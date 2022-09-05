@@ -1,0 +1,56 @@
+[tool.nbqa.addopts]
+flake8 = [
+    "--max-line-length=120",
+    "--extend-ignore=E201,E202"
+]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E201,E202,W605"
+
+[tool.pylint.MASTER]
+max-line-length = 120
+disable = "invalid-name,pointless-statement"
+max-locals = 20
+
+[tool.mypy]
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = "numpy.*"
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+
+[[tool.mypy.overrides]]
+module = "transformers.*"
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[[tool.mypy.overrides]]
+module = [
+       "lmdb",
+       "tqdm",
+       "tqdm.notebook",
+       "numpy",
+       "nltk",
+       "nltk.tokenize",
+       "pandas",
+       "sklearn.linear_model",
+       "sklearn.ensemble",
+       "sklearn.neighbors",
+       "scipy.special",
+       "uralicNLP",
+       "uralicNLP.cg3",
+       "pyconll",
+       "seaborn",
+       "matplotlib",
+       "matplotlib.pyplot",
+       "sklearn.metrics",
+       "tnparser.pipeline",
+       ".util",
+       ".idiom",
+       ".fileutil",
+       ".dbutil"
+]
+ignore_missing_imports = true

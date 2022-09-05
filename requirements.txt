@@ -1,0 +1,67 @@
+numpy
+nltk
+pandas
+# PyYAML
+# pyyaml
+tqdm
+
+# notebook stuff
+jupyter
+nbstripout
+nbqa
+jupyter_contrib_nbextensions
+
+# visualization
+matplotlib
+plotly
+seaborn
+
+# Finnish NLP
+uralicNLP
+
+# code quality
+typing-extensions
+mypy
+pylint
+flake8
+flake8-docstrings
+pyproject-flake8
+
+# corpora
+pyconll
+
+# scientific
+# scipy/sklearn: comment if not on M1 Mac, or use conda
+# scipy/sklearn install magic for M1:
+# https://github.com/scikit-learn/scikit-learn/issues/19137
+# scipy
+# sklearn
+
+# transformers, huggingface
+# sentencepiece
+# tokenizers
+# torch
+# torchvision
+# datasets
+# huggingface-hub
+# sentence-transformers
+
+# neural parser
+# ufal.udpipe
+# OpenNMT-py>=1.2.0
+# diaparser
+# pytorch_lightning
+# torchmetrics
+
+# database
+# lmdb
+# pysolr
+# zstandard
+# lz4
+# psutil
+# ply
+# pyjsonnlp
+
+# edit distance
+# textdistance[extras]
+

@@ -1,0 +1,19 @@
+data
+corpora
+.env
+venv
+.DS_Store
+
+# Jupyter
+jupyter.*.out
+.ipynb_checkpoints
+
+# Downloads
+*.tar.gz
+
+# Building
+dist
+__pycache__
+*.pyc
+build
+*.egg-info
