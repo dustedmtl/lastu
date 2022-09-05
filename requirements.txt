@@ -23,7 +23,7 @@ uralicNLP
 typing-extensions
 mypy
 pylint
-flake8
+flake8==4.0.1
 flake8-docstrings
 pyproject-flake8
 
