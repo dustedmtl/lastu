@@ -1,6 +1,6 @@
 """File reader module."""
 
-# pylint: disable=invalid-name, line-too-long
+# pylint: disable=invalid-name, line-too-long, consider-using-f-string
 
 # from typing import List, Dict, Union, Tuple, Optional, Iterable, Callable
 from typing import Tuple, Optional, Iterable, Callable
@@ -9,7 +9,8 @@ from os.path import isfile, join, basename
 import re
 from collections import Counter
 import pyconll
-from tqdm.notebook import tqdm
+# from tqdm.notebook import tqdm
+from tqdm.autonotebook import tqdm
 
 Freqs = Tuple[Counter, Counter, Counter]
 
@@ -103,6 +104,7 @@ def conllu_reader(path: str,
                   checker: Optional[Callable] = None,
                   count: Optional[int] = None) -> Optional[Freqs]:
     """Read conllu files recursively."""
+    print("Reading input files: %s" % path)
     if isfile(path):
         freqs = conllu_freq_reader(path, checker=checker)
     else:
@@ -118,15 +120,18 @@ def conllu_reader(path: str,
 
         total = count if count else len(files)
 
-        for fnpath, fn in tqdm(files[:total], total=total):
+        for fnpath, fn in (pbar := tqdm(files[:total], total=total)):
             try:
                 if not fn.endswith('conllu'):
                     continue
                 if verbose:
-                    print("Reading file: %s" % fn, end='\r')
-                    idx += 1
-                    freqs = conllu_freq_reader(fnpath,
-                                               counts=freqs, checker=checker)
+                    pbar.set_description(f'{fn}')
+                    # tqdm.write(f'Reading file: {fn}')
+                    # tqdm.write(f'Reading file: {fn}', end='\r')
+                    # print("Reading file: %s" % fn, end='\r')
+                idx += 1
+                freqs = conllu_freq_reader(fnpath,
+                                           counts=freqs, checker=checker)
                 if count and idx > count:
                     break
             except Exception:
