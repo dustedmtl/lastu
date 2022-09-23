@@ -50,6 +50,7 @@ module = [
        "sklearn.metrics",
        "tnparser.pipeline",
        ".corpus",
-       ".dbutil"
+       ".dbutil",
+       ".mytypes"
 ]
 ignore_missing_imports = true

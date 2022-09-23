@@ -2,17 +2,14 @@
 
 # pylint: disable=invalid-name, line-too-long, too-many-locals, unnecessary-comprehension
 
-from typing import Tuple
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
 # from os.path import basename
 # from io import StringIO
-from collections import Counter
 import sqlite3
 from sqlite3 import IntegrityError
 import pandas as pd
 # from tqdm.notebook import tqdm
-
-Freqs = Tuple[Counter, Counter, Counter]
+from .mytypes import Freqs
 
 
 def get_connection(dbfile: str) -> sqlite3.Connection:
@@ -28,7 +25,7 @@ def write_freqs_to_db(connection: sqlite3.Connection,
 
     template = "INSERT INTO %s (%s) values (%s)"
 
-    fields = ['lemma', 'form', 'pos', 'frequency', 'len']
+    fields = ['lemma', 'form', 'pos', 'frequency', 'len', 'feats', 'nouncase']
     itpl = ', '.join([f for f in fields])
     vtpl = ','.join(['?' for _ in fields])
 
@@ -36,11 +33,11 @@ def write_freqs_to_db(connection: sqlite3.Connection,
     # print(insert_template)
 
     values = []
-    for key, freq in freqs[0].items():
+    for key, freq in freqs.items():
         # print(key, freq)
         # lemma, word, pos = key.split(' ')
-        lemma, word, pos = key
-        recvals = [lemma, word, pos, freq, len(word)]
+        lemma, word, pos, nouncase, feats = key
+        recvals = [lemma, word, pos, freq, len(word), feats, nouncase]
         values.append(recvals)
 
     try:

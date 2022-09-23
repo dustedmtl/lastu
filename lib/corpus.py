@@ -11,8 +11,8 @@ from collections import Counter
 import pyconll
 # from tqdm.notebook import tqdm
 from tqdm.autonotebook import tqdm
+from .mytypes import Freqs
 
-Freqs = Tuple[Counter, Counter, Counter]
 
 # import nltk
 # nltk.download('punkt')
@@ -43,6 +43,7 @@ def conllu_file_reader(cfile: str,
                 yield 0, None
 
     if cfile.endswith('.vrt'):
+        # Convert suomi24 data to standard ConLL-U order
         outorder = {
             0: 'ref',
             1: 'lemma',
@@ -81,7 +82,7 @@ def conllu_file_reader(cfile: str,
                     sentencedata = []
                     yield fileidx, c
                 if insentence:
-                    # reformat fields to standard (?) conll-u format
+                    # reformat fields to standard (?) ConLL-U format
                     tabs = line.split('\t')
                     if inorder:
                         nutabs = []
@@ -157,9 +158,10 @@ def conllu_freq_reader(path: str,
         freqs = counts
     else:
         # FIXME: initialize based on type?
-        freqs = (Counter(), Counter(), Counter())
+        # columns = ['lemma', 'form', 'pos', 'case', 'feats', 'count']
+        freqs = (Counter(), [])
 
-    wordcounter = freqs[0]
+    wordcounter = freqs
     # print(freqs)
     # print(path)
     for _t in conllu_file_reader(path, checker):
@@ -174,10 +176,28 @@ def conllu_freq_reader(path: str,
             form = token.form
             lemma = token.lemma
             upos = token.upos
-            # print(form, lemma, upos, token.feats)
-            if form and upos:
+            feats = token.feats
+            # print(form, lemma, upos, feats)
+            # Convert feats back to string for indexing
+            origfeats = token.conll().split('\t')[5]
+            # print(origfeats)
+            if ',' in origfeats:
+                # print(form, lemma, upos, feats)
+                pass
+
+            if lemma and form and upos:
                 # useasidx = ' '.join([lemma.lower(), form.lower(), upos])
-                useasidx = (lemma.lower(), form.lower(), upos)
+                nouncase = None
+                if 'Case' in feats:
+                    nouncase = list(feats['Case'])[0]
+                # print(lemma, form, upos, nouncase)
+                # FIXME: add Derivation, Number, Person to separate columns
+                # FIXME: separate indexable
+                if not feats:
+                    origfeats = "_"
+                    # print(lemma, form, upos, origfeats)
+
+                useasidx = (lemma.lower(), form.lower(), upos, nouncase, origfeats)
                 wordcounter[useasidx] += 1
 
     return freqs
@@ -193,7 +213,8 @@ def conllu_reader(path: str,
         freqs = conllu_freq_reader(path, checker=checker)
     else:
         idx = 0
-        freqs = (Counter(), Counter(), Counter())
+        # columns = ['lemma', 'form', 'pos', 'case', 'feats', 'count']
+        freqs = (Counter(), [])
         # freqs = None
 
         files = []
