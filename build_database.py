@@ -36,10 +36,9 @@ parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help='Verbose')
 
-# FIXME: lowercase or uppercase as default?
-parser.add_argument('-l', '--lowercase',
+parser.add_argument('-o', '--origcase',
                     action='store_true',
-                    help='Lowercase the data')
+                    help='Original case')
 
 parser.add_argument('-c', '--count',
                     type=int,
@@ -68,12 +67,15 @@ if not exists(args.dbfile):
 
 # FIXME: check that dbfile is a SQLite database?
 
-data = corpus.conllu_reader(args.input, verbose=args.verbose, count=args.count)
+data = corpus.conllu_reader(args.input,
+                            verbose=args.verbose,
+                            origcase=args.origcase,
+                            count=args.count)
 # print(len(data))
 
 # FIXME: empty SQLite databse file?
 
-print(f'Storing {len(data)} unigram frequencies to database {args.dbfile}')
+print(f'Storing {len(data[0])} unigram frequencies to database {args.dbfile}')
 if not sqlcon:
     sqlcon = dbutil.get_connection(args.dbfile)
 dbutil.write_freqs_to_db(sqlcon, data)

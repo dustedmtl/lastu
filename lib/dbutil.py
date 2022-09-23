@@ -22,10 +22,27 @@ def write_freqs_to_db(connection: sqlite3.Connection,
                       freqs: Freqs):
     """Write frequencies to SQLite database."""
     cursor = connection.cursor()
+    cursor.execute('PRAGMA journal_mode=wal')
+    print('Cursor mode:', cursor.fetchall())
 
     template = "INSERT INTO %s (%s) values (%s)"
 
-    fields = ['lemma', 'form', 'pos', 'frequency', 'len', 'feats', 'nouncase']
+    featmap = {
+        'Number': 'nnumber',
+        'Case': 'nouncase',
+        'Derivation': 'derivation',
+        'Tense': 'tense',
+        'Person': 'person',
+        'VerbForm': 'verbform',
+        'Clitic': 'clitic'
+    }
+
+    fields = ['lemma', 'form', 'pos', 'frequency', 'len', 'feats']
+    fields2 = ['lemma', 'form', 'pos', 'frequency', 'feats']
+
+    for feat in sorted(featmap.keys()):
+        fields.append(featmap[feat])
+
     itpl = ', '.join([f for f in fields])
     vtpl = ','.join(['?' for _ in fields])
 
@@ -33,11 +50,18 @@ def write_freqs_to_db(connection: sqlite3.Connection,
     # print(insert_template)
 
     values = []
-    for key, freq in freqs.items():
+    for key, freq in freqs[0].items():
         # print(key, freq)
         # lemma, word, pos = key.split(' ')
-        lemma, word, pos, nouncase, feats = key
-        recvals = [lemma, word, pos, freq, len(word), feats, nouncase]
+        lemma, word, pos, feats = key
+        recvals = [lemma, word, pos, freq, len(word), feats]
+        featdict = freqs[1][key]
+        for feat in sorted(featmap.keys()):
+            featval = None
+            if feat in featdict:
+                featval = ','.join(featdict[feat])
+            recvals.append(featval)
+        # print(recvals)
         values.append(recvals)
 
     try:
@@ -49,10 +73,34 @@ def write_freqs_to_db(connection: sqlite3.Connection,
         print('Issue', e)
         connection.rollback()
 
+    fields2 = ['lemma', 'form', 'pos', 'frequency', 'feats']
 
-def get_frequency_dataframe(connection: sqlite3.Connection) -> pd.DataFrame:
+    itpl2 = ', '.join([f for f in fields2])
+    vtpl2 = ','.join(['?' for _ in fields2])
+
+    insert_template2 = template % ('wordfeats', itpl2, vtpl2)
+    # print(insert_template)
+
+    values2 = []
+    for key, freq in freqs[2].items():
+        lemma, word, pos, feats = key
+        recvals = [lemma, word, pos, freq, feats]
+        values2.append(recvals)
+
+    try:
+        cursor.executemany(insert_template2, values2)
+        connection.commit()
+    except IntegrityError as e:
+        # this is not ok
+        print('Issue', e)
+        connection.rollback()
+
+
+def get_frequency_dataframe(connection: sqlite3.Connection,
+                            full: bool = False) -> pd.DataFrame:
     """Get frequencies as dataframe."""
-    sql_query = pd.read_sql_query('SELECT * FROM wordfreqs', connection)
+    table = 'wordfeats' if full else 'wordfreqs'
+    sql_query = pd.read_sql_query(f'SELECT * FROM {table}', connection)
 
     df = pd.DataFrame(sql_query)
     return df

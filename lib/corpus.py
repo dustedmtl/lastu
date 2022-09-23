@@ -1,6 +1,6 @@
 """File reader module."""
 
-# pylint: disable=invalid-name, line-too-long, unspecified-encoding
+# pylint: disable=invalid-name, line-too-long, too-many-locals
 
 # from typing import List, Dict, Union, Tuple, Optional, Iterable, Callable
 from typing import List, Tuple, Optional, Iterable, Callable
@@ -151,17 +151,29 @@ def conllu_file_reader(cfile: str,
 
 def conllu_freq_reader(path: str,
                        checker: Optional[Callable] = None,
+                       origcase: Optional[bool] = False,
                        counts: Optional[Freqs] = None) -> Freqs:
     """Get frequencies from conllu files."""
-    # FIXME: generate bigram frequencies
     if counts:
         freqs = counts
     else:
-        # FIXME: initialize based on type?
-        # columns = ['lemma', 'form', 'pos', 'case', 'feats', 'count']
-        freqs = (Counter(), [])
+        freqs = (Counter(), dict(), Counter())
 
-    wordcounter = freqs
+    wordcounter = freqs[0]
+    wordfeats = freqs[1]
+    featcounter = freqs[2]
+
+    # FIXME: move map to another file? data class?
+    featmap = {
+        'Number': 'nnumber',
+        'Case': 'nouncase',
+        'Derivation': 'derivation',
+        'Tense': 'tense',
+        'Person': 'person',
+        'VerbForm': 'verbform',
+        'Clitic': 'clitic'
+    }
+
     # print(freqs)
     # print(path)
     for _t in conllu_file_reader(path, checker):
@@ -180,25 +192,37 @@ def conllu_freq_reader(path: str,
             # print(form, lemma, upos, feats)
             # Convert feats back to string for indexing
             origfeats = token.conll().split('\t')[5]
-            # print(origfeats)
+
+            _corefeats = {}
+            corefeats = None
+            if feats:
+                for feat in feats.keys():
+                    if feat in featmap:
+                        _corefeats[feat] = feats[feat]
+                featlist = []
+                for feat in sorted(_corefeats.keys()):
+                    featlist.append('='.join([feat, ','.join(_corefeats[feat])]))
+                corefeats = '|'.join(featlist)
+                # print(origfeats, '=>', corefeats)
+
             if ',' in origfeats:
                 # print(form, lemma, upos, feats)
                 pass
 
             if lemma and form and upos:
-                # useasidx = ' '.join([lemma.lower(), form.lower(), upos])
-                nouncase = None
-                if 'Case' in feats:
-                    nouncase = list(feats['Case'])[0]
-                # print(lemma, form, upos, nouncase)
-                # FIXME: add Derivation, Number, Person to separate columns
-                # FIXME: separate indexable
                 if not feats:
                     origfeats = "_"
-                    # print(lemma, form, upos, origfeats)
+                    corefeats = "_"
 
-                useasidx = (lemma.lower(), form.lower(), upos, nouncase, origfeats)
+                uselemma = lemma if origcase else lemma.lower()
+                useform = form if origcase else form.lower()
+                useasidx = (uselemma, useform, upos, corefeats)
                 wordcounter[useasidx] += 1
+
+                wordfeats[useasidx] = feats
+
+                useasidx2 = (uselemma, useform, upos, origfeats)
+                featcounter[useasidx2] += 1
 
     return freqs
 
@@ -206,16 +230,19 @@ def conllu_freq_reader(path: str,
 def conllu_reader(path: str,
                   verbose: bool = False,
                   checker: Optional[Callable] = None,
+                  origcase: Optional[bool] = False,
                   count: Optional[int] = None) -> Optional[Freqs]:
     """Read conllu files recursively."""
     print("Reading input files: %s" % path)
     if isfile(path):
-        freqs = conllu_freq_reader(path, checker=checker)
+        freqs = conllu_freq_reader(path,
+                                   origcase=origcase,
+                                   checker=checker)
     else:
         idx = 0
+        # FIXME: move initialization to another file or data class?
         # columns = ['lemma', 'form', 'pos', 'case', 'feats', 'count']
-        freqs = (Counter(), [])
-        # freqs = None
+        freqs = (Counter(), dict(), Counter())
 
         files = []
         for res in list(walk(path)):
@@ -236,7 +263,9 @@ def conllu_reader(path: str,
                     # print("Reading file: %s" % fn, end='\r')
                 idx += 1
                 freqs = conllu_freq_reader(fnpath,
-                                           counts=freqs, checker=checker)
+                                           origcase=origcase,
+                                           counts=freqs,
+                                           checker=checker)
                 if count and idx > count:
                     break
             except Exception:
