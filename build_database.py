@@ -44,6 +44,10 @@ parser.add_argument('-c', '--count',
                     type=int,
                     help='File count')
 
+parser.add_argument('-s', '--sentencecount',
+                    type=int,
+                    help='Sentence count')
+
 args = parser.parse_args()
 
 
@@ -70,7 +74,8 @@ if not exists(args.dbfile):
 data = corpus.conllu_reader(args.input,
                             verbose=args.verbose,
                             origcase=args.origcase,
-                            count=args.count)
+                            sentencecount=args.sentencecount,
+                            filecount=args.count)
 # print(len(data))
 
 # FIXME: empty SQLite databse file?
