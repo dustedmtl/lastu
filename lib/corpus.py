@@ -1,12 +1,14 @@
 """File reader module."""
 
-# pylint: disable=invalid-name, line-too-long, too-many-locals
+# pylint: disable=invalid-name, line-too-long
+# too-many-locals, too-many-arguments
 
 # from typing import List, Dict, Union, Tuple, Optional, Iterable, Callable
 from typing import List, Tuple, Optional, Iterable, Callable
 from os import walk
-from os.path import isfile, join, basename
+from os.path import isfile, join, basename, getsize
 import re
+import gzip
 from collections import Counter
 import pyconll
 # from tqdm.notebook import tqdm
@@ -19,8 +21,9 @@ from .mytypes import Freqs
 
 
 def conllu_file_reader(cfile: str,
-                       checker: Optional[Callable] = None) -> Iterable[Tuple[int,
-                                                                             Optional[pyconll.unit.sentence.Sentence]]]:
+                       checker: Optional[Callable] = None,
+                       sentencecount: Optional[int] = None) \
+                       -> Iterable[Tuple[int, Optional[pyconll.unit.sentence.Sentence]]]:
     """Parse conllu file."""
     shortfn = basename(cfile)
 
@@ -42,7 +45,7 @@ def conllu_file_reader(cfile: str,
                 # print("Fast check, don't read conllu file contents for %s" % cfile)
                 yield 0, None
 
-    if cfile.endswith('.vrt'):
+    if cfile.endswith('.vrt') or cfile.endswith('.vrt.gz'):
         # Convert suomi24 data to standard ConLL-U order
         outorder = {
             0: 'ref',
@@ -56,6 +59,7 @@ def conllu_file_reader(cfile: str,
         }
         inorder = None
 
+        # FIXME: move to a different function
         with open(cfile, 'r') as f:
             idx = 0
             fileidx = 0
@@ -127,37 +131,48 @@ def conllu_file_reader(cfile: str,
 
         yield 0, ''
     else:
-        with open(cfile, 'r') as f:
-            data = f.read()
+        maxsize = 10**8
+        filesize = getsize(cfile)
 
-        # Get the last sentence id for the file
-        sentids = re.findall(r'# sent_id = (\d+)', data, flags=re.MULTILINE)
-        # print(sentids)
-        sentencecount = max(set([int(s) for s in sentids]))
-        # print(last)
+        if filesize < maxsize:
+            with open(cfile, 'r', encoding="utf-8") as f:
+                data = f.read()
+                sentencecount = get_last_sentence(data)
+                if checker:
+                    has_file = checker(shortfn, sentencecount)
+                    # print(cfile, shortfn, sentencecount, has_file)
+                    if has_file:
+                        yield 0, None
 
-        if checker:
-            has_file = checker(shortfn, sentencecount)
-            # print(cfile, shortfn, sentencecount, has_file)
-            if has_file:
-                yield 0, None
-
-        # FIXME: field order (?)
         idx = 0
-        for sentence in pyconll.load_from_file(cfile):
+        # for sentence in pyconll.load_from_file(cfile):
+        # FIXME: read gzipped file
+        # FIXME: use conllu module instead of pyconll
+        for sentence in pyconll.load.iter_from_file(cfile):
             idx += 1
+            if sentencecount and idx > sentencecount:
+                break
             yield idx, sentence
+
+
+def get_last_sentence(data: str) -> int:
+    """Get id of last sentence in conllu file."""
+    sentids = re.findall(r'# sent_id = (\d+)', data, flags=re.MULTILINE)
+    sentencecount = max({int(s) for s in sentids})
+    # print(last)
+    return sentencecount
 
 
 def conllu_freq_reader(path: str,
                        checker: Optional[Callable] = None,
                        origcase: Optional[bool] = False,
+                       sentencecount: Optional[int] = None,
                        counts: Optional[Freqs] = None) -> Freqs:
     """Get frequencies from conllu files."""
     if counts:
         freqs = counts
     else:
-        freqs = (Counter(), dict(), Counter())
+        freqs = (Counter(), {}, Counter())
 
     wordcounter = freqs[0]
     wordfeats = freqs[1]
@@ -176,11 +191,11 @@ def conllu_freq_reader(path: str,
 
     # print(freqs)
     # print(path)
-    for _t in conllu_file_reader(path, checker):
+    for _t in tqdm(conllu_file_reader(path, checker,
+                                      sentencecount=sentencecount)):
         _idx, sentence = _t
         # if _idx > count:
         #    break
-        # print(_idx, sentence)
         pos = 0
         for token in sentence:  # type: ignore
             pos += 1
@@ -231,18 +246,24 @@ def conllu_reader(path: str,
                   verbose: bool = False,
                   checker: Optional[Callable] = None,
                   origcase: Optional[bool] = False,
-                  count: Optional[int] = None) -> Optional[Freqs]:
+                  sentencecount: Optional[int] = None,
+                  filecount: Optional[int] = None) -> Optional[Freqs]:
     """Read conllu files recursively."""
-    print("Reading input files: %s" % path)
+    print(f"Reading input files: {path}")
+
     if isfile(path):
+        if sentencecount:
+            print(f"Reading {sentencecount} sentences")
+
         freqs = conllu_freq_reader(path,
                                    origcase=origcase,
+                                   sentencecount=sentencecount,
                                    checker=checker)
     else:
         idx = 0
         # FIXME: move initialization to another file or data class?
         # columns = ['lemma', 'form', 'pos', 'case', 'feats', 'count']
-        freqs = (Counter(), dict(), Counter())
+        freqs = (Counter(), {}, Counter())
 
         files = []
         for res in list(walk(path)):
@@ -250,7 +271,7 @@ def conllu_reader(path: str,
             for fn in filenames:
                 files.append((join(dirpath, fn), fn))
 
-        total = count if count else len(files)
+        total = filecount if filecount else len(files)
 
         for fnpath, fn in (pbar := tqdm(files[:total], total=total)):
             try:
@@ -264,9 +285,10 @@ def conllu_reader(path: str,
                 idx += 1
                 freqs = conllu_freq_reader(fnpath,
                                            origcase=origcase,
+                                           sentencecount=sentencecount,
                                            counts=freqs,
                                            checker=checker)
-                if count and idx > count:
+                if filecount and idx > filecount:
                     break
             except Exception:
                 pass
