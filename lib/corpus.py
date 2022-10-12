@@ -62,9 +62,7 @@ def conllu_file_reader(cfile: str,
                 data = fileh.read()
                 maxcount = get_last_sentence(data)
                 if checker:
-                    has_file = checker(shortfn, maxcount)
-                    # print(cfile, shortfn, sentencecount, has_file)
-                    if has_file:
+                    if checker(shortfn, maxcount):
                         yield 0, None
 
         idx = 0
@@ -72,9 +70,11 @@ def conllu_file_reader(cfile: str,
             fields = parse_conllu_plus_fields(fileh, metadata_parsers=None)
             try:
                 for sentence in parse_sentences(fileh):
-                    # The used parser module considers two spaces to be a separator, fix that
+                    # The used parser module considers two spaces to be a separator, fix that.
+                    # Multiple consecutive space characters are converted to a single space.
                     # The files are all separated by tabs actually
-                    sentence = sentence.replace('  ', ' ')
+                    # sentence = sentence.replace('  ', ' ')
+                    sentence = re.sub(r' +', ' ', sentence)
                     tokenlist = parse_token_and_metadata(
                         sentence,
                         fields=fields,
