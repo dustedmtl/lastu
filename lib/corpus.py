@@ -216,7 +216,7 @@ def serialize_feats(feats: Dict) -> str:
 
 
 def conllu_freq_reader(path: str,
-                       checker: Optional[Callable] = None,
+                       # checker: Optional[Callable] = None,
                        origcase: Optional[bool] = False,
                        sentencecount: Optional[int] = None,
                        singlefile: Optional[bool] = False,
@@ -229,7 +229,7 @@ def conllu_freq_reader(path: str,
 
     wordcounter = freqs[0]
     wordfeats = freqs[1]
-    featcounter = freqs[2]
+    # featcounter = freqs[2]
 
     # FIXME: move map to another file? data class?
     featmap = {
@@ -242,10 +242,9 @@ def conllu_freq_reader(path: str,
         'Clitic': 'clitic'
     }
 
-    for _t in tqdm(conllu_file_reader(path, checker,
-                                      sentencecount=sentencecount),
-                   disable=not singlefile):
-        _idx, sentence = _t
+    for _idx, sentence in tqdm(conllu_file_reader(path,
+                                                  sentencecount=sentencecount),
+                               disable=not singlefile):
         # if _idx > count:
         #    break
         pos = 0
@@ -289,15 +288,15 @@ def conllu_freq_reader(path: str,
 
                 wordfeats[useasidx] = feats
 
-                useasidx2 = (uselemma, useform, upos, origfeats)
-                featcounter[useasidx2] += 1
+                # useasidx2 = (uselemma, useform, upos, origfeats)
+                # featcounter[useasidx2] += 1
 
     return freqs
 
 
 def conllu_reader(path: str,
                   verbose: bool = False,
-                  checker: Optional[Callable] = None,
+                  # checker: Optional[Callable] = None,
                   origcase: Optional[bool] = False,
                   sentencecount: Optional[int] = None,
                   filecount: Optional[int] = None) -> Optional[Freqs]:
@@ -311,8 +310,7 @@ def conllu_reader(path: str,
         freqs = conllu_freq_reader(path,
                                    origcase=origcase,
                                    sentencecount=sentencecount,
-                                   singlefile=True,
-                                   checker=checker)
+                                   singlefile=True)
     else:
         idx = 0
         # FIXME: move initialization to another file or data class?
@@ -340,8 +338,7 @@ def conllu_reader(path: str,
                 freqs = conllu_freq_reader(fnpath,
                                            origcase=origcase,
                                            sentencecount=sentencecount,
-                                           counts=freqs,
-                                           checker=checker)
+                                           counts=freqs)
                 if filecount and idx > filecount:
                     break
             except Exception as e:
