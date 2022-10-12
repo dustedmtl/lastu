@@ -33,116 +33,33 @@ def conllu_file_reader(cfile: str,
     """Parse conllu file."""
     shortfn = basename(cfile)
 
-    fastcheck = False
+#    fastcheck = False
+#    if checker:
+#        # Inspect the checker closure for properties
+#        try:
+#            varrs = checker.__code__.co_freevars
+#            idx = varrs.index('fastcheck')
+#            if idx != -1:
+#                fastcheck = checker.__closure__[idx].cell_contents  # type: ignore
+#        except Exception:
+#            pass
 
-    if checker:
-        # Inspect the checker closure for properties
-        try:
-            varrs = checker.__code__.co_freevars
-            idx = varrs.index('fastcheck')
-            if idx != -1:
-                fastcheck = checker.__closure__[idx].cell_contents  # type: ignore
-        except Exception:
-            pass
-
-        if fastcheck:
-            has_file = checker(shortfn, 0)
-            if has_file:
-                # print("Fast check, don't read conllu file contents for %s" % cfile)
-                yield 0, None
+#        if fastcheck:
+#            has_file = checker(shortfn, 0)
+#            if has_file:
+#                # print("Fast check, don't read conllu file contents for %s" % cfile)
+#                yield 0, None
 
     if cfile.endswith('.vrt') or cfile.endswith('.vrt.gz'):
-        # Convert suomi24 data to standard ConLL-U order
-        outorder = {
-            0: 'ref',
-            1: 'lemma',
-            2: 'word',
-            3: 'pos',
-            5: 'msd',
-            6: 'dephead',
-            7: 'deprel',
-            9: 'lex',
-        }
-        inorder = None
-
-        # FIXME: move to a different function
-        with open(cfile, 'r') as f:
-            idx = 0
-            fileidx = 0
-            insentence = False
-            tabidx = [1, 0, 2, 4, 8, 5, 6, 7, 8, 10]
-            sentencedata: List[str] = []
-
-            for line in tqdm(f):
-                idx += 1
-                if 'positional-attributes' in line:
-                    attrs = re.search(r':\s+(.*)\/', line)
-                    if attrs:
-                        _attrs = attrs.group(1).split()
-                        inorder = {k: i for i, k in enumerate(_attrs)}
-                        # print(inorder)
-                if line.startswith('</sentence'):
-                    insentence = False
-                    fileidx += 1
-                    in_string = ''.join(sentencedata)
-                    # print(in_string)
-                    sentencedata.append('\n')
-                    # c = pyconll.unit.conll.Conll(sentencedata)
-                    c = pyconll.unit.sentence.Sentence(in_string)
-                    sentencedata = []
-                    yield fileidx, c
-                if insentence:
-                    # reformat fields to standard (?) ConLL-U format
-                    tabs = line.split('\t')
-                    if inorder:
-                        nutabs = []
-                        for _i in range(0, 10):
-                            if _i in outorder:
-                                field = outorder.get(_i)
-                                inidx = inorder[field]
-                                value = tabs[inidx]
-                                # print(field, inidx, value)
-                                if field == 'msd' and value != '_':
-                                    if '_' in value and '=' not in value:
-                                        nuvals = []
-                                        for _v in value.split('|'):
-                                            try:
-                                                if '_' in _v:
-                                                    vals = _v.split('_')
-                                                    k = vals[0]
-                                                    if len(vals) > 2:
-                                                        v = '_'.join(vals[1:])
-                                                    else:
-                                                        v = vals[1]
-                                                    nuvals.append('='.join([k, v]))
-                                                else:
-                                                    nuvals.append(_v)
-                                            except ValueError as e:
-                                                print(_v)
-                                                raise e
-                                        value = '|'.join(nuvals)
-                                nutabs.append(value)
-                            else:
-                                nutabs.append('_')
-                    else:
-                        nutabs = [tabs[i] for i in tabidx]
-                    # print(line)
-                    # print(nutabs)
-                    sentencedata.append('\t'.join(nutabs))
-                if line.startswith('<sentence'):
-                    insentence = True
-
-                if idx > 20:
-                    pass
-
-        yield 0, None
+        for idx, tokenlist in conllu_vrt_file_reader(cfile):
+            yield idx, tokenlist
     else:
         maxsize = 10**8
         filesize = getsize(cfile)
 
         if filesize < maxsize:
-            with open(cfile, 'r', encoding="utf-8") as f:
-                data = f.read()
+            with open(cfile, 'r', encoding="utf-8") as fileh:
+                data = fileh.read()
                 maxcount = get_last_sentence(data)
                 if checker:
                     has_file = checker(shortfn, maxcount)
@@ -178,6 +95,94 @@ def conllu_file_reader(cfile: str,
 #            if sentencecount and idx > sentencecount:
 #                break
 #            yield idx, sentence
+
+
+def conllu_vrt_file_reader(filename: str):
+    """Read sentences from vrt file."""
+    # Convert suomi24 data to standard ConLL-U order
+    outorder = {
+        0: 'ref',
+        1: 'lemma',
+        2: 'word',
+        3: 'pos',
+        5: 'msd',
+        6: 'dephead',
+        7: 'deprel',
+        9: 'lex',
+    }
+    inorder = None
+
+    with open(filename, 'r', encoding='utf-8') as f:
+        idx = 0
+        fileidx = 0
+        insentence = False
+        tabidx = [1, 0, 2, 4, 8, 5, 6, 7, 8, 10]
+        sentencedata: List[str] = []
+
+        # FIXME: use conllu module instead of pyconll
+        for line in tqdm(f):
+            idx += 1
+            if 'positional-attributes' in line:
+                attrs = re.search(r':\s+(.*)\/', line)
+                if attrs:
+                    _attrs = attrs.group(1).split()
+                    inorder = {k: i for i, k in enumerate(_attrs)}
+                    # print(inorder)
+            if line.startswith('</sentence'):
+                insentence = False
+                fileidx += 1
+                in_string = ''.join(sentencedata)
+                # print(in_string)
+                sentencedata.append('\n')
+                # c = pyconll.unit.conll.Conll(sentencedata)
+                c = pyconll.unit.sentence.Sentence(in_string)
+                sentencedata = []
+                yield fileidx, c
+            if insentence:
+                # reformat fields to standard (?) ConLL-U format
+                tabs = line.split('\t')
+                if inorder:
+                    nutabs = []
+                    for _i in range(0, 10):
+                        if _i in outorder:
+                            field = outorder.get(_i)
+                            inidx = inorder[field]
+                            value = tabs[inidx]
+                            # print(field, inidx, value)
+                            if field == 'msd' and value != '_':
+                                if '_' in value and '=' not in value:
+                                    nuvals = []
+                                    for _v in value.split('|'):
+                                        try:
+                                            if '_' in _v:
+                                                vals = _v.split('_')
+                                                k = vals[0]
+                                                if len(vals) > 2:
+                                                    v = '_'.join(vals[1:])
+                                                else:
+                                                    v = vals[1]
+                                                nuvals.append('='.join([k, v]))
+                                            else:
+                                                nuvals.append(_v)
+                                        except ValueError as e:
+                                            print(_v)
+                                            raise e
+                                    value = '|'.join(nuvals)
+                            nutabs.append(value)
+                        else:
+                            nutabs.append('_')
+                else:
+                    nutabs = [tabs[i] for i in tabidx]
+                # print(line)
+                # print(nutabs)
+                sentencedata.append('\t'.join(nutabs))
+            if line.startswith('<sentence'):
+                insentence = True
+
+            if idx > 20:
+                pass
+
+    yield 0, ''
 
 
 @contextmanager
