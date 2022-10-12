@@ -3,14 +3,20 @@
 # pylint: disable=invalid-name, line-too-long
 # too-many-locals, too-many-arguments
 
-# from typing import List, Dict, Union, Tuple, Optional, Iterable, Callable
-from typing import List, Tuple, Optional, Iterable, Callable
+from typing import List, Dict, Tuple, Optional, Iterable, Callable
 from os import walk
 from os.path import isfile, join, basename, getsize
 import re
 import gzip
+from contextlib import contextmanager
 from collections import Counter
 import pyconll
+# from conllu import parse_incr, TokenList
+from conllu import TokenList
+from conllu.exceptions import ParseException
+from conllu.parser import (
+    parse_conllu_plus_fields, parse_sentences, parse_token_and_metadata
+)
 # from tqdm.notebook import tqdm
 from tqdm.autonotebook import tqdm
 from .mytypes import Freqs
@@ -23,7 +29,7 @@ from .mytypes import Freqs
 def conllu_file_reader(cfile: str,
                        checker: Optional[Callable] = None,
                        sentencecount: Optional[int] = None) \
-                       -> Iterable[Tuple[int, Optional[pyconll.unit.sentence.Sentence]]]:
+                       -> Iterable[Tuple[int, Optional[TokenList]]]:
     """Parse conllu file."""
     shortfn = basename(cfile)
 
@@ -129,7 +135,7 @@ def conllu_file_reader(cfile: str,
                 if idx > 20:
                     pass
 
-        yield 0, ''
+        yield 0, None
     else:
         maxsize = 10**8
         filesize = getsize(cfile)
@@ -137,22 +143,52 @@ def conllu_file_reader(cfile: str,
         if filesize < maxsize:
             with open(cfile, 'r', encoding="utf-8") as f:
                 data = f.read()
-                sentencecount = get_last_sentence(data)
+                maxcount = get_last_sentence(data)
                 if checker:
-                    has_file = checker(shortfn, sentencecount)
+                    has_file = checker(shortfn, maxcount)
                     # print(cfile, shortfn, sentencecount, has_file)
                     if has_file:
                         yield 0, None
 
         idx = 0
-        # for sentence in pyconll.load_from_file(cfile):
-        # FIXME: read gzipped file
-        # FIXME: use conllu module instead of pyconll
-        for sentence in pyconll.load.iter_from_file(cfile):
-            idx += 1
-            if sentencecount and idx > sentencecount:
-                break
-            yield idx, sentence
+        with get_filehandle(cfile) as fileh:
+            fields = parse_conllu_plus_fields(fileh, metadata_parsers=None)
+            try:
+                for sentence in parse_sentences(fileh):
+                    # The used parser module considers two spaces to be a separator, fix that
+                    # The files are all separated by tabs actually
+                    sentence = sentence.replace('  ', ' ')
+                    tokenlist = parse_token_and_metadata(
+                        sentence,
+                        fields=fields,
+                        field_parsers=None,
+                        metadata_parsers=None
+                    )
+                    # for tokenlist in parse_incr(fileh):
+                    idx += 1
+                    if sentencecount and idx > sentencecount:
+                        break
+                    yield idx, tokenlist
+            except ParseException as pe:
+                print(idx, pe)
+                raise pe
+
+#        for sentence in pyconll.load.iter_from_file(cfile):
+#            idx += 1
+#            if sentencecount and idx > sentencecount:
+#                break
+#            yield idx, sentence
+
+
+@contextmanager
+def get_filehandle(filename: str):
+    """Get filehandle from file, possibly gzipped."""
+    if filename.endswith('.gz'):
+        with gzip.open(filename, mode='rt') as fh:
+            yield fh
+    else:
+        with open(filename, 'r', encoding='utf-8') as fh:
+            yield fh
 
 
 def get_last_sentence(data: str) -> int:
@@ -163,10 +199,22 @@ def get_last_sentence(data: str) -> int:
     return sentencecount
 
 
+def serialize_feats(feats: Dict) -> str:
+    """Serialize feats to string."""
+    fields = []
+    if not feats:
+        return '_'
+    for k in sorted(feats.keys()):
+        v = feats[k]
+        fields.append(f'{k}={v}')
+    return '|'.join(fields)
+
+
 def conllu_freq_reader(path: str,
                        checker: Optional[Callable] = None,
                        origcase: Optional[bool] = False,
                        sentencecount: Optional[int] = None,
+                       singlefile: Optional[bool] = False,
                        counts: Optional[Freqs] = None) -> Freqs:
     """Get frequencies from conllu files."""
     if counts:
@@ -189,24 +237,23 @@ def conllu_freq_reader(path: str,
         'Clitic': 'clitic'
     }
 
-    # print(freqs)
-    # print(path)
     for _t in tqdm(conllu_file_reader(path, checker,
-                                      sentencecount=sentencecount)):
+                                      sentencecount=sentencecount),
+                   disable=not singlefile):
         _idx, sentence = _t
         # if _idx > count:
         #    break
         pos = 0
         for token in sentence:  # type: ignore
             pos += 1
-            # pyconll Token fields
-            form = token.form
-            lemma = token.lemma
-            upos = token.upos
-            feats = token.feats
-            # print(form, lemma, upos, feats)
+            form = token['form']
+            lemma = token['lemma']
+            upos = token['upos']
+            feats = token['feats']
             # Convert feats back to string for indexing
-            origfeats = token.conll().split('\t')[5]
+            origfeats = serialize_feats(feats)
+            # print(form, lemma, upos, feats, origfeats)
+            # origfeats = token.conll().split('\t')[5]
 
             _corefeats = {}
             corefeats = None
@@ -214,10 +261,11 @@ def conllu_freq_reader(path: str,
                 for feat in feats.keys():
                     if feat in featmap:
                         _corefeats[feat] = feats[feat]
-                featlist = []
-                for feat in sorted(_corefeats.keys()):
-                    featlist.append('='.join([feat, ','.join(_corefeats[feat])]))
-                corefeats = '|'.join(featlist)
+                corefeats = serialize_feats(_corefeats)
+                # featlist = []
+                # for feat in sorted(_corefeats.keys()):
+                #     featlist.append('='.join([feat, ','.join(_corefeats[feat])]))
+                # corefeats = '|'.join(featlist)
                 # print(origfeats, '=>', corefeats)
 
             if ',' in origfeats:
@@ -258,6 +306,7 @@ def conllu_reader(path: str,
         freqs = conllu_freq_reader(path,
                                    origcase=origcase,
                                    sentencecount=sentencecount,
+                                   singlefile=True,
                                    checker=checker)
     else:
         idx = 0
@@ -290,6 +339,7 @@ def conllu_reader(path: str,
                                            checker=checker)
                 if filecount and idx > filecount:
                     break
-            except Exception:
-                pass
+            except Exception as e:
+                print(f'Error with file {fn}: {e}')
+
     return freqs

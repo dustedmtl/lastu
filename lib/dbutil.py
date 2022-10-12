@@ -57,9 +57,13 @@ def write_freqs_to_db(connection: sqlite3.Connection,
         recvals = [lemma, word, pos, freq, len(word), feats]
         featdict = freqs[1][key]
         for feat in sorted(featmap.keys()):
-            featval = None
-            if feat in featdict:
-                featval = ','.join(featdict[feat])
+            featval = '_'
+            # print(key, freq, featdict)
+            if isinstance(featdict, dict) and feat in featdict:
+                # print(feat, featdict[feat])
+                featval = featdict[feat]
+            # print(key, freq, featdict, featval)
+            # print(recvals)
             recvals.append(featval)
         # print(recvals)
         values.append(recvals)
