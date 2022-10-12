@@ -22,8 +22,8 @@ def write_freqs_to_db(connection: sqlite3.Connection,
                       freqs: Freqs):
     """Write frequencies to SQLite database."""
     cursor = connection.cursor()
-    cursor.execute('PRAGMA journal_mode=wal')
-    print('Cursor mode:', cursor.fetchall())
+    # cursor.execute('PRAGMA journal_mode=wal')
+    # print('Cursor mode:', cursor.fetchall())
 
     template = "INSERT INTO %s (%s) values (%s)"
 
