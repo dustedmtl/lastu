@@ -36,32 +36,3 @@ pyconll
 # https://github.com/scikit-learn/scikit-learn/issues/19137
 # scipy
 # sklearn
-
-# transformers, huggingface
-# sentencepiece
-# tokenizers
-# torch
-# torchvision
-# datasets
-# huggingface-hub
-# sentence-transformers
-
-# neural parser
-# ufal.udpipe
-# OpenNMT-py>=1.2.0
-# diaparser
-# pytorch_lightning
-# torchmetrics
-
-# database
-# lmdb
-# pysolr
-# zstandard
-# lz4
-# psutil
-# ply
-# pyjsonnlp
-
-# edit distance
-# textdistance[extras]
-
