@@ -1,8 +1,6 @@
 numpy
 nltk
 pandas
-# PyYAML
-# pyyaml
 tqdm
 
 # notebook stuff
@@ -29,6 +27,7 @@ pyproject-flake8
 
 # corpora
 pyconll
+conllu
 
 # scientific
 # scipy/sklearn: comment if not on M1 Mac, or use conda
