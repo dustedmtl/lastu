@@ -78,6 +78,7 @@ if not exists(args.dbfile):
 trashfh = None
 
 if args.trashfile:
+    print(f'Storing discarded strings to file {args.trashfile}')
     trashfh = open(args.trashfile, 'w', encoding='utf-8')
 
 data = corpus.conllu_reader(args.input,
