@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Convert text data to conllu format."""
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, consider-using-with
 
 # import os
 # from os.path import isdir, isfile, exists
@@ -36,10 +36,6 @@ parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help='Verbose')
 
-parser.add_argument('-o', '--origcase',
-                    action='store_true',
-                    help='Original case')
-
 parser.add_argument('-c', '--count',
                     type=int,
                     help='File count')
@@ -47,6 +43,14 @@ parser.add_argument('-c', '--count',
 parser.add_argument('-s', '--sentencecount',
                     type=int,
                     help='Sentence count')
+
+parser.add_argument('-t', '--trashfile',
+                    type=str,
+                    help='Trash file')
+
+parser.add_argument('-o', '--origcase',
+                    action='store_true',
+                    help='Original case')
 
 args = parser.parse_args()
 
@@ -71,14 +75,19 @@ if not exists(args.dbfile):
 
 # FIXME: check that dbfile is a SQLite database?
 
+trashfh = None
+
+if args.trashfile:
+    trashfh = open(args.trashfile, 'w', encoding='utf-8')
+
 data = corpus.conllu_reader(args.input,
                             verbose=args.verbose,
                             origcase=args.origcase,
                             sentencecount=args.sentencecount,
+                            trashfile=trashfh,
                             filecount=args.count)
-# print(len(data))
-
-# FIXME: empty SQLite databse file?
+if trashfh:
+    trashfh.close()
 
 print(f'Storing {len(data[0])} unigram frequencies to database {args.dbfile}')
 if not sqlcon:
