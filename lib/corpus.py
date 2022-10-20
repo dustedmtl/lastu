@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name, line-too-long
 # too-many-locals, too-many-arguments
 
-from typing import List, Dict, Tuple, Optional, Iterable, Callable
+from typing import List, Dict, Tuple, Optional, Iterable, Callable, TextIO, Iterator
 from os import walk
 from os.path import isfile, join, basename, getsize
 import re
@@ -21,9 +21,33 @@ from conllu.parser import (
 from tqdm.autonotebook import tqdm
 from .mytypes import Freqs
 
+initchars = '^'
+alpha = '.*?[abcdefghijklmnopqrstuvwxyzåäöé].*?'
+alphanum = '[abcdefghijklmnopqrstuvwxyzåäöé0-9]'
+alphanumplus = '[abcdefghijklmnopqrstuvwxyzåäöé0-9\-\.\#]'
+midchars = '[\'\.\:\-\_\#abcdefghijklmnopqrstuvwxyzåäöé0-9]*'
+endchars = '$'
+hasalpha = re.compile(alpha)
+validregex = re.compile(''.join([initchars, alphanum, midchars, alphanumplus, endchars]))
+alphanumregex = re.compile(''.join([initchars, alphanumplus, '+', endchars]))
 
-# import nltk
-# nltk.download('punkt')
+
+def semi_word(word: str) -> bool:
+    """Check if word is semi-valid."""
+    if not valid_word(word):
+        return False
+    if re.match(alphanumregex, word):
+        return False
+    return True
+
+
+def valid_word(word: str) -> bool:
+    """Check if word is valid."""
+    if len(word) < 2:
+        return False
+    if re.match(validregex, word):
+        return True
+    return False
 
 
 def conllu_file_reader(cfile: str,
@@ -33,35 +57,18 @@ def conllu_file_reader(cfile: str,
     """Parse conllu file."""
     shortfn = basename(cfile)
 
-#    fastcheck = False
-#    if checker:
-#        # Inspect the checker closure for properties
-#        try:
-#            varrs = checker.__code__.co_freevars
-#            idx = varrs.index('fastcheck')
-#            if idx != -1:
-#                fastcheck = checker.__closure__[idx].cell_contents  # type: ignore
-#        except Exception:
-#            pass
-
-#        if fastcheck:
-#            has_file = checker(shortfn, 0)
-#            if has_file:
-#                # print("Fast check, don't read conllu file contents for %s" % cfile)
-#                yield 0, None
-
     if cfile.endswith('.vrt') or cfile.endswith('.vrt.gz'):
         for idx, tokenlist in conllu_vrt_file_reader(cfile):
             yield idx, tokenlist
     else:
-        maxsize = 10**8
-        filesize = getsize(cfile)
+        if checker:
+            maxsize = 10**8
+            filesize = getsize(cfile)
 
-        if filesize < maxsize:
-            with open(cfile, 'r', encoding="utf-8") as fileh:
-                data = fileh.read()
-                maxcount = get_last_sentence(data)
-                if checker:
+            if filesize < maxsize:
+                with open(cfile, 'r', encoding="utf-8") as fileh:
+                    data = fileh.read()
+                    maxcount = get_last_sentence(data)
                     if checker(shortfn, maxcount):
                         yield 0, None
 
@@ -196,6 +203,15 @@ def get_filehandle(filename: str):
             yield fh
 
 
+@contextmanager
+def get_trashfh(filename: Optional[str]) -> Iterator[Optional[TextIO]]:
+    """Get trash filehandle from file."""
+    if filename and not isfile(filename):
+        with open(filename, 'w', encoding='utf-8') as fh:
+            yield fh
+    yield None
+
+
 def get_last_sentence(data: str) -> int:
     """Get id of last sentence in conllu file."""
     sentids = re.findall(r'# sent_id = (\d+)', data, flags=re.MULTILINE)
@@ -216,9 +232,9 @@ def serialize_feats(feats: Dict) -> str:
 
 
 def conllu_freq_reader(path: str,
-                       # checker: Optional[Callable] = None,
                        origcase: Optional[bool] = False,
                        sentencecount: Optional[int] = None,
+                       trashfile: Optional[TextIO] = None,
                        singlefile: Optional[bool] = False,
                        counts: Optional[Freqs] = None) -> Freqs:
     """Get frequencies from conllu files."""
@@ -259,6 +275,16 @@ def conllu_freq_reader(path: str,
             # print(form, lemma, upos, feats, origfeats)
             # origfeats = token.conll().split('\t')[5]
 
+            if not valid_word(form.lower()) or not valid_word(lemma.lower()):
+                if len(form) > 1 and len(lemma) > 1:
+                    # print(form, lemma)
+                    if trashfile:
+                        trashfile.write('\t'.join([path, str(_idx), form, lemma]) + '\n')
+                continue
+#            else:
+#                if semi_word(form) or semi_word(lemma):
+#                    print('Semi', form, lemma)
+
             _corefeats = {}
             corefeats = None
             if feats:
@@ -296,9 +322,9 @@ def conllu_freq_reader(path: str,
 
 def conllu_reader(path: str,
                   verbose: bool = False,
-                  # checker: Optional[Callable] = None,
                   origcase: Optional[bool] = False,
                   sentencecount: Optional[int] = None,
+                  trashfile: Optional[TextIO] = None,
                   filecount: Optional[int] = None) -> Optional[Freqs]:
     """Read conllu files recursively."""
     print(f"Reading input files: {path}")
@@ -310,6 +336,7 @@ def conllu_reader(path: str,
         freqs = conllu_freq_reader(path,
                                    origcase=origcase,
                                    sentencecount=sentencecount,
+                                   trashfile=trashfile,
                                    singlefile=True)
     else:
         idx = 0
@@ -338,6 +365,7 @@ def conllu_reader(path: str,
                 freqs = conllu_freq_reader(fnpath,
                                            origcase=origcase,
                                            sentencecount=sentencecount,
+                                           trashfile=trashfile,
                                            counts=freqs)
                 if filecount and idx > filecount:
                     break
