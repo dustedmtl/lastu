@@ -21,3 +21,5 @@ CREATE TABLE IF NOT EXISTS wordbigramfreqs (
        frequency INTEGER NOT NULL,
        PRIMARY KEY (form)
 );
+
+CREATE INDEX IF NOT EXISTS bigfreq ON wordbigramfreqs(frequency);
