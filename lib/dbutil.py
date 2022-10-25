@@ -193,34 +193,56 @@ def parse_query(query: str) -> List[List[str]]:
                'derivation', 'clitic',  # these my be complex
                'compound'  # special handling
                ]
+    boolkeys = ['compound']
 
     stroperators = ['=', '!=', 'like', 'in']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
     for part in parts:
         try:
-            key, comparator, value = part.split()
-            # print(f'{key}; {comparator}; {value}')
-            value = value.strip("'").strip('"')
+            vals = part.split()
+            bols = [w for w in vals if w in boolkeys]
 
             isok = False
 
-            if key in numkeys:
-                if comparator in numoperators:
-                    # print(f'Num ok: {key} {comparator}')
-                    if value.isnumeric():
+            if bols:
+                if bols[0] == 'compound':
+                    key = 'lemma'
+                    value = '%#%'
+                    if len(vals) > 1:
+                        if vals[0] == 'not':
+                            comparator = 'not like'
+                            isok = True
+                        else:
+                            print(f"Invalid query part: {part}")
+                    else:
+                        comparator = 'like'
+                        isok = True
+                else:
+                    print(f"Invalid query part: {part}")
+
+            else:
+                key, comparator, value = vals
+                value = value.strip("'").strip('"')
+
+                isok = False
+
+                if key in numkeys:
+                    if comparator in numoperators:
+                        # print(f'Num ok: {key} {comparator}')
+                        if value.isnumeric():
+                            isok = True
+                        else:
+                            print(f"Query value for key '{key}' not ok: '{value}' is not a number")
+                    else:
+                        print(f"Query comparator for '{key}' not ok: '{comparator}'")
+                elif key in strkeys:
+                    if comparator in stroperators:
                         isok = True
                     else:
-                        print(f"Query value for key '{key}' not ok: '{value}' is not a number")
+                        print(f"Query comparator for '{key}' not ok: '{comparator}'")
                 else:
-                    print(f"Query comparator for '{key}' not ok: '{comparator}'")
-            elif key in strkeys:
-                if comparator in stroperators:
-                    isok = True
-                else:
-                    print(f"Query comparator for '{key}' not ok: '{comparator}'")
-            else:
-                print(f"Query key '{key}' not ok")
+                    print(f"Query key '{key}' not ok")
 
             if isok:
                 kvparts.append([key, comparator, value])
