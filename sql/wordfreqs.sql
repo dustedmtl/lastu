@@ -28,16 +28,16 @@ CREATE INDEX IF NOT EXISTS wperson ON wordfreqs(person);
 CREATE INDEX IF NOT EXISTS wverbform ON wordfreqs(verbform);
 CREATE INDEX IF NOT EXISTS wclitic ON wordfreqs(clitic);
 
-CREATE TABLE IF NOT EXISTS wordfeats (
-       lemma VARCHAR(256) NOT NULL,
-       form VARCHAR(256) NOT NULL,
-       pos VARCHAR(16) NOT NULL,
-       frequency INTEGER NOT NULL,
-       feats VARCHAR(256) NOT NULL,
-       PRIMARY KEY (lemma, form, pos, feats)
-);
+--CREATE TABLE IF NOT EXISTS wordfeats (
+--       lemma VARCHAR(256) NOT NULL,
+--       form VARCHAR(256) NOT NULL,
+--       pos VARCHAR(16) NOT NULL,
+--       frequency INTEGER NOT NULL,
+--       feats VARCHAR(256) NOT NULL,
+--       PRIMARY KEY (lemma, form, pos, feats)
+--);
 
-CREATE INDEX IF NOT EXISTS w2pos ON wordfeats(pos);
-CREATE INDEX IF NOT EXISTS w2lemma ON wordfeats(lemma, form, pos);
-CREATE INDEX IF NOT EXISTS w2form ON wordfeats(form);
-CREATE INDEX IF NOT EXISTS w2freq ON wordfeats(frequency);
+--CREATE INDEX IF NOT EXISTS w2pos ON wordfeats(pos);
+--CREATE INDEX IF NOT EXISTS w2lemma ON wordfeats(lemma, form, pos);
+--CREATE INDEX IF NOT EXISTS w2form ON wordfeats(form);
+--CREATE INDEX IF NOT EXISTS w2freq ON wordfeats(frequency);
