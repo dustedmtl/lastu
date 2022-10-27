@@ -12,6 +12,7 @@ from sqlite3 import IntegrityError
 import pandas as pd
 import numpy as np
 from tqdm.autonotebook import tqdm
+from tabulate import tabulate
 from .mytypes import Freqs
 
 
@@ -257,18 +258,25 @@ def parse_query(query: str) -> List[List[str]]:
 
 def get_frequency_dataframe(connection: sqlite3.Connection,
                             rowlimit: int = 10000,
-                            orderby: str = 'frequency',
+                            orderby: str = 'w.frequency',
                             query: Optional[str] = None,
-                            addgrams: bool = True,
+                            grams: bool = False,
                             aggregate: bool = True) -> pd.DataFrame:
     """Get frequencies as dataframe."""
     table = 'wordfreqs'
     # FIXME: validate rowlimit, orderby
+    # FIXME: make this a class
 
     wherestr = ""
     args = []
 
     gfields = defaultdict(set)  # type: ignore
+
+    indexorder = ['w.form', 'w.frequency',
+                  'w.nouncase', 'w.nnumber', 'w.derivation',
+                  'w.clitic', 'w.pos', 'w.lemma']
+    indexers = []
+    notlikeindexers = []
 
     if query:
         queryparts = parse_query(query)
@@ -280,15 +288,21 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
             if k.endswith('freq'):
                 usetable = k[0]
                 k = 'frequency'
+            fullcol = f'{usetable}.{k}'
+            if fullcol in indexorder:
+                indexers.append(fullcol)
+                if c != 'like':
+                    notlikeindexers.append(fullcol)
             whereparts.append(f'{usetable}.{k} {c} ?')
+            args.append(v)
             gflist = gfields.get(k, set())
             gflist.add(v)
             gfields[k] = gflist
-            args.append(v)
+
         # print(whereparts)
-        wherestr = "where " + ' and '.join(whereparts)
-        print(wherestr)
-        print(args)
+        if len(whereparts) > 0:
+            wherestr = "where " + ' and '.join(whereparts)
+        print(wherestr, args)
 
     groupby = ""
     # dropcols = []
@@ -305,31 +319,50 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
                 groupby += ", w.nouncase, w.nnumber"
                 # dropcols.extend(['verbform', 'tense'])
 
-    # SELECT w.*, i.frequency as initgramfreq, f.frequency as fingramfreq, b.frequency as bigramfreq FROM wordfreqs w
-    # LEFT JOIN initgramfreqs i ON i.form = substring(w.form, 1, 3)
-    # LEFT JOIN fingramfreqs f ON f.form = substring(w.form, -3, 3)
-    # LEFT join wordbigramfreqs b on b.form = w.form
-    # where w.lemma = 'voi' and w.frequency > 10
-    # GROUP BY w.lemma, w.form, w.pos, w.nouncase, w.nnumber ORDER BY w.frequency DESC LIMIT 10000;
-
     addselects = ""
     addjoins = ""
 
+    print(f'Indexers: {indexers}')
+    print(f'Not LIKE indexers: {notlikeindexers}')
+    indexfields = {'w.frequency': 'wfreq', 'w.form': 'wform',
+                   'w.len': 'wlen', 'w.lemma': 'wlemma',
+                   'w.derivation': 'wder', 'w.clitic': 'wclitic'}
+    windexedby = ""
+    # At least one column needs to be indexed with a proper index
+    if len(notlikeindexers) == 0:
+        for indexer in indexorder:
+            if indexer in indexers and indexer in indexfields:
+                windexedby = f"indexed by {indexfields[indexer]}"
+                break
+        if len(windexedby) == 0:
+            windexedby = "indexed by wform"
+        print(f'Force indexer other than autoindex: {windexedby}')
+
     # FIXME: second aggregation: just lemma, form and PoS
 
-    if addgrams:
+    if grams:
         aliases = ['i', 'f', 'b']
         names = ['initgramfreq', 'fingramfreq', 'bigramfreq']
         tables = ['initgramfreqs', 'fingramfreqs', 'wordbigramfreqs']
-        comps = ['substring(w.form, 1, 3)', 'substring(w.form, -3, 3)', 'w.form']
+        comps = ['substr(w.form, 1, 3)', 'substr(w.form, -3, 3)', 'w.form']
 
         for alias, aname, atable, wordcomp in zip(aliases, names, tables, comps):
             # print(alias, aname, atable, wordcomp)
             addselects += f', {alias}.frequency as {aname}'
             addjoins += f' LEFT JOIN {atable} {alias} ON {alias}.form = {wordcomp}'
 
-    sqlstr = f'SELECT w.*{addselects} FROM {table} w{addjoins} {wherestr} {groupby} ORDER BY {orderby} DESC LIMIT {rowlimit}'
+    # sqlstr = f'SELECT w.*{addselects} FROM {table} w{addjoins} {wherestr} {groupby} ORDER BY {orderby} DESC LIMIT {rowlimit}'
+    sqlstr = f'SELECT w.*{addselects} FROM {table} w {windexedby} {addjoins} {wherestr} {groupby} ORDER BY {orderby} DESC LIMIT {rowlimit}'
     print(sqlstr)
+    print(args)
+
+    explainer = pd.read_sql_query('explain query plan ' + sqlstr,
+                                  connection,
+                                  params=args)
+    print()
+    print('Query plan:')
+    print(tabulate(explainer, headers=explainer.columns))
+
     sql_query = pd.read_sql_query(sqlstr,
                                   connection,
                                   params=args)
