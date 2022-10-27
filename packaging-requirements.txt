@@ -1,0 +1,13 @@
+
+# Base
+pandas
+tqdm
+
+# UI
+pyqt6
+
+# query debug
+tabulate
+
+# building
+pyinstaller
