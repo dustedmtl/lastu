@@ -25,6 +25,15 @@ flake8==4.0.1
 flake8-docstrings
 pyproject-flake8
 
+# UI
+pyqt6
+
+# query debug
+tabulate
+
+# building
+# pyinstaller
+
 # corpora
 pyconll
 conllu
