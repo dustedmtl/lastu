@@ -1,8 +1,9 @@
-#
-# Python GUIs Copyright ©2014-2022 Martin Fitzpatrick
-# https://www.pythonguis.com/tutorials/pyqt6-qtableview-modelviews-numpy-pandas/
+"""UI for wordmill application."""
+
 # Copyright (C) 2022 University of Turku
-# License: CC-BY-NC-SA
+# License: CC-BY-4.0
+#
+# Starter code based on https://www.pythonguis.com/tutorials/pyqt6-qtableview-modelviews-numpy-pandas/
 
 # pylint: disable=invalid-name
 
@@ -11,12 +12,11 @@ from os.path import exists, getsize, dirname, realpath, join, split
 from pathlib import Path
 import time
 import logging
-
 import pandas as pd
 
 from PyQt6.QtWidgets import (
     QTableView, QApplication, QMainWindow, QWidget,
-    QVBoxLayout, QHBoxLayout, QGridLayout,
+    QGridLayout,
     QAbstractScrollArea,
     QLineEdit, QPushButton, QLabel
 )
@@ -33,24 +33,26 @@ logger.addHandler(handler)
 
 class TableModel(QAbstractTableModel):
     def __init__(self, data: pd.DataFrame):
-        super(TableModel, self).__init__()
+        super().__init__()
+        # super(TableModel, self).__init__()
         self._data = data
 
-    def data(self, index, role):
+    def data(self, index: QModelIndex, role: int = None):
         if role == Qt.ItemDataRole.DisplayRole:
             # print(index.row(), index.column(), self._data.iloc[index.row()][index.column()])
             return str(self._data.iloc[index.row()][index.column()])
         return None
 
-    def rowCount(self, _index):
+    def rowCount(self, _parent: QModelIndex = None):
         # The length of the outer list.
         return len(self._data)
 
-    def columnCount(self, _index):
+    def columnCount(self, _parent: QModelIndex = None):
         # Return number of columns
         return len(self._data.columns)
 
-    def headerData(self, section, orientation, role):
+    def headerData(self, section: int,
+                   orientation: Qt.Orientation, role: int = None):
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return str(self._data.columns[section])
@@ -74,7 +76,8 @@ def get_macos_path(currentdir: str):
 class MainWindow(QMainWindow):
 
     def __init__(self, dbconnection, df=None):
-        super(MainWindow, self).__init__()
+        super().__init__()
+        # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
 
         self.connection = dbconnection
@@ -98,6 +101,8 @@ class MainWindow(QMainWindow):
         self.table = QTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setAlternatingRowColors(True)
+
+        # cell width is based on their contents
         self.table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         # view.setSelectionBehavior(QTableView.SelectRows)
 
@@ -144,16 +149,17 @@ class MainWindow(QMainWindow):
         text = self.querybox.text()
         return text
 
-    def dbquery(self, text):
+    def dbquery(self, text: str):
         try:
             newdf = dbutil.get_frequency_dataframe(self.connection, query=text, grams=True)
             return newdf
         except Exception as e:
             logger.error("Issue with query %s: %s", query, e)
-            self.label.setText(f'Issue with query {text}')
+            self.errorfield.setText(f'Issue with query {text}')
             return None
 
-    def setData(self, df):
+#    def setData(self, df: Optional[pd.DataFrame]):
+    def setData(self, df: pd.DataFrame = None):
         if df is None:
             df = pd.DataFrame()
         self.model = TableModel(df)
