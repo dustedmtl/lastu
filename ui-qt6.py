@@ -27,7 +27,7 @@ from lib import dbutil
 homedir = Path.home()
 logger = logging.getLogger('ui-qt6')
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(join(homedir, 'ui-qt6.log'))
+handler = logging.FileHandler(join(homedir, 'ui-qt6.txt'))
 logger.addHandler(handler)
 
 
