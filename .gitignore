@@ -2,6 +2,7 @@ data
 corpora
 .env
 venv
+packenv
 .DS_Store
 
 # Jupyter
