@@ -95,9 +95,6 @@ class MainWindow(QMainWindow):
         self.statusfield = QLabel()
         self.layout.addWidget(self.statusfield, 1, 0, 1, 2)
 
-        self.errorfield = QLabel()
-        self.layout.addWidget(self.errorfield, 1, 0, 1, 2)
-
         self.table = QTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setAlternatingRowColors(True)
@@ -133,17 +130,19 @@ class MainWindow(QMainWindow):
 
         start = time.perf_counter()
         querydf = self.dbquery(querytext)
-        self.setData(querydf)
-        end = time.perf_counter()
 
-        self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {end - start:.1f} seconds')
+        if querydf is not None:
+            self.setData(querydf)
+            end = time.perf_counter()
 
-        sizehint = self.layout.sizeHint()
-        width = sizehint.width()
-        print(f'Setting window width to {width}')
-        # self.setFixedSize(self.layout.sizeHint())
-        self.setFixedWidth(width+10)
-        # self.setMinimumSize(width, 0)
+            self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {end - start:.1f} seconds')
+
+            sizehint = self.layout.sizeHint()
+            width = sizehint.width()
+            print(f'Setting window width to {width}')
+            # self.setFixedSize(self.layout.sizeHint())
+            self.setFixedWidth(width+10)
+            # self.setMinimumSize(width, 0)
 
     def getQuery(self):
         text = self.querybox.text()
@@ -151,11 +150,14 @@ class MainWindow(QMainWindow):
 
     def dbquery(self, text: str):
         try:
-            newdf = dbutil.get_frequency_dataframe(self.connection, query=text, grams=True)
+            newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.connection, query=text, grams=True)
+            print(querystatus, querymessage)
+            if querystatus < 0:
+                raise Exception(querymessage)
             return newdf
         except Exception as e:
             logger.error("Issue with query %s: %s", query, e)
-            self.errorfield.setText(f'Issue with query {text}')
+            self.statusfield.setText(f'Issue with query {text}: {e}')
             return None
 
 #    def setData(self, df: Optional[pd.DataFrame]):
