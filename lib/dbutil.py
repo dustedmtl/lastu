@@ -251,7 +251,7 @@ def parse_query(query: str) -> List[List[str]]:
             # FIXME: derivation
             # FIXME: multiple values (?)
         except Exception as e:
-            print(e)
+            print(f"Invalid query part {part}: {e}")
 
     return kvparts
 
@@ -261,7 +261,7 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
                             orderby: str = 'w.frequency',
                             query: Optional[str] = None,
                             grams: bool = False,
-                            aggregate: bool = True) -> pd.DataFrame:
+                            aggregate: bool = True) -> Tuple[pd.DataFrame, int, str]:
     """Get frequencies as dataframe."""
     table = 'wordfreqs'
     # FIXME: validate rowlimit, orderby
@@ -299,10 +299,12 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
             gflist.add(v)
             gfields[k] = gflist
 
-        # print(whereparts)
         if len(whereparts) > 0:
             wherestr = "where " + ' and '.join(whereparts)
         print(wherestr, args)
+
+    if len(wherestr) == 0:
+        return pd.DataFrame(), -1, 'No valid query string'
 
     groupby = ""
     # dropcols = []
@@ -363,10 +365,13 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
     print('Query plan:')
     print(tabulate(explainer, headers=explainer.columns))
 
+    querystatus = 0
+    querymessage = 'success'
+
     sql_query = pd.read_sql_query(sqlstr,
                                   connection,
                                   params=args)
 
     df = pd.DataFrame(sql_query)
 
-    return df
+    return df, querystatus, querymessage
