@@ -1,9 +1,9 @@
 """Utilities for reading and writing sqlite databases."""
 
-# pylint: disable=invalid-name, line-too-long, too-many-locals, unnecessary-comprehension
+# pylint: disable=invalid-name, line-too-long
 
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union, Dict
 from collections import Counter, defaultdict
 # from os.path import basename
 # from io import StringIO
@@ -260,74 +260,67 @@ def parse_query(query: str) -> List[List[str]]:
     return kvparts
 
 
-def get_frequency_dataframe(connection: sqlite3.Connection,
-                            rowlimit: int = 10000,
-                            orderby: str = 'w.frequency',
-                            query: Optional[str] = None,
-                            grams: bool = False,
-                            aggregate: bool = True) -> Tuple[pd.DataFrame, int, str]:
-    """Get frequencies as dataframe."""
-    table = 'wordfreqs'
-    # FIXME: validate rowlimit, orderby
-    # FIXME: make this a class
+indexorder = ['w.form', 'w.frequency',
+              'w.nouncase', 'w.nnumber', 'w.derivation',
+              'w.clitic', 'w.pos', 'w.lemma']
 
+
+def parse_querystring(querystr: str) -> Tuple[str, List, List, List]:
+    """Parse the query string."""
+    queryparts = parse_query(querystr)
+    # print(queryparts)
+
+    whereparts = []
     wherestr = ""
     args = []
 
     gfields = defaultdict(set)  # type: ignore
 
-    indexorder = ['w.form', 'w.frequency',
-                  'w.nouncase', 'w.nnumber', 'w.derivation',
-                  'w.clitic', 'w.pos', 'w.lemma']
     indexers = []
     notlikeindexers = []
 
-    if query:
-        queryparts = parse_query(query)
-        # print(queryparts)
-        whereparts = []
-        for andpart in queryparts:
-            k, c, v = andpart
-            usetable = 'w'
-            if k.endswith('freq'):
-                usetable = k[0]
-                k = 'frequency'
-            fullcol = f'{usetable}.{k}'
-            if fullcol in indexorder:
-                indexers.append(fullcol)
-                if c != 'like':
-                    notlikeindexers.append(fullcol)
-            whereparts.append(f'{usetable}.{k} {c} ?')
-            args.append(v)
-            gflist = gfields.get(k, set())
-            gflist.add(v)
-            gfields[k] = gflist
+    for andpart in queryparts:
+        k, c, v = andpart
+        usetable = 'w'
+        if k.endswith('freq'):
+            usetable = k[0]
+            k = 'frequency'
+        fullcol = f'{usetable}.{k}'
+        if fullcol in indexorder:
+            indexers.append(fullcol)
+            if c != 'like':
+                notlikeindexers.append(fullcol)
+        whereparts.append(f'{usetable}.{k} {c} ?')
+        args.append(v)
+        gflist = gfields.get(k, set())
+        gflist.add(v)
+        gfields[k] = gflist
 
-        if len(whereparts) > 0:
-            wherestr = "where " + ' and '.join(whereparts)
-        print(wherestr, args)
+    if len(whereparts) > 0:
+        wherestr = "WHERE " + ' AND '.join(whereparts)
 
-    if len(wherestr) == 0:
-        return pd.DataFrame(), -1, 'No valid query string'
+    return wherestr, args, indexers, notlikeindexers
 
-    groupby = ""
-    # dropcols = []
-    if aggregate:
-        groupby = "GROUP BY w.lemma, w.form, w.pos"
-        if 'pos' in gfields:
-            if 'NOUN' in gfields['pos']:
-                groupby += ", w.nouncase, w.nnumber"
-                # dropcols.extend(['verbform', 'tense'])
-            elif 'VERB' in gfields:
-                groupby += ", w.tense, w.person, w.verbform"
-                # dropcols.extend(['nouncase'])
-            elif 'ADJ' in gfields:
-                groupby += ", w.nouncase, w.nnumber"
-                # dropcols.extend(['verbform', 'tense'])
 
-    addselects = ""
-    addjoins = ""
+def parse_querydict(querydict: Dict) -> Tuple[str, List, List, List]:
+    """Parse query dictionary."""
+    wherestr = ""
+    whereparts = []
+    args = []
+    indexers = set()
 
+    for querypart in querydict.keys():
+        for queryval in querydict[querypart]:
+            indexers.add(querypart)
+            whereparts.append(f'w.{querypart} = ?')
+            args.append(queryval)
+    wherestr = 'WHERE ' + ' OR '.join(whereparts)
+    return wherestr, args, list(indexers), []
+
+
+def get_indexer(indexers: List,
+                notlikeindexers: List) -> str:
+    """Possibly force indexer."""
     print(f'Indexers: {indexers}')
     print(f'Not LIKE indexers: {notlikeindexers}')
     indexfields = {'w.frequency': 'wfreq', 'w.form': 'wform',
@@ -343,8 +336,54 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
         if len(windexedby) == 0:
             windexedby = "indexed by wform"
         print(f'Force indexer other than autoindex: {windexedby}')
+    return windexedby
 
-    # FIXME: second aggregation: just lemma, form and PoS
+
+def get_frequency_dataframe(connection: sqlite3.Connection,
+                            rowlimit: int = 10000,
+                            orderby: str = 'w.frequency',
+                            query: Union[str, Dict] = None,
+                            defaultindex: bool = False,
+                            # aggregate: bool = True,
+                            grams: bool = False) -> Tuple[pd.DataFrame, int, str]:
+    """Get frequencies as dataframe."""
+    table = 'wordfreqs'
+    # FIXME: validate rowlimit, orderby
+    # FIXME: make this a class
+
+    wherestr = ""
+    args = []
+
+    if isinstance(query, str):
+        wherestr, args, indexers, notlikeindexers = parse_querystring(query)
+    elif isinstance(query, dict):
+        defaultindex = True
+        wherestr, args, indexers, notlikeindexers = parse_querydict(query)
+
+    print(wherestr, args)
+
+    if len(wherestr) == 0:
+        return pd.DataFrame(), -1, 'No valid query string'
+
+    groupby = ""
+    # dropcols = []
+    # if aggregate:
+    #    groupby = "GROUP BY w.lemma, w.form, w.pos, w.feats"
+    #    if 'pos' in gfields:
+    #        if 'NOUN' in gfields['pos']:
+    #            groupby += ", w.nouncase, w.nnumber"
+    #            # dropcols.extend(['verbform', 'tense'])
+    #        elif 'VERB' in gfields:
+    #            groupby += ", w.tense, w.person, w.verbform"
+    #            # dropcols.extend(['nouncase'])
+    #        elif 'ADJ' in gfields:
+    #            groupby += ", w.nouncase, w.nnumber"
+    #            # dropcols.extend(['verbform', 'tense'])
+
+    addselects = ""
+    addjoins = ""
+
+    windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers)
 
     if grams:
         aliases = ['i', 'f', 'b']
