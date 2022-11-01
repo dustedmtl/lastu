@@ -9,8 +9,10 @@
 
 import sys
 from os.path import exists, getsize, dirname, realpath, join, split
+from collections import defaultdict
 from pathlib import Path
 import time
+from datetime import datetime
 import logging
 import pandas as pd
 
@@ -18,11 +20,12 @@ from PyQt6.QtWidgets import (
     QTableView, QApplication, QMainWindow, QWidget,
     QGridLayout,
     QAbstractScrollArea,
+    QFileDialog,
     QLineEdit, QPushButton, QLabel
 )
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
 
-from lib import dbutil
+from lib import dbutil, uiutil
 
 homedir = Path.home()
 logger = logging.getLogger('ui-qt6')
@@ -86,14 +89,19 @@ class MainWindow(QMainWindow):
 
         self.querybox = QLineEdit()
         self.querybox.returnPressed.connect(self.enter)
-        self.layout.addWidget(self.querybox, 0, 0)
+        self.layout.addWidget(self.querybox, 0, 0, 1, 1)
 
         button = QPushButton("Query")
         button.clicked.connect(self.setQueryData)
-        self.layout.addWidget(button, 0, 1)
+        self.layout.addWidget(button, 0, 1, 1, 1)
 
         self.statusfield = QLabel()
-        self.layout.addWidget(self.statusfield, 1, 0, 1, 2)
+        # self.layout.addWidget(self.statusfield, 1, 0, 1, 2)
+        self.layout.addWidget(self.statusfield, 1, 0, 1, 1)
+
+        filebutton = QPushButton("File")
+        filebutton.clicked.connect(self.inputFileDialog)
+        self.layout.addWidget(filebutton, 1, 1, 1, 1)
 
         self.table = QTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
@@ -107,10 +115,10 @@ class MainWindow(QMainWindow):
 
         self.setData(df)
 
-        self.layout.addWidget(self.table, 2, 0, 2, 2)
+        self.layout.addWidget(self.table, 2, 0, 1, 2)
 
         self.copyleft = QLabel('Copyright (c) 2022 University of Turku')
-        self.layout.addWidget(self.copyleft)
+        self.layout.addWidget(self.copyleft, 3, 0, 1, 2)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)
         # FIXME: smaller font
 
@@ -124,12 +132,14 @@ class MainWindow(QMainWindow):
         self.setQueryData()
 
     def setQueryData(self):
-        querytext = self.getQuery()
+        querytext = self.querybox.text()
         # FIXME: ensure that the below text shows
         self.statusfield.setText(f'Executing query {querytext}')
+        self.doQuery(querytext)
 
+    def doQuery(self, queryinput):
         start = time.perf_counter()
-        querydf = self.dbquery(querytext)
+        querydf = self.dbquery(queryinput)
 
         if querydf is not None:
             self.setData(querydf)
@@ -144,14 +154,46 @@ class MainWindow(QMainWindow):
             self.setFixedWidth(width+10)
             # self.setMinimumSize(width, 0)
 
-    def getQuery(self):
-        text = self.querybox.text()
-        return text
+    def inputFileDialog(self):
+        fileinput = QFileDialog()
+        fileinput.setFileMode(QFileDialog.FileMode.ExistingFile)
+        fileinput.setNameFilter("Text files (*.txt)")
+        fileinput.setViewMode(QFileDialog.ViewMode.Detail)
+
+        if fileinput.exec():
+            filenames = fileinput.selectedFiles()
+            filename = filenames[0]
+            wordinput = self.get_wordinput(filename)
+            self.statusfield.setText(f'Executing query from input fileOB')
+            self.querybox.setText('')
+            self.doQuery(wordinput)
+
+    def get_wordinput(self, filename):
+        wordinput = defaultdict(list)
+        with open(filename, 'r', encoding='utf-8') as f:
+            for line in f.readlines():
+                try:
+                    if len(line.strip()) == 0:
+                        continue
+                    if line.startswith('#'):
+                        continue
+                    kw, value = line.strip().split('=')
+                    kw = kw.strip()
+                    value = value.strip()
+                    print(f'-{kw}-{value}-')
+                    if kw not in ['lemma', 'form', 'unword']:
+                        print(f'Invalid category: {line}')
+                    else:
+                        wordinput[kw].append(value)
+                except Exception as e:
+                    print(f'Invalid input: {line}', e)
+        return wordinput
+        
 
     def dbquery(self, text: str):
         try:
             newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.connection, query=text, grams=True)
-            print(querystatus, querymessage)
+            # print(querystatus, querymessage)
             if querystatus < 0:
                 raise Exception(querymessage)
             return newdf
@@ -160,7 +202,6 @@ class MainWindow(QMainWindow):
             self.statusfield.setText(f'Issue with query {text}: {e}')
             return None
 
-#    def setData(self, df: Optional[pd.DataFrame]):
     def setData(self, df: pd.DataFrame = None):
         if df is None:
             df = pd.DataFrame()
@@ -171,39 +212,37 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
 
-    basedir1 = dirname(__file__)
-    basedir2 = dirname(realpath(__file__))
-    basedir3 = dirname(sys.argv[0])
-    basedir4 = dirname(sys.executable)
+    logger.info('\nLaunching application at %s', datetime.now())
+    inifile = 'wm2.ini'
+    appconfig, currworkdir = uiutil.get_config(inifile)
+    # print(appconfig, currworkdir)
+    if not appconfig:
+        logger.info("Configuration file '%s' not found", inifile)
+        # FIXME: error window if ini file not found
 
-    logger.debug('basedir1: %s', basedir1)
-    logger.debug('basedir2: %s', basedir2)
-    logger.debug('basedir3: %s', basedir3)
-    logger.debug('basedir4: %s', basedir4)
+    dbdir = uiutil.get_configvar(appconfig, 'input', 'datadir')
+    dbfile = uiutil.get_configvar(appconfig, 'input', 'database')
 
-    # FIXME: detect whether app is frozen or not
-    # FIXME: detect OS -> proper path
-    # FIXME: read database info from ini file
+    if not dbdir:
+        if not currworkdir:
+            logger.error('No data directory found')
+            raise uiutil.ConfigurationError('No data directory found')
+        dbdir = currworkdir
+        logger.info('No data directory specified, using current working directory %s', currworkdir)
+    if not dbfile:
+        dbfile = 's24_c2.db'
 
-    if len(basedir3) > 0:
-        basedir = get_macos_path(basedir3)
-    else:
-        basedir = '.'
-
-    logger.info("basedir: %s", basedir)
-
-    # dbfile = f'{basedir}/data/gutenberg_c1.db'
-    dbfile = f'{basedir}/data/s24_c1.db'
-
-    if not exists(dbfile) or getsize(dbfile) == 0:
-        logger.error("No such file: %s", dbfile)
-        raise FileNotFoundError(dbfile)
+    dbfp = join(dbdir, dbfile)
+    logger.info("Using database file path %s", dbfp)
+    if not exists(dbfp) or getsize(dbfp) == 0:
+        logger.error("No such file: %s", dbfp)
+        raise FileNotFoundError(dbfp)
 
     try:
-        logger.info("Connecting to %s...", dbfile)
-        sqlcon = dbutil.get_connection(dbfile)
+        logger.info("Connecting to %s...", dbfp)
+        sqlcon = dbutil.get_connection(dbfp)
     except Exception as e:
-        logger.error("Couldn't connect to %s: %s", dbfile, e)
+        logger.error("Couldn't connect to %s: %s", dbfp, e)
 
     app = QApplication(sys.argv)
 
