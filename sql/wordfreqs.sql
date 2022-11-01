@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS wordfreqs (
        person VARCHAR(16),
        verbform VARCHAR(16),
        clitic VARCHAR(16),
+       posspers VARCHAR(16),
+       possnum VARCHAR(16),
        PRIMARY KEY (lemma, form, pos, feats)
 );
 
@@ -27,6 +29,8 @@ CREATE INDEX IF NOT EXISTS wtense ON wordfreqs(tense);
 CREATE INDEX IF NOT EXISTS wperson ON wordfreqs(person);
 CREATE INDEX IF NOT EXISTS wverbform ON wordfreqs(verbform);
 CREATE INDEX IF NOT EXISTS wclitic ON wordfreqs(clitic);
+CREATE INDEX IF NOT EXISTS wposspers ON wordfreqs(posspers);
+CREATE INDEX IF NOT EXISTS wpossnum ON wordfreqs(possnum);
 
 --CREATE TABLE IF NOT EXISTS wordfeats (
 --       lemma VARCHAR(256) NOT NULL,
