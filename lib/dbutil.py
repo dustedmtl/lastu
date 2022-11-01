@@ -38,6 +38,8 @@ def write_freqs_to_db(connection: sqlite3.Connection,
         'Tense': 'tense',
         'Person': 'person',
         'VerbForm': 'verbform',
+        'Person[psor]': 'posspers',
+        'Number[psor]': 'possnum',
         'Clitic': 'clitic'
     }
 
@@ -95,13 +97,14 @@ def write_freqs_to_db(connection: sqlite3.Connection,
         recvals = [lemma, word, pos, freq, feats]
         values2.append(recvals)
 
-    try:
-        cursor.executemany(insert_template2, values2)
-        connection.commit()
-    except IntegrityError as e:
-        # this is not ok
-        print('Issue', e)
-        connection.rollback()
+    if len(values2) > 0:
+        try:
+            cursor.executemany(insert_template2, values2)
+            connection.commit()
+        except IntegrityError as e:
+            # this is not ok
+            print('Issue', e)
+            connection.rollback()
 
 
 def get_trigram_freqs(connection: sqlite3.Connection) -> Tuple[Counter, Counter, Counter]:
@@ -191,6 +194,7 @@ def parse_query(query: str) -> List[List[str]]:
     strkeys = ['lemma', 'form', 'pos',
                'nouncase', 'nnumber',
                'tense', 'person', 'verbform',
+               'posspers', 'possnum',
                'derivation', 'clitic',  # these my be complex
                'compound'  # special handling
                ]
