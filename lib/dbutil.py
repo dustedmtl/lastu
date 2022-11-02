@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name, line-too-long
 
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
-from typing import List, Tuple, Optional, Union, Dict
+from typing import List, Tuple, Union, Dict
 from collections import Counter, defaultdict
 # from os.path import basename
 # from io import StringIO
@@ -11,9 +11,13 @@ import sqlite3
 from sqlite3 import IntegrityError
 import pandas as pd
 import numpy as np
+import logging
 from tqdm.autonotebook import tqdm
 from tabulate import tabulate
 from .mytypes import Freqs
+
+logger = logging.getLogger('ui-qt6')
+logger.setLevel(logging.DEBUG)
 
 
 def get_connection(dbfile: str) -> sqlite3.Connection:
@@ -260,9 +264,11 @@ def parse_query(query: str) -> List[List[str]]:
     return kvparts
 
 
-indexorder = ['w.form', 'w.frequency',
-              'w.nouncase', 'w.nnumber', 'w.derivation',
-              'w.clitic', 'w.pos', 'w.lemma']
+indexorder = ['w.form', 'w.lemma', 'w.frequency',
+              'w.nouncase', 'w.nnumber',
+              'w.posspers', 'w.possnum',
+              'w.derivation', 'w.clitic',
+              'w.pos']
 
 
 def parse_querystring(querystr: str) -> Tuple[str, List, List, List]:
@@ -325,7 +331,8 @@ def get_indexer(indexers: List,
     print(f'Not LIKE indexers: {notlikeindexers}')
     indexfields = {'w.frequency': 'wfreq', 'w.form': 'wform',
                    'w.len': 'wlen', 'w.lemma': 'wlemma',
-                   'w.derivation': 'wder', 'w.clitic': 'wclitic'}
+                   'w.derivation': 'wder', 'w.clitic': 'wclitic',
+                   'w.posspers': 'wposspers', 'w.possnum': 'w.possnum'}
     windexedby = ""
     # At least one column needs to be indexed with a proper index
     if len(notlikeindexers) == 0:
@@ -352,7 +359,7 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
     # FIXME: make this a class
 
     wherestr = ""
-    args = []
+    args: List[str] = []
 
     if isinstance(query, str):
         wherestr, args, indexers, notlikeindexers = parse_querystring(query)
@@ -396,7 +403,6 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
             addselects += f', {alias}.frequency as {aname}'
             addjoins += f' LEFT JOIN {atable} {alias} ON {alias}.form = {wordcomp}'
 
-    # sqlstr = f'SELECT w.*{addselects} FROM {table} w{addjoins} {wherestr} {groupby} ORDER BY {orderby} DESC LIMIT {rowlimit}'
     sqlstr = f'SELECT w.*{addselects} FROM {table} w {windexedby} {addjoins} {wherestr} {groupby} ORDER BY {orderby} DESC LIMIT {rowlimit}'
     print(sqlstr)
     print(args)
