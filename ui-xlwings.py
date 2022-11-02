@@ -3,7 +3,6 @@
 # pylint: disable=invalid-name
 
 import xlwings as xw
-import pandas as pd
 
 from lib import dbutil
 

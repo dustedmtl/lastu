@@ -2,7 +2,6 @@
 # pylint: disable=invalid-name
 import os
 import sys
-import pandas as pd
 
 import wx
 import wx.grid
@@ -33,7 +32,7 @@ class DataTable(wx.grid.GridTableBase):
             return self.data.index[row]
         return self.data.iloc[row, col-1]
 
-    def GetColLabelValue(self, col): 
+    def GetColLabelValue(self, col):
         if col == 0:
             return 'Index' if self.data.index.name is None else self.data.index.name
         return self.data.columns[col-1]
@@ -50,12 +49,12 @@ class DataTable(wx.grid.GridTableBase):
 
 class AppFrame(wx.Frame):
     """Application frame."""
+
     def __init__(self, df=None):
-        wx.Frame.__init__(self, None, wx.ID_ANY, "Default title", size=(1200,500))
+        wx.Frame.__init__(self, None, wx.ID_ANY, "Default title", size=(1200, 500))
         self._baseGui(df)
         self.Layout()
         self.Show()
-
 
     def _baseGui(self, df=None):
 
@@ -75,7 +74,6 @@ class AppFrame(wx.Frame):
 
         # gridsizer = wx.BoxSizer(wx.HORIZONTAL)
         # gridsizer.Add(grid, 0, wx.EXPAND)
-
 
     def exit(self, _event):
         self.Destroy()
