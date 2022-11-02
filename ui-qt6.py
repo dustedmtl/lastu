@@ -8,7 +8,7 @@
 # pylint: disable=invalid-name
 
 import sys
-from os.path import exists, getsize, dirname, realpath, join, split
+from os.path import exists, getsize, join, split
 from collections import defaultdict
 from pathlib import Path
 import time
@@ -84,24 +84,28 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("WM2")
 
         self.connection = dbconnection
-
+        self._otherwindows = []
         self.layout = QGridLayout()
+
+        newbutton = QPushButton("New window")
+        newbutton.clicked.connect(self.newWindow)
+        self.layout.addWidget(newbutton, 0, 1, 1, 1)
 
         self.querybox = QLineEdit()
         self.querybox.returnPressed.connect(self.enter)
-        self.layout.addWidget(self.querybox, 0, 0, 1, 1)
+        self.layout.addWidget(self.querybox, 1, 0, 1, 1)
 
         button = QPushButton("Query")
-        button.clicked.connect(self.setQueryData)
-        self.layout.addWidget(button, 0, 1, 1, 1)
+        button.clicked.connect(self.textQuery)
+        self.layout.addWidget(button, 1, 1, 1, 1)
 
         self.statusfield = QLabel()
         # self.layout.addWidget(self.statusfield, 1, 0, 1, 2)
-        self.layout.addWidget(self.statusfield, 1, 0, 1, 1)
+        self.layout.addWidget(self.statusfield, 2, 0, 1, 1)
 
-        filebutton = QPushButton("File")
-        filebutton.clicked.connect(self.inputFileDialog)
-        self.layout.addWidget(filebutton, 1, 1, 1, 1)
+        filebutton = QPushButton("Input")
+        filebutton.clicked.connect(self.inputFileQuery)
+        self.layout.addWidget(filebutton, 2, 1, 1, 1)
 
         self.table = QTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
@@ -115,10 +119,10 @@ class MainWindow(QMainWindow):
 
         self.setData(df)
 
-        self.layout.addWidget(self.table, 2, 0, 1, 2)
+        self.layout.addWidget(self.table, 3, 0, 1, 2)
 
         self.copyleft = QLabel('Copyright (c) 2022 University of Turku')
-        self.layout.addWidget(self.copyleft, 3, 0, 1, 2)
+        self.layout.addWidget(self.copyleft, 4, 0, 1, 2)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)
         # FIXME: smaller font
 
@@ -127,11 +131,21 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
 
+    def newWindow(self):
+        w2 = MainWindow(self.connection)
+        w2.querybox.setText(self.querybox.text())
+        self._otherwindows.append(w2)
+        w2.setData(self.data)
+        sizehint = w2.layout.sizeHint()
+        width = sizehint.width()
+        w2.setFixedWidth(width+10)
+        w2.show()
+
     def enter(self):
         # print('enter pressed')
-        self.setQueryData()
+        self.textQuery()
 
-    def setQueryData(self):
+    def textQuery(self):
         querytext = self.querybox.text()
         # FIXME: ensure that the below text shows
         self.statusfield.setText(f'Executing query {querytext}')
@@ -154,7 +168,7 @@ class MainWindow(QMainWindow):
             self.setFixedWidth(width+10)
             # self.setMinimumSize(width, 0)
 
-    def inputFileDialog(self):
+    def inputFileQuery(self):
         fileinput = QFileDialog()
         fileinput.setFileMode(QFileDialog.FileMode.ExistingFile)
         fileinput.setNameFilter("Text files (*.txt)")
@@ -164,7 +178,7 @@ class MainWindow(QMainWindow):
             filenames = fileinput.selectedFiles()
             filename = filenames[0]
             wordinput = self.get_wordinput(filename)
-            self.statusfield.setText(f'Executing query from input fileOB')
+            self.statusfield.setText(f'Executing query from input file {filename}')
             self.querybox.setText('')
             self.doQuery(wordinput)
 
@@ -188,7 +202,6 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     print(f'Invalid input: {line}', e)
         return wordinput
-        
 
     def dbquery(self, text: str):
         try:
@@ -205,6 +218,7 @@ class MainWindow(QMainWindow):
     def setData(self, df: pd.DataFrame = None):
         if df is None:
             df = pd.DataFrame()
+        self.data = df
         self.model = TableModel(df)
         self.table.setModel(self.model)
         self.table.resizeColumnsToContents()
@@ -236,7 +250,11 @@ if __name__ == "__main__":
     logger.info("Using database file path %s", dbfp)
     if not exists(dbfp) or getsize(dbfp) == 0:
         logger.error("No such file: %s", dbfp)
-        raise FileNotFoundError(dbfp)
+        # last ditch: try current directory (script mode)
+        dbfp = join('data', dbfile)
+        if not exists(dbfp) or getsize(dbfp) == 0:
+            logger.error("No such file: %s", dbfp)
+            raise FileNotFoundError(dbfp)
 
     try:
         logger.info("Connecting to %s...", dbfp)
@@ -254,6 +272,7 @@ if __name__ == "__main__":
 
     # initial query
     w.querybox.setText(query)
-    w.setQueryData()
+    w.textQuery()
     w.show()
+
     app.exec()
