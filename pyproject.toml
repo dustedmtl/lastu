@@ -49,6 +49,11 @@ module = [
        "matplotlib.pyplot",
        "sklearn.metrics",
        "tnparser.pipeline",
+       # UI models,
+       "xlwings",
+       "wx",
+       "wx.grid",
+       "pandasgui",
        ".corpus",
        ".dbutil",
        ".mytypes"
