@@ -15,7 +15,7 @@ plotly
 seaborn
 
 # Finnish NLP
-uralicNLP
+# uralicNLP
 
 # code quality
 typing-extensions
