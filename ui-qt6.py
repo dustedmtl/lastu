@@ -241,7 +241,7 @@ if __name__ == "__main__":
         if not currworkdir:
             logger.error('No data directory found')
             raise uiutil.ConfigurationError('No data directory found')
-        dbdir = currworkdir
+        dbdir = join(currworkdir, 'data')
         logger.info('No data directory specified, using current working directory %s', currworkdir)
     if not dbfile:
         dbfile = 's24_c2.db'
@@ -249,8 +249,7 @@ if __name__ == "__main__":
     dbfp = join(dbdir, dbfile)
     logger.info("Using database file path %s", dbfp)
     if not exists(dbfp) or getsize(dbfp) == 0:
-        logger.error("No such file: %s", dbfp)
-        # last ditch: try current directory (script mode)
+        logger.debug("File not found: %s; trying current directory for finding data file", dbfp)
         dbfp = join('data', dbfile)
         if not exists(dbfp) or getsize(dbfp) == 0:
             logger.error("No such file: %s", dbfp)
