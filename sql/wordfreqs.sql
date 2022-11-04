@@ -14,10 +14,12 @@ CREATE TABLE IF NOT EXISTS wordfreqs (
        clitic VARCHAR(16),
        posspers VARCHAR(16),
        possnum VARCHAR(16),
+       ambform FLOAT NOT NULL,
+       hood INTEGER NOT NULL,
        PRIMARY KEY (lemma, form, pos, feats)
 );
 
-CREATE INDEX IF NOT EXISTS wpos ON wordfreqs(pos);
+-- CREATE INDEX IF NOT EXISTS wpos ON wordfreqs(pos);
 CREATE INDEX IF NOT EXISTS wlemma ON wordfreqs(lemma, form, pos);
 CREATE INDEX IF NOT EXISTS wform ON wordfreqs(form);
 CREATE INDEX IF NOT EXISTS wfreq ON wordfreqs(frequency);
@@ -31,6 +33,8 @@ CREATE INDEX IF NOT EXISTS wverbform ON wordfreqs(verbform);
 CREATE INDEX IF NOT EXISTS wclitic ON wordfreqs(clitic);
 CREATE INDEX IF NOT EXISTS wposspers ON wordfreqs(posspers);
 CREATE INDEX IF NOT EXISTS wpossnum ON wordfreqs(possnum);
+CREATE INDEX IF NOT EXISTS wamb ON wordfreqs(ambform);
+CREATE INDEX IF NOT EXISTS whood ON wordfreqs(hood);
 
 --CREATE TABLE IF NOT EXISTS wordfeats (
 --       lemma VARCHAR(256) NOT NULL,
