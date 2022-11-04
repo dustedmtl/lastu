@@ -20,6 +20,9 @@ logger = logging.getLogger('ui-qt6')
 logger.setLevel(logging.DEBUG)
 
 
+# FIXME: make this a class
+# FIXME: store wordfreqs table column list
+# FIXME: record choices from feature tables
 def get_connection(dbfile: str) -> sqlite3.Connection:
     """Get SQLite connection."""
     sqlcon = sqlite3.connect(dbfile)
@@ -124,6 +127,7 @@ def get_trigram_freqs(connection: sqlite3.Connection) -> Tuple[Counter, Counter,
     res = cursor.execute(sqlstr)
     for row in tqdm(res):
         form, freq = row
+        # FIXME: minimum word length 4
         initrigram = form[:3]
         fintrigram = form[-3:]
         # print(row, initrigram, fintrigram)
@@ -194,6 +198,8 @@ def parse_query(query: str) -> List[List[str]]:
     kvparts = []
 
     numkeys = ['frequency', 'len',
+               'lemmafreq', 'lemmalen', 'amblemma',
+               'hood', 'ambform',
                'initrigramfreq', 'fintrigramfreq', 'bigramfreq']
     strkeys = ['lemma', 'form', 'pos',
                'nouncase', 'nnumber',
@@ -256,19 +262,27 @@ def parse_query(query: str) -> List[List[str]]:
             if isok:
                 kvparts.append([key, comparator, value])
             # FIXME: compound
-            # FIXME: derivation
-            # FIXME: multiple values (?)
+            # FIXME: middle parts
         except Exception as e:
             print(f"Invalid query part {part}: {e}")
 
     return kvparts
 
 
-indexorder = ['w.form', 'w.lemma', 'w.frequency',
-              'w.nouncase', 'w.nnumber',
-              'w.posspers', 'w.possnum',
-              'w.derivation', 'w.clitic',
-              'w.pos']
+indexorder = ['w.form', 'w.lemma',
+              'w.frequency', 'w.len',
+              'w.ambform', 'w.hood',
+              'w.nouncase',
+              'w.derivation',
+              'w.clitic']
+
+# fields that have good indexes
+indexfields = {'w.frequency': 'wfreq', 'w.form': 'wform',
+               'w.len': 'wlen', 'w.lemma': 'wlemma',
+               'w.ambform': 'wambform', 'w.hood': 'whood',
+               'w.nouncase': 'wcase',
+               'w.derivation': 'wder',
+               'w.clitic': 'wclitic'}
 
 
 def parse_querystring(querystr: str) -> Tuple[str, List, List, List]:
@@ -288,18 +302,44 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List]:
     for andpart in queryparts:
         k, c, v = andpart
         usetable = 'w'
-        if k.endswith('freq'):
+        if k in ['lemmafreq', 'lemmalen', 'amblemma']:
+            usetable = 'l'
+        elif k.endswith('freq'):
             usetable = k[0]
             k = 'frequency'
         fullcol = f'{usetable}.{k}'
         if fullcol in indexorder:
-            indexers.append(fullcol)
-            if c != 'like':
+            if c == 'like':
+                # % at the beginning of string of like query: no indexing
+                if not v.startswith('%'):
+                    indexers.append(fullcol)
+            else:
                 notlikeindexers.append(fullcol)
-        whereparts.append(f'{usetable}.{k} {c} ?')
-        args.append(v)
+                indexers.append(fullcol)
+
         gflist = gfields.get(k, set())
-        gflist.add(v)
+        if c == 'in':
+            invals = [w.strip() for w in v.split(',')]
+            if k in ['derivation', 'clitic']:
+                subargs = []
+                whereor = []
+                for val in invals:
+                    subargs.append(f'{val}%')
+                    subargs.append(f'%,{val}%')
+                    whereor.append(f'{usetable}.{k} LIKE ?')
+                    whereor.append(f'{usetable}.{k} LIKE ?')
+                whereparts.append(f"({' OR '.join(whereor)})")
+                args.extend(subargs)
+            else:
+                qmarks = ','.join(['?'] * len(invals))
+                whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
+                args.extend(invals)
+            _ = [gflist.add(_) for _ in invals]
+        else:
+            whereparts.append(f'{usetable}.{k} {c} ?')
+            args.append(v)
+            if c == '=':
+                gflist.add(v)
         gfields[k] = gflist
 
     if len(whereparts) > 0:
@@ -325,14 +365,12 @@ def parse_querydict(querydict: Dict) -> Tuple[str, List, List, List]:
 
 
 def get_indexer(indexers: List,
-                notlikeindexers: List) -> str:
+                notlikeindexers: List,
+                orderby: str) -> str:
     """Possibly force indexer."""
     print(f'Indexers: {indexers}')
     print(f'Not LIKE indexers: {notlikeindexers}')
-    indexfields = {'w.frequency': 'wfreq', 'w.form': 'wform',
-                   'w.len': 'wlen', 'w.lemma': 'wlemma',
-                   'w.derivation': 'wder', 'w.clitic': 'wclitic',
-                   'w.posspers': 'wposspers', 'w.possnum': 'w.possnum'}
+
     windexedby = ""
     # At least one column needs to be indexed with a proper index
     if len(notlikeindexers) == 0:
@@ -341,23 +379,36 @@ def get_indexer(indexers: List,
                 windexedby = f"indexed by {indexfields[indexer]}"
                 break
         if len(windexedby) == 0:
-            windexedby = "indexed by wform"
+            # The best index depends on the sorting. This is by default frequency
+            if orderby in indexfields:
+                windexedby = f"indexed by {indexfields[orderby]}"
         print(f'Force indexer other than autoindex: {windexedby}')
     return windexedby
 
 
+# FIXME: rowlimit to connection class
+# FIXME: lemmas, grams to connection class?
 def get_frequency_dataframe(connection: sqlite3.Connection,
                             rowlimit: int = 10000,
                             orderby: str = 'w.frequency',
                             query: Union[str, Dict] = None,
                             defaultindex: bool = False,
+                            lemmas: bool = False,
                             # aggregate: bool = True,
                             grams: bool = False) -> Tuple[pd.DataFrame, int, str]:
     """Get frequencies as dataframe."""
-    table = 'wordfreqs'
-    # FIXME: validate rowlimit, orderby
-    # FIXME: make this a class
+    # FIXME: validate rowlimit
+    # FIXME: make this a class?
 
+    orderdirection = 'DESC'
+    orderparts = orderby.split(' ')
+    if orderparts[0].startswith('w.'):
+        orderby = orderparts[0]
+        if len(orderparts) > 1:
+            if orderparts[1] in ['ASC', 'DESC']:
+                orderdirection = orderparts[1]
+
+    table = 'wordfreqs'
     wherestr = ""
     args: List[str] = []
 
@@ -369,6 +420,7 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
 
     print(wherestr, args)
 
+    # FIXME: get query errors
     if len(wherestr) == 0:
         return pd.DataFrame(), -1, 'No valid query string'
 
@@ -390,7 +442,11 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
     addselects = ""
     addjoins = ""
 
-    windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers)
+    windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers, orderby)
+
+    if lemmas:
+        addselects += ', l.*'
+        addjoins += ' LEFT JOIN lemmas l ON w.lemma = l.lemma AND w.pos = l.pos'
 
     if grams:
         aliases = ['i', 'f', 'b']
@@ -403,7 +459,7 @@ def get_frequency_dataframe(connection: sqlite3.Connection,
             addselects += f', {alias}.frequency as {aname}'
             addjoins += f' LEFT JOIN {atable} {alias} ON {alias}.form = {wordcomp}'
 
-    sqlstr = f'SELECT w.*{addselects} FROM {table} w {windexedby} {addjoins} {wherestr} {groupby} ORDER BY {orderby} DESC LIMIT {rowlimit}'
+    sqlstr = f'SELECT w.*{addselects} FROM {table} w {windexedby} {addjoins} {wherestr} {groupby} ORDER BY {orderby} {orderdirection} LIMIT {rowlimit}'
     print(sqlstr)
     print(args)
 
