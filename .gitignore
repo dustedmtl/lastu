@@ -4,6 +4,7 @@ corpora
 venv
 packenv
 .DS_Store
+trash
 
 # Jupyter
 jupyter.*.out
