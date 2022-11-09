@@ -22,10 +22,10 @@ from tqdm.autonotebook import tqdm
 from .mytypes import Freqs
 
 initchars = '^'
-alpha = '.*?[abcdefghijklmnopqrstuvwxyzåäöé].*?'
-alphanum = '[abcdefghijklmnopqrstuvwxyzåäöé0-9]'
-alphanumplus = '[abcdefghijklmnopqrstuvwxyzåäöé0-9\-\.\#]'
-midchars = '[\'\.\:\-\_\#abcdefghijklmnopqrstuvwxyzåäöé0-9]*'
+alpha = '.*?[abcdefghijklmnopqrstuvwxyzåäöéü].*?'
+alphanum = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9]'
+alphanumplus = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9\-\.\']'
+midchars = r'[\'\.\:\-\_\#abcdefghijklmnopqrstuvwxyzåäöéü0-9]*'
 endchars = '$'
 hasalpha = re.compile(alpha)
 validregex = re.compile(''.join([initchars, alphanum, midchars, alphanumplus, endchars]))
@@ -46,7 +46,8 @@ def valid_word(word: str) -> bool:
     if len(word) < 2:
         return False
     if re.match(validregex, word):
-        return True
+        if re.match(hasalpha, word):
+            return True
     return False
 
 
@@ -281,10 +282,9 @@ def conllu_freq_reader(path: str,
                     if trashfile:
                         trashfile.write('\t'.join([path, str(_idx), form, lemma]) + '\n')
                 continue
-#            else:
-#                if semi_word(form) or semi_word(lemma):
-#                    print('Semi', form, lemma)
 
+            # if not re.match(hasalpha, form.lower()) or not re.match(hasalpha, lemma.lower()):
+            #    print(f'not invalid: {lemma} / {form}')
             _corefeats = {}
             corefeats = None
             if feats:
