@@ -14,38 +14,39 @@ CREATE TABLE IF NOT EXISTS wordfreqs (
        clitic VARCHAR(16),
        posspers VARCHAR(16),
        possnum VARCHAR(16),
-       ambform FLOAT NOT NULL,
-       hood INTEGER NOT NULL,
+--       ambform FLOAT,
        PRIMARY KEY (lemma, form, pos, feats)
 );
 
--- CREATE INDEX IF NOT EXISTS wpos ON wordfreqs(pos);
-CREATE INDEX IF NOT EXISTS wlemma ON wordfreqs(lemma, form, pos);
-CREATE INDEX IF NOT EXISTS wform ON wordfreqs(form);
-CREATE INDEX IF NOT EXISTS wfreq ON wordfreqs(frequency);
+--CREATE INDEX IF NOT EXISTS wpos ON wordfreqs(pos);
+--CREATE INDEX IF NOT EXISTS wlemma ON wordfreqs(lemma, form, pos);
+--CREATE INDEX IF NOT EXISTS wlemmap ON wordfreqs(lemma, form, posx);
+--CREATE INDEX IF NOT EXISTS wform ON wordfreqs(form);
+--CREATE INDEX IF NOT EXISTS wfreq ON wordfreqs(frequency);
 CREATE INDEX IF NOT EXISTS wlen ON wordfreqs(len);
 CREATE INDEX IF NOT EXISTS wcase ON wordfreqs(nouncase);
-CREATE INDEX IF NOT EXISTS wnumber ON wordfreqs(nnumber);
-CREATE INDEX IF NOT EXISTS wder ON wordfreqs(derivation);
+--CREATE INDEX IF NOT EXISTS wnumber ON wordfreqs(nnumber);
+--CREATE INDEX IF NOT EXISTS wder ON wordfreqs(derivation);
 CREATE INDEX IF NOT EXISTS wtense ON wordfreqs(tense);
 CREATE INDEX IF NOT EXISTS wperson ON wordfreqs(person);
 CREATE INDEX IF NOT EXISTS wverbform ON wordfreqs(verbform);
-CREATE INDEX IF NOT EXISTS wclitic ON wordfreqs(clitic);
+--CREATE INDEX IF NOT EXISTS wclitic ON wordfreqs(clitic);
 CREATE INDEX IF NOT EXISTS wposspers ON wordfreqs(posspers);
 CREATE INDEX IF NOT EXISTS wpossnum ON wordfreqs(possnum);
-CREATE INDEX IF NOT EXISTS wamb ON wordfreqs(ambform);
-CREATE INDEX IF NOT EXISTS whood ON wordfreqs(hood);
+--CREATE INDEX IF NOT EXISTS wamb ON wordfreqs(ambform);
 
---CREATE TABLE IF NOT EXISTS wordfeats (
---       lemma VARCHAR(256) NOT NULL,
---       form VARCHAR(256) NOT NULL,
---       pos VARCHAR(16) NOT NULL,
---       frequency INTEGER NOT NULL,
---       feats VARCHAR(256) NOT NULL,
---       PRIMARY KEY (lemma, form, pos, feats)
---);
+CREATE INDEX IF NOT EXISTS wfreq_pos ON wordfreqs(frequency, pos);
+CREATE INDEX IF NOT EXISTS wfreq_posx ON wordfreqs(frequency, posx);
+CREATE INDEX IF NOT EXISTS wfreq_form ON wordfreqs(frequency, form);
+CREATE INDEX IF NOT EXISTS wfreq_case ON wordfreqs(frequency, nouncase);
+CREATE INDEX IF NOT EXISTS wfreq_len ON wordfreqs(frequency, len);
+--CREATE INDEX IF NOT EXISTS wfreq_der ON wordfreqs(frequency, derivation);
+--CREATE INDEX IF NOT EXISTS wfreq_clitic ON wordfreqs(frequency, clitic);
 
---CREATE INDEX IF NOT EXISTS w2pos ON wordfeats(pos);
---CREATE INDEX IF NOT EXISTS w2lemma ON wordfeats(lemma, form, pos);
---CREATE INDEX IF NOT EXISTS w2form ON wordfeats(form);
---CREATE INDEX IF NOT EXISTS w2freq ON wordfeats(frequency);
+CREATE INDEX IF NOT EXISTS wform_pos ON wordfreqs(form, pos);
+CREATE INDEX IF NOT EXISTS wform_posx ON wordfreqs(form, posx);
+CREATE INDEX IF NOT EXISTS wform_len ON wordfreqs(form, len);
+CREATE INDEX IF NOT EXISTS wform_case ON wordfreqs(form, nouncase);
+--CREATE INDEX IF NOT EXISTS wform_der ON wordfreqs(form, derivation);
+--CREATE INDEX IF NOT EXISTS wform_clitic ON wordfreqs(form, clitic);
+
