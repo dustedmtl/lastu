@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
 
-        self.connection = dbconnection
+        self.dbconnection = dbconnection
         self._otherwindows = []
         self.layout = QGridLayout()
 
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def newWindow(self):
-        w2 = MainWindow(self.connection)
+        w2 = MainWindow(self.dbconnection)
         w2.querybox.setText(self.querybox.text())
         self._otherwindows.append(w2)
         w2.setData(self.data)
@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
 
     def dbquery(self, text: str):
         try:
-            newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.connection, query=text, grams=True)
+            newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.dbconnection, query=text, grams=True)
             # print(querystatus, querymessage)
             if querystatus < 0:
                 raise Exception(querymessage)
@@ -257,13 +257,13 @@ if __name__ == "__main__":
 
     try:
         logger.info("Connecting to %s...", dbfp)
-        sqlcon = dbutil.get_connection(dbfp)
+        dbconn = dbutil.DatabaseConnection(dbfp)
     except Exception as e:
         logger.error("Couldn't connect to %s: %s", dbfp, e)
 
     app = QApplication(sys.argv)
 
-    w = MainWindow(sqlcon)
+    w = MainWindow(dbconn)
     query = "form = 'silmäsi' and frequency > 10"
     # query = "pos = 'NOUN' and form = 'silmäsi' and frequency > 10"
     # query = "pos = 'NOUN' and frequency > 10 and len > 6 and bigramfreq > 6000000"
