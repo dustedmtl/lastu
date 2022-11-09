@@ -33,6 +33,10 @@ parser.add_argument('-a', '--all',
                     action='store_true',
                     help='All tables')
 
+parser.add_argument('-p', '--posx',
+                    action='store_true',
+                    help='Create posx information')
+
 parser.add_argument('-f', '--forms',
                     action='store_true',
                     help='Forms tables')
@@ -47,7 +51,8 @@ parser.add_argument('-F', '--features',
 
 args = parser.parse_args()
 
-sqlcon = dbutil.get_connection(args.dbfile)
+dbc = dbutil.DatabaseConnection(args.dbfile)
+sqlcon = dbc.get_connection()
 cursor = None
 
 # FIXME: automatic schema addition?
@@ -73,11 +78,23 @@ if args.newfile:
             sqldata = schemafile.read()
             cursor.executescript(sqldata)
 
-if not cursor:
-    cursor = sqlcon.cursor()
+cursor = sqlcon.cursor()
 
 # FIXME: if table already has data..
 #  - empty?
+
+if args.posx or args.all:
+    prepstatements = [
+        "alter table wordfreqs drop column posx",
+        "alter table wordfreqs add column posx VARCHAR(16) NOT NULL DEFAULT ''"
+        ]
+    statements = [
+        "update wordfreqs set posx = pos",
+        "update wordfreqs set posx = 'VERB' where posx = 'AUX'"
+    ]
+
+#    for statement in statements:
+#        dbutil.adhoc_query(sqlcon, statement, verbose=True)
 
 if args.forms or args.all:
     print('Checking table lemmaforms...')
