@@ -367,7 +367,7 @@ indexorder = ['w.form', 'w.lemma',
               'w.clitic']
 
 # fields that have good indexes
-indexfields = {'w.frequency': 'wfreq', 'w.form': 'wform',
+indexfields = {'w.frequency': 'wfreq_form', 'w.form': 'wform_len',
                'w.len': 'wlen', 'w.lemma': 'wlemma',
                'w.ambform': 'wambform', 'w.hood': 'whood',
                'w.nouncase': 'wcase',
@@ -482,6 +482,7 @@ def get_indexer(indexers: List,
     print(f'Indexers: {indexers}')
     print(f'Not LIKE indexers: {notlikeindexers}')
 
+    orderby = orderby.split(' ')[0]
     windexedby = ""
     # At least one column needs to be indexed with a proper index
     if len(notlikeindexers) == 0:
@@ -495,6 +496,7 @@ def get_indexer(indexers: List,
             if orderfield in indexfields:
                 windexedby = f"indexed by {indexfields[orderby]}"
         print(f'Force indexer other than autoindex: {windexedby}')
+    return ""
     return windexedby
 
 
