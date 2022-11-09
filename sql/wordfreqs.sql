@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS wordfreqs (
        lemma VARCHAR(256) NOT NULL,
        form VARCHAR(256) NOT NULL,
        pos VARCHAR(16) NOT NULL,
+       posx VARCHAR(16) NOT NULL,
        frequency INTEGER NOT NULL,
        len INTEGER NOT NULL,
        feats VARCHAR(256) NOT NULL,
