@@ -5,15 +5,16 @@
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
 from typing import List, Tuple, Union, Dict, Optional
 from collections import Counter, defaultdict
+# import sys
 import time
 # from os.path import basename
 # from io import StringIO
 import sqlite3
 from sqlite3 import IntegrityError
+import logging
 import pandas as pd
 from pandas.io.sql import DatabaseError
 import numpy as np
-import logging
 from tqdm.autonotebook import tqdm
 from tabulate import tabulate
 from .mytypes import Freqs
@@ -35,7 +36,7 @@ def query_timing(func):
         start = time.perf_counter()
         results = func(*args, **kwargs)
         end = time.perf_counter()
-        print(f'Query execution took {end - start:.1f} seconds')
+        logger.info('Query execution took %.1f seconds', end - start)
         return results
     return wrapper
 
@@ -164,26 +165,49 @@ def get_trigram_freqs(connection: sqlite3.Connection) -> Tuple[Counter, Counter,
     res = cursor.execute(sqlstr)
     for row in tqdm(res):
         form, freq = row
-        # FIXME: minimum word length 4
+
+        for i, j in zip(range(0, len(form)-1), range(2, len(form)+1)):
+            # print(i, j, form[i:j])
+            bi[form[i:j]] += freq
+
+        if len(form) < 4:
+            continue
+
         initrigram = form[:3]
         fintrigram = form[-3:]
         # print(row, initrigram, fintrigram)
         init[initrigram] += freq
         fin[fintrigram] += freq
 
-        for i, j in zip(range(0, len(form)-1), range(2, len(form)+1)):
-            # print(i, j, form[i:j])
-            bi[form[i:j]] += freq
     return init, fin, bi
 
 
 def insert_trigram_freqs(connection: sqlite3.Connection,
-                         init: Counter, fin: Counter, bi: Counter):
+                         init: Counter, fin: Counter, bi: Counter,
+                         empty: bool = False):
     """Insert frequencies to database."""
+
+    ok = defaultdict(bool)
+    for table in ['initgramfreqs', 'fingramfreqs', 'bigramfreqs']:
+        ok[table] = True
+        print(f'Checking table {table}...', flush=True)
+        have = adhoc_query(connection, f'select * from {table} limit 1', verbose=True)
+        if len(have) > 0:
+            if empty:
+                print(f'Emptying table {table}...', flush=True)
+                _ = adhoc_query(connection, f'delete from {table}', verbose=True)
+            else:
+                ok[table] = False
+
     cursor = connection.cursor()
+
     for table, counts in zip(['initgramfreqs', 'fingramfreqs', 'bigramfreqs'],
                              [init, fin, bi]):
-        print(f'Inserting {len(counts)} rows to table {table}')
+        if not ok[table]:
+            print(f'Table {table} already has content, not inserting', flush=True)
+            continue
+
+        print(f'Inserting {len(counts)} rows to table {table}', flush=True)
 
         insvalues = []
         for key, freq in counts.items():
@@ -201,14 +225,27 @@ def insert_trigram_freqs(connection: sqlite3.Connection,
 
 
 def insert_bigram_freqs(connection: sqlite3.Connection,
-                        bi: Counter):
+                        bi: Counter,
+                        empty: bool = False):
     """Insert word/bigram frequencies to database."""
-    cursor = connection.cursor()
+    ok = True
+    table = 'wordbigramfreqs'
+    print(f'Checking table {table}...', flush=True)
+    have = adhoc_query(connection, f'select * from {table} limit 1', verbose=True)
+    if len(have) > 0:
+        if empty:
+            print(f'Emptying table {table}...', flush=True)
+            _ = adhoc_query(connection, f'delete from {table}', verbose=True)
+        else:
+            ok = False
+
+    if not ok:
+        print(f'Table {table} already has content, not inserting', flush=True)
+        return
 
     # select = "SELECT DISTINCT(form) from wordfreqs LIMIT 10"
-    select = "SELECT DISTINCT(form) from wordfreqs"
-    cursor.execute(select)
-    rows = cursor.fetchall()
+    print(f'Loading distinct forms from {table}...', flush=True)
+    rows = adhoc_query(connection, "SELECT DISTINCT(form) from wordfreqs", verbose=True)
     results = [row[0] for row in rows]
 
     insertsql = 'INSERT INTO wordbigramfreqs (form, frequency) VALUES (?, ?)'
@@ -221,6 +258,8 @@ def insert_bigram_freqs(connection: sqlite3.Connection,
         insvalues.append([form, freq])
 
     try:
+        print(f'Inserting {len(insvalues)} rows to table wordbigramfreqs', flush=True)
+        cursor = connection.cursor()
         cursor.executemany(insertsql, insvalues)
         connection.commit()
     except IntegrityError as e:
@@ -262,6 +301,10 @@ class DatabaseConnection:
     def get_connection(self) -> sqlite3.Connection:
         """Return SQL connection."""
         return self.connection
+
+    def have_posx(self) -> str:
+        """Check if posx is in column list."""
+        return 'posx' in self.columns['wordfreqs']
 
     def get_queryselects(self, useposx: bool) -> str:
         """Get applicable query selects."""
@@ -612,7 +655,10 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
 
         for alias, aname, atable, wordcomp in zip(aliases, names, tables, comps):
             # print(alias, aname, atable, wordcomp)
-            addselects += f', {alias}.frequency as {aname}'
+            if alias in 'if':
+                addselects += f', iif(length(w.form) > 3, {alias}.frequency, 0) as {aname}'
+            else:
+                addselects += f', {alias}.frequency as {aname}'
             addjoins += f' LEFT JOIN {atable} {alias} ON {alias}.form = {wordcomp}'
 
     sqlstr = f'SELECT {wselects}{addselects} FROM wordfreqs w{addfrom} {windexedby} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {dbconnection.rowlimit()}'
