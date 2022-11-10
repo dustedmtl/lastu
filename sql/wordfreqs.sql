@@ -51,3 +51,8 @@ CREATE INDEX IF NOT EXISTS wform_case ON wordfreqs(form, nouncase);
 --CREATE INDEX IF NOT EXISTS wform_der ON wordfreqs(form, derivation);
 --CREATE INDEX IF NOT EXISTS wform_clitic ON wordfreqs(form, clitic);
 
+CREATE INDEX IF NOT EXISTS wform_rev ON wordfreqs(form, revform);
+CREATE INDEX IF NOT EXISTS wrev_form ON wordfreqs(revform, form);
+CREATE INDEX IF NOT EXISTS windex_posx ON wordfreqs(lemma, form, posx, feats);
+
+CREATE INDEX IF NOT EXISTS wform_compounds ON wordfreqs(form, compounds);
