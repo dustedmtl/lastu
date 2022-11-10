@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('build-database')
 
 parser = argparse.ArgumentParser(prog='generate-helper-tables',
-                                 description='Generate helper tables')
+                                 description='Generate helper tables and columns')
 
 parser.add_argument('-d', '--dbfile',
                     type=str,
@@ -35,7 +35,15 @@ parser.add_argument('-a', '--all',
 
 parser.add_argument('-p', '--posx',
                     action='store_true',
-                    help='Create posx information')
+                    help='Create posx column')
+
+parser.add_argument('-r', '--reverse',
+                    action='store_true',
+                    help='Create reverse column')
+
+parser.add_argument('-c', '--compound',
+                    action='store_true',
+                    help='Create compound column')
 
 parser.add_argument('-f', '--forms',
                     action='store_true',
@@ -84,6 +92,7 @@ cursor = sqlcon.cursor()
 #  - empty?
 
 if args.posx or args.all:
+    # FIXME: check if column already exists (use database connection class)
     prepstatements = [
         "alter table wordfreqs drop column posx",
         "alter table wordfreqs add column posx VARCHAR(16) NOT NULL DEFAULT ''"
@@ -93,8 +102,60 @@ if args.posx or args.all:
         "update wordfreqs set posx = 'VERB' where posx = 'AUX'"
     ]
 
-#    for statement in statements:
-#        dbutil.adhoc_query(sqlcon, statement, verbose=True)
+    for statement in statements:
+        dbutil.adhoc_query(sqlcon, statement, verbose=True)
+
+if args.reverse or args.all:
+    print('Adding reverse forms...')
+    # FIXME: check if column already exists (use database connection class)
+    statements = [
+        "alter table wordfreqs add column revform VARCHAR(256) NOT NULL DEFAULT ''"
+        ]
+
+    for statement in statements:
+        dbutil.adhoc_query(sqlcon, statement, verbose=True)
+
+    formdf = dbutil.adhoc_query(sqlcon, "select form from forms", todf=True, verbose=True)
+    formrev = [form[::-1] for form in formdf.form]
+    updatestatement = "update wordfreqs set revform = ? where form = ?"
+    insvalues = []
+    for form, rev in zip(formdf.form, formrev):
+        insvalues.append([rev, form])
+    for i in tqdm(range(0, len(insvalues), 1000)):
+        slc = insvalues[i:i+1000]
+        try:
+            cursor.executemany(updatestatement, slc)
+            sqlcon.commit()
+        except IntegrityError as e:
+            logging.exception(e)
+            sqlcon.rollback()
+
+if args.compound or args.all:
+    print('Adding compounds...')
+    # FIXME: check if column already exists (use database connection class)
+    statements = [
+        "alter table wordfreqs add column compounds INT NOT NULL DEFAULT 0"
+        ]
+
+    for statement in statements:
+        dbutil.adhoc_query(sqlcon, statement, verbose=True)
+
+    lemmadf = dbutil.adhoc_query(sqlcon, "select lemma from lemmas where instr(lemma, '#') > 0", todf=True, verbose=True)
+    print(f'Fetched {len(lemmadf)} compound lemmas')
+    updatestatement = "update wordfreqs set compounds = ? where lemma = ?"
+    insvalues = []
+    for lemma in lemmadf.lemma:
+        compval = lemma.count('#')
+        insvalues.append([compval, lemma])
+    for i in tqdm(range(0, len(insvalues), 10000)):
+        slc = insvalues[i:i+10000]
+        try:
+            cursor.executemany(updatestatement, slc)
+            sqlcon.commit()
+        except IntegrityError as e:
+            logging.exception(e)
+            sqlcon.rollback()
+        # break
 
 if args.forms or args.all:
     print('Checking table lemmaforms...')
