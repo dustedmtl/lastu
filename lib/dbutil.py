@@ -302,10 +302,11 @@ class DatabaseConnection:
         """Return SQL connection."""
         return self.connection
 
-    def have_posx(self) -> str:
+    def have_posx(self) -> bool:
         """Check if posx is in column list."""
         return 'posx' in self.columns['wordfreqs']
 
+    # FIXME: move to query class
     def get_queryselects(self, useposx: bool) -> str:
         """Get applicable query selects."""
         cols = []
@@ -315,6 +316,8 @@ class DatabaseConnection:
             if usecol == 'w.pos':
                 usecol = 'w.posx as pos' if useposx else 'w.pos'
             elif usecol == 'w.posx':
+                continue
+            elif usecol == 'w.revform':
                 continue
             elif usecol == 'w.frequency':
                 if useposx:
@@ -338,12 +341,14 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                'nouncase', 'nnumber',
                'tense', 'person', 'verbform',
                'posspers', 'possnum',
-               'derivation', 'clitic',  # these my be complex
-               'compound'  # special handling
+               'start', 'middle', 'end',
+               'derivation', 'clitic'  # these my be complex
                ]
+    formkeys = ['start', 'middle', 'end']
     boolkeys = ['compound']
 
     stroperators = ['=', '!=', 'like', 'in']
+    formoperators = ['=', '!=']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
     for part in parts:
@@ -384,6 +389,11 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                             errors.append(f"Query value for key '{key}' not ok: '{value}' is not a number")
                     else:
                         errors.append(f"Query comparator for '{key}' not ok: '{comparator}'")
+                elif key in formkeys:
+                    if comparator in formoperators:
+                        isok = True
+                    else:
+                        print(f"Query comparator for '{key}' not ok: '{comparator}'")
                 elif key in strkeys:
                     if comparator in stroperators:
                         isok = True
@@ -394,7 +404,6 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
 
             if isok:
                 kvparts.append([key, comparator, value])
-            # FIXME: middle parts
         except ValueError as e:
             logging.exception(e)
             errors.append(f"Invalid query part: '{part.strip()}'")
@@ -433,6 +442,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
     notlikeindexers = []
 
     for andpart in queryparts:
+        # FIXME: NOT IN
         k, c, v = andpart
         usetable = 'w'
         if k in ['lemmafreq', 'lemmalen', 'amblemma']:
@@ -483,6 +493,33 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 args.extend(invals)
             _ = [gflist.add(_) for _ in invals]
         else:
+            # FIXME: IN query
+            if k == 'start':
+                if c == '=':
+                    whereparts.append(f'instr({usetable}.form, ?) {c} 1')
+                else:
+                    whereparts.append(f'instr({usetable}.form, ?) {c} 1')
+                args.append(v)
+                continue
+            if k == 'middle':
+                if c == '=':
+                    # whereparts.append(f'{usetable}.form GLOB ?')
+                    # args.append(f'?*{v}*?')
+                    whereparts.append(f'instr({usetable}.form, ?) > 1')
+                    args.append(v)
+                    whereparts.append(f'{usetable}.revform NOT GLOB ?')
+                    args.append(v[::-1] + "*")
+                else:
+                    whereparts.append(f'instr({usetable}.form, ?) == 0')
+                    args.append(v)
+                continue
+            if k == 'end':
+                if c == '=':
+                    whereparts.append(f'{usetable}.revform GLOB ?')
+                else:
+                    whereparts.append(f'{usetable}.revform NOT GLOB ?')
+                args.append(v[::-1] + "*")
+                continue
             if k == 'pos':
                 if v == 'AUX':
                     useposx = False
