@@ -32,6 +32,9 @@ pyqt6
 tabulate
 types-tabulate
 
+# edit distance
+symspellpy
+
 # building
 # pyinstaller
 
