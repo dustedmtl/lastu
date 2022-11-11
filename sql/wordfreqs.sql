@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS wordfreqs (
 );
 
 --CREATE INDEX IF NOT EXISTS wpos ON wordfreqs(pos);
---CREATE INDEX IF NOT EXISTS wlemma ON wordfreqs(lemma, form, pos);
+CREATE INDEX IF NOT EXISTS wlemma ON wordfreqs(lemma, pos);
+CREATE INDEX IF NOT EXISTS wlemmax ON wordfreqs(lemma, posx);
 --CREATE INDEX IF NOT EXISTS wlemmap ON wordfreqs(lemma, form, posx);
 --CREATE INDEX IF NOT EXISTS wform ON wordfreqs(form);
 --CREATE INDEX IF NOT EXISTS wfreq ON wordfreqs(frequency);
@@ -53,6 +54,6 @@ CREATE INDEX IF NOT EXISTS wform_case ON wordfreqs(form, nouncase);
 
 CREATE INDEX IF NOT EXISTS wform_rev ON wordfreqs(form, revform);
 CREATE INDEX IF NOT EXISTS wrev_form ON wordfreqs(revform, form);
-CREATE INDEX IF NOT EXISTS windex_posx ON wordfreqs(lemma, form, posx, feats);
+--CREATE INDEX IF NOT EXISTS windex_posx ON wordfreqs(lemma, form, posx, feats);
 
-CREATE INDEX IF NOT EXISTS wform_compounds ON wordfreqs(form, compounds);
+--CREATE INDEX IF NOT EXISTS wform_compounds ON wordfreqs(form, compounds);
