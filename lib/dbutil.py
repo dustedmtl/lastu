@@ -3,10 +3,12 @@
 # pylint: disable=invalid-name, line-too-long
 
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
-from typing import List, Tuple, Union, Dict, Optional
+from typing import List, Tuple, Union, Dict, Optional, Iterator
 from collections import Counter, defaultdict
 # import sys
 import time
+import math
+import re
 # from os.path import basename
 # from io import StringIO
 import sqlite3
@@ -36,7 +38,9 @@ def query_timing(func):
         start = time.perf_counter()
         results = func(*args, **kwargs)
         end = time.perf_counter()
-        logger.info('Query execution took %.1f seconds', end - start)
+        difference = end - start
+        if difference > 0.01:
+            logger.info('Query execution took %.1f seconds', difference)
         return results
     return wrapper
 
@@ -67,6 +71,13 @@ def adhoc_query(connection: sqlite3.Connection,
         return None
 
 
+def chunks(dataset: List, chunklen=1000) -> Iterator:
+    """Create an iterator for dataset chunks."""
+    for i in range(0, len(dataset), chunklen):
+        slc = dataset[i:i+chunklen]
+        yield slc
+
+
 def write_freqs_to_db(connection: sqlite3.Connection,
                       freqs: Freqs):
     """Write frequencies to SQLite database."""
@@ -74,8 +85,11 @@ def write_freqs_to_db(connection: sqlite3.Connection,
     # cursor.execute('PRAGMA journal_mode=wal')
     # print('Cursor mode:', cursor.fetchall())
 
+    # FIXME: try to do an upsert? (update/insert)
     template = "INSERT INTO %s (%s) values (%s)"
+    itemplate = "INSERT OR IGNORE INTO %s (%s) values (%s)"
 
+    # FIXME: get the feature map from elsewhere. Database connection class?
     featmap = {
         'Number': 'nnumber',
         'Case': 'nouncase',
@@ -88,24 +102,28 @@ def write_freqs_to_db(connection: sqlite3.Connection,
         'Clitic': 'clitic'
     }
 
-    fields = ['lemma', 'form', 'pos', 'frequency', 'len', 'feats']
-    fields2 = ['lemma', 'form', 'pos', 'frequency', 'feats']
+    wordfields = ['lemma', 'form', 'pos', 'posx', 'frequency', 'feats', 'featid']
+    featfields = ['feats', 'pos']
 
     for feat in sorted(featmap.keys()):
-        fields.append(featmap[feat])
+        featfields.append(featmap[feat])
 
-    itpl = ', '.join([f for f in fields])
-    vtpl = ','.join(['?' for _ in fields])
+    insert_tpl = ', '.join(list(wordfields))
+    values_tpl = ', '.join(['?' for _ in wordfields])
 
-    insert_template = template % ('wordfreqs', itpl, vtpl)
-    # print(insert_template)
+    insert_template = template % ('wordfreqs', insert_tpl, values_tpl)
+    print(insert_template)
 
-    values = []
+    wordvalues = []
+    featvalues = []
+
+    uqfeats = set()
+
     for key, freq in freqs[0].items():
-        # print(key, freq)
-        # lemma, word, pos = key.split(' ')
         lemma, word, pos, feats = key
-        recvals = [lemma, word, pos, freq, len(word), feats]
+        posx = 'VERB' if pos == 'AUX' else pos
+        wordvals = [lemma, word, pos, posx, freq, feats, 0]
+        featvals = [feats, pos]
         featdict = freqs[1][key]
         for feat in sorted(featmap.keys()):
             featval = '_'
@@ -115,40 +133,45 @@ def write_freqs_to_db(connection: sqlite3.Connection,
                 featval = featdict[feat]
             # print(key, freq, featdict, featval)
             # print(recvals)
-            recvals.append(featval)
+            featvals.append(featval)
         # print(recvals)
-        values.append(recvals)
+        wordvalues.append(wordvals)
+        if (pos, feats) in uqfeats:
+            ...
+        else:
+            uqfeats.add((pos, feats))
+            featvalues.append(featvals)
 
-    try:
-        # FIXME: try to do an upsert? (update/insert)
-        cursor.executemany(insert_template, values)
-        connection.commit()
-    except IntegrityError as e:
-        # this is not ok
-        print('Issue', e)
-        connection.rollback()
+    print(wordvalues[0])
+    print(featvalues[0])
 
-    fields2 = ['lemma', 'form', 'pos', 'frequency', 'feats']
+    chunklen = 10000
+    totwords = math.ceil(len(wordvalues)/chunklen)
+    totfeats = math.ceil(len(featvalues)/chunklen)
 
-    itpl2 = ', '.join([f for f in fields2])
-    vtpl2 = ','.join(['?' for _ in fields2])
-
-    insert_template2 = template % ('wordfeats', itpl2, vtpl2)
-    # print(insert_template)
-
-    values2 = []
-    for key, freq in freqs[2].items():
-        lemma, word, pos, feats = key
-        recvals = [lemma, word, pos, freq, feats]
-        values2.append(recvals)
-
-    if len(values2) > 0:
+    for chunk in tqdm(chunks(wordvalues, chunklen=chunklen), total=totwords):
         try:
-            cursor.executemany(insert_template2, values2)
+            cursor.executemany(insert_template, chunk)
             connection.commit()
         except IntegrityError as e:
             # this is not ok
-            print('Issue', e)
+            logging.exception(e)
+            connection.rollback()
+            break
+
+    insert_tpl = ', '.join(list(featfields))
+    values_tpl = ', '.join(['?' for _ in featfields])
+
+    insert_template = itemplate % ('features', insert_tpl, values_tpl)
+    print(insert_template)
+
+    for chunk in tqdm(chunks(featvalues, chunklen=chunklen), total=totfeats):
+        try:
+            cursor.executemany(insert_template, chunk)
+            connection.commit()
+        except IntegrityError as e:
+            # this is not ok
+            logging.exception(e)
             connection.rollback()
 
 
@@ -268,7 +291,6 @@ def insert_bigram_freqs(connection: sqlite3.Connection,
         connection.rollback()
 
 
-# FIXME: record choices from feature tables
 class DatabaseConnection:
     """Encapsulation of database connection."""
 
@@ -278,7 +300,7 @@ class DatabaseConnection:
         self.limit = 10000
         self.dbfile = filename
         self.connection = get_connection(filename)
-        self.tables = ['wordfreqs']
+        self.tables = ['wordfreqs', 'features', 'forms', 'lemmaforms', 'lemmas']
         self.columns = defaultdict(list)  # type: ignore
         self.record_columns()
 
@@ -307,26 +329,42 @@ class DatabaseConnection:
         return 'posx' in self.columns['wordfreqs']
 
     # FIXME: move to query class
-    def get_queryselects(self, useposx: bool) -> str:
+    def get_queryselects(self, table: str, useposx: bool = False) -> List:
         """Get applicable query selects."""
         cols = []
 
-        for col in self.columns['wordfreqs']:
-            usecol = 'w.' + col
+        dropcols = ['w.posx', 'w.id', 'w.featid',
+                    'ft.featid', 'ft.feats', 'ft.pos', 'ft.posx',
+                    'l.pos', 'l.lemma', 'l.comparts',
+                    'l.amblemma', 'f.hood', # for now
+                    'f.form', 'f.frequency', 'f.numforms', 'f.revform'
+                    ]
+        for col in self.columns[table]:
+            if table == 'wordfreqs':
+                usetable = 'w'
+            elif table == 'features':
+                usetable = 'ft'
+            elif table == 'forms':
+                usetable = 'f'
+            elif table == 'lemmaforms':
+                usetable = 'lf'
+            elif table == 'lemmas':
+                usetable = 'l'
+            usecol = f'{usetable}.{col}'
             if usecol == 'w.pos':
                 usecol = 'w.posx as pos' if useposx else 'w.pos'
-            elif usecol == 'w.posx':
-                continue
-            elif usecol == 'w.revform':
-                continue
             elif usecol == 'w.frequency':
                 if useposx:
                     usecol = "sum(w.frequency) as frequency"
+            elif usecol in dropcols:
+                continue
             cols.append(usecol)
-        return ', '.join(cols)
+        # print(table, cols)
+        return cols
 
 
 # FIXME: make this a query class
+# FIXME: get supported features from database connection?
 def parse_query(query: str) -> Tuple[List[List[str]], List]:
     """Parse query to SQL key-values."""
     parts = query.split('and')
@@ -346,13 +384,14 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                ]
     formkeys = ['start', 'middle', 'end']
     boolkeys = ['compound']
-
-    stroperators = ['=', '!=', 'like', 'in']
+    stroperators = ['=', '!=', 'like', 'in', 'notin']
     formoperators = ['=', '!=']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
+    # FIXME: use a queue mechanism for this?
     for part in parts:
         try:
+            part = re.sub(r'not\s+in', 'notin', part, re.I)
             vals = part.split()
             bols = [w for w in vals if w in boolkeys]
 
@@ -362,15 +401,20 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                 if bols[0] == 'compound':
                     key = 'lemma'
                     value = '%#%'
+                    # key = 'comparts'
+                    # value = 0
                     if len(vals) > 1:
                         if vals[0] == 'not':
                             comparator = 'not like'
+                            # comparator = '='
                             isok = True
                         else:
                             errors.append(f"Invalid query part: '{part.strip()}'")
                     else:
                         comparator = 'like'
+                        # comparator = '>'
                         isok = True
+
                 else:
                     errors.append(f"Invalid query part: '{part.strip()}'")
 
@@ -411,21 +455,14 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
     return kvparts, errors
 
 
-indexorder = ['w.form', 'w.lemma',
-              'w.frequency', 'w.len',
-              'w.ambform', 'w.hood',
-              'w.nouncase',
-              'w.derivation',
-              'w.clitic']
+indexorder = ['w.form', 'w.lemma', 'w.frequency']
 
 # fields that have good indexes
-indexfields = {'w.frequency': 'wfreq_form', 'w.form': 'wform_len',
-               'w.len': 'wlen', 'w.lemma': 'wlemma',
-               'w.ambform': 'wambform', 'w.hood': 'whood',
-               'w.nouncase': 'wcase',
-               'w.derivation': 'wder',
-               'w.clitic': 'wclitic'}
-
+indexfields = {'w.frequency': 'wfreq_form', 'w.form': 'wform_posx',
+               # 'w.len': 'wlen',
+               'w.lemma': 'wlemma',
+               # 'w.ambform': 'wambform', 'w.hood': 'whood'
+               }
 
 def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]:
     """Parse the query string."""
@@ -441,12 +478,31 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
     indexers = []
     notlikeindexers = []
 
+    # FIXME: get supported features from database connection?
+    features = ['nouncase', 'nnumber',
+               'tense', 'person', 'verbform',
+               'posspers', 'possnum',
+               'derivation', 'clitic'
+                ]
+    lemmas = ['lemmalen', 'lemmafreq', 'amblemma', 'comparts']
+    lemmaforms = ['ambform']
+    forms = ['len', 'hood', 'start', 'middle' 'end']
+    # forms = []
+    separatetables = ['derivation', 'clitic', 'nouncase']
+
     for andpart in queryparts:
-        # FIXME: NOT IN
         k, c, v = andpart
         usetable = 'w'
-        if k in ['lemmafreq', 'lemmalen', 'amblemma']:
+        if k in separatetables:
+            usetable = k[0]
+        elif k in features:
+            usetable = 'ft'
+        elif k in lemmas:
             usetable = 'l'
+        elif k in lemmaforms:
+            usetable = 'lf'
+        elif k in forms:
+            usetable = 'f'
         elif k.endswith('freq'):
             usetable = k[0]
             k = 'frequency'
@@ -461,26 +517,33 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 indexers.append(fullcol)
 
         gflist = gfields.get(k, set())
-        if c == 'in':
+        if c in ['in', 'notin'] and c not in ['start', 'middle', 'end']:
             invals = [w.strip() for w in v.split(',')]
-            if k in ['cliticx']:
-                # old method, deprecated
-                usetable = k[0]
+            if k in ['derivationx', 'cliticx']:
+                # This is the old implementation
+                # usetable = k[0]
+                usetable = 'ft'
                 subargs = []
                 whereor = []
                 for val in invals:
                     subargs.append(f'{val}%')
-                    subargs.append(val)
+                    subargs.append(f'%,{val}%')
                     whereor.append(f'{usetable}.{k} LIKE ?')
                     whereor.append(f'{usetable}.{k} LIKE ?')
                 whereparts.append(f"({' OR '.join(whereor)})")
                 args.extend(subargs)
-            elif k in ['derivation', 'clitic']:
+            elif k in separatetables:
                 usetable = k[0]
-                # separate table for derivations and clitics
+                # Separate table for derivations and clitics is better
                 qmarks = ','.join(['?'] * len(invals))
+                # FIXME: Do NOT IN feature searches from separate table or not? How to handle empties?
+                if c == 'notin':
+                    c = 'not in'
+                    usetable = 'ft'
+                else:
+                    whereparts.append(f'w.featid = {usetable}.featid')
                 whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
-                whereparts.append(f'w.lemma = {usetable}.lemma and w.form = {usetable}.form and w.posx = {usetable}.pos and w.feats = {usetable}.feats')
+                # whereparts.append(f'w.lemma = {usetable}.lemma and w.form = {usetable}.form and w.posx = {usetable}.pos and w.feats = {usetable}.feats')
                 args.extend(invals)
             else:
                 if k == 'pos':
@@ -489,12 +552,15 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                     else:
                         k = 'posx'
                 qmarks = ','.join(['?'] * len(invals))
+                if c == 'notin':
+                    c = 'not in'
                 whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
                 args.extend(invals)
             _ = [gflist.add(_) for _ in invals]
         else:
-            # FIXME: IN query
+            # FIXME: IN query, NOT IN query for start, middle, end
             if k == 'start':
+                usetable = 'w'
                 if c == '=':
                     whereparts.append(f'instr({usetable}.form, ?) {c} 1')
                 else:
@@ -502,18 +568,20 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 args.append(v)
                 continue
             if k == 'middle':
+                usetable = 'w'
                 if c == '=':
-                    # whereparts.append(f'{usetable}.form GLOB ?')
-                    # args.append(f'?*{v}*?')
-                    whereparts.append(f'instr({usetable}.form, ?) > 1')
-                    args.append(v)
-                    whereparts.append(f'{usetable}.revform NOT GLOB ?')
-                    args.append(v[::-1] + "*")
+                    whereparts.append(f'{usetable}.form GLOB ?')
+                    args.append(f'?*{v}*?')
+                    # whereparts.append(f'instr({usetable}.form, ?) > 1')
+                    # args.append(v)
+                    # whereparts.append(f'{usetable}.revform NOT GLOB ?')
+                    # args.append(v[::-1] + "*")
                 else:
                     whereparts.append(f'instr({usetable}.form, ?) == 0')
                     args.append(v)
                 continue
             if k == 'end':
+                usetable = 'f'
                 if c == '=':
                     whereparts.append(f'{usetable}.revform GLOB ?')
                 else:
@@ -559,8 +627,8 @@ def get_indexer(indexers: List,
                 notlikeindexers: List,
                 orderby: str) -> str:
     """Possibly force indexer."""
-    print(f'Indexers: {indexers}')
-    print(f'Not LIKE indexers: {notlikeindexers}')
+    # print(f'Indexers: {indexers}')
+    # print(f'Not LIKE indexers: {notlikeindexers}')
 
     orderby = orderby.split(' ')[0]
     windexedby = ""
@@ -575,9 +643,9 @@ def get_indexer(indexers: List,
             orderfield = orderby.split(' ')[0]
             if orderfield in indexfields:
                 windexedby = f"indexed by {indexfields[orderby]}"
-        print(f'Force indexer other than autoindex: {windexedby}')
+        # print(f'Force indexer other than autoindex: {windexedby}')
     return ""
-    return windexedby
+    # return windexedby
 
 
 def get_querystring(query: Union[str, Dict] = None,
@@ -631,8 +699,7 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     # args: List[str] = []
 
     wherestr, args, errors, windexedby, useposx = get_querystring(query, orderstring, defaultindex)
-    wselects = dbconnection.get_queryselects(useposx)
-    # print(wselects)
+    selects = dbconnection.get_queryselects('wordfreqs', useposx)
 
     # FIXME: return query errors if so deemed
 
@@ -651,6 +718,10 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         return pd.DataFrame(), -1, 'No valid query string'
 
     groupby = ""
+    haveposx = [w for w in selects if 'posx' in w]
+    if len(haveposx) > 0:
+        groupby = "group by w.lemma, w.form, w.posx, w.feats"
+
     # dropcols = []
     # if aggregate:
     #    groupby = "GROUP BY w.lemma, w.form, w.pos, w.feats"
@@ -666,39 +737,64 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     #            # dropcols.extend(['verbform', 'tense'])
 
     addfrom = ""
-    addselects = ""
     addjoins = ""
+#    windexedby = "indexed by idx_wordfreqs_freq_posx"
 
-    if 'posx' in wselects:
-        groupby = "group by w.lemma, w.form, w.posx, w.feats"
+    jointables = ["wordfreqs w", "features ft", "forms f"]
+#    jointables = ["wordfreqs w", "features ft"]
+    fromtable = f"wordfreqs w {windexedby}, features ft"
+
+    wherestr += " AND w.featid = ft.featid"
+
+    if (addfeats := dbconnection.get_queryselects('features')):
+        selects.extend(addfeats)
+    if (addforms := dbconnection.get_queryselects('forms')):
+        selects.extend(addforms)
+
+    for table in jointables:
+        if table == fromtable:
+            continue
+#        if table == "wordfreqs w":
+#            # addjoins += " LEFT JOIN wordfreqs w ON w.feats = ft.feats AND w.pos = ft.pos"
+#            addjoins += " LEFT JOIN wordfreqs w ON w.featid = ft.featid"
+#        if table == "features ft" and addfeats:
+#            # addjoins += " LEFT JOIN features ft ON w.feats = ft.feats AND w.pos = ft.pos"
+#            addjoins += " LEFT JOIN features ft ON w.featid = ft.featid"
+        if table == "forms f":
+            addjoins += " LEFT JOIN forms f ON w.form = f.form"
 
     if 'd.derivation' in wherestr:
-        addfrom += ",derivations d"
+        addfrom += ", derivations d"
+        wherestr += " AND w.featid = d.featid"
     if 'c.clitic' in wherestr:
-        addfrom += ",clitics c"
+        addfrom += ", clitics c"
+        wherestr += " AND w.featid = c.featid"
+    if 'n.nouncase' in wherestr:
+        addfrom += ", nouncases n"
+        wherestr += " AND w.featid = n.featid"
 
     if lemmas:
-        addselects += ', l.lemmafreq, l.lemmalen, l.amblemma'
+        selects.extend(dbconnection.get_queryselects('lemmas'))
         addjoins += ' LEFT JOIN lemmas l ON w.lemma = l.lemma AND w.posx = l.pos'
 
-        addselects += ', 1-lf.formpct as ambform'
-        addjoins += ' LEFT JOIN lemmaforms lf ON w.lemma = lf.lemma AND w.form = lf.form AND w.posx = lf.pos'
+        # selects.append(1-lf.formpct as ambform)
+        # addjoins += ' LEFT JOIN lemmaforms lf ON w.lemma = lf.lemma AND w.form = lf.form AND w.posx = lf.pos'
 
     if grams:
-        aliases = ['i', 'f', 'b']
+        aliases = ['i', 'e', 'b']
         names = ['initgramfreq', 'fingramfreq', 'bigramfreq']
         tables = ['initgramfreqs', 'fingramfreqs', 'wordbigramfreqs']
         comps = ['substr(w.form, 1, 3)', 'substr(w.form, -3, 3)', 'w.form']
 
         for alias, aname, atable, wordcomp in zip(aliases, names, tables, comps):
             # print(alias, aname, atable, wordcomp)
-            if alias in 'if':
-                addselects += f', iif(length(w.form) > 3, {alias}.frequency, 0) as {aname}'
+            if alias in 'ie':
+                selects.append(f'iif(length(w.form) > 3, {alias}.frequency, 0) as {aname}')
             else:
-                addselects += f', {alias}.frequency as {aname}'
+                selects.append(f'{alias}.frequency as {aname}')
             addjoins += f' LEFT JOIN {atable} {alias} ON {alias}.form = {wordcomp}'
 
-    sqlstr = f'SELECT {wselects}{addselects} FROM wordfreqs w{addfrom} {windexedby} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {dbconnection.rowlimit()}'
+    sqlstr = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {dbconnection.rowlimit()}'
     print(sqlstr)
     print(args)
 
