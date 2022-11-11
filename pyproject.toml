@@ -37,6 +37,7 @@ module = [
        "nltk",
        "nltk.tokenize",
        "pandas",
+       "pandas.io.sql",
        "sklearn.linear_model",
        "sklearn.ensemble",
        "sklearn.neighbors",
