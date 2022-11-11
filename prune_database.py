@@ -7,9 +7,9 @@
 # from os.path import isdir, isfile, exists
 from os.path import exists
 import sys
-import shutil
 import argparse
-from sqlite3 import IntegrityError
+# import shutil
+# from sqlite3 import IntegrityError
 from tqdm import tqdm
 
 from lib import dbutil
