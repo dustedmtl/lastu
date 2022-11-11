@@ -31,4 +31,6 @@ CREATE INDEX IF NOT EXISTS idx_wordfreqs_freqx_posx ON wordfreqs(frequencyx DESC
 
 CREATE INDEX IF NOT EXISTS idx_wordfreqs_form_pos ON wordfreqs(form, pos);
 CREATE INDEX IF NOT EXISTS idx_wordfreqs_form_posx ON wordfreqs(form, posx);
+CREATE INDEX IF NOT EXISTS idx_wordfreqs_form_freq ON wordfreqs(form, frequency);
+CREATE INDEX IF NOT EXISTS idx_wordfreqs_form_freqx ON wordfreqs(form, frequencyx);
 
