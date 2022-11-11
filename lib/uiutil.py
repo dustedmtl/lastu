@@ -15,11 +15,15 @@ logger.setLevel(logging.DEBUG)
 
 
 class ConfigurationError(Exception):
+    """Configuration error class."""
+
     def __init__(self, text, *args):
+        """Initialize error class."""
         super().__init__(args)
         self.text = text
 
     def __str__(self):
+        """Return error text."""
         return f'Issue with configuration: {self.text}'
 
 
