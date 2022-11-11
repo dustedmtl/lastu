@@ -304,6 +304,18 @@ class DatabaseConnection:
         self.columns = defaultdict(list)  # type: ignore
         self.record_columns()
 
+        self._featmap = {
+            'Number': 'nnumber',
+            'Case': 'nouncase',
+            'Derivation': 'derivation',
+            'Tense': 'tense',
+            'Person': 'person',
+            'VerbForm': 'verbform',
+            'Person[psor]': 'posspers',
+            'Number[psor]': 'possnum',
+            'Clitic': 'clitic'
+        }
+
     def record_columns(self):
         """Store column lists."""
         for table in self.tables:
@@ -328,12 +340,20 @@ class DatabaseConnection:
         """Check if posx is in column list."""
         return 'posx' in self.columns['wordfreqs']
 
+    def featmap(self, reverse: bool) -> Dict:
+        """Return feature map."""
+        if reverse:
+            fmap = {v: k for k, v in self._featmap.items()}
+            return fmap
+        return self._featmap
+
     # FIXME: move to query class
     def get_queryselects(self, table: str, useposx: bool = False) -> List:
         """Get applicable query selects."""
         cols = []
 
         dropcols = ['w.posx', 'w.id', 'w.featid',
+                    # 'w.frequencyx',
                     'ft.featid', 'ft.feats', 'ft.pos', 'ft.posx',
                     'l.pos', 'l.lemma', 'l.comparts',
                     'l.amblemma', 'f.hood', # for now
@@ -355,7 +375,7 @@ class DatabaseConnection:
                 usecol = 'w.posx as pos' if useposx else 'w.pos'
             elif usecol == 'w.frequency':
                 if useposx:
-                    usecol = "sum(w.frequency) as frequency"
+                    usecol = 'w.frequencyx as frequency'
             elif usecol in dropcols:
                 continue
             cols.append(usecol)
@@ -486,7 +506,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 ]
     lemmas = ['lemmalen', 'lemmafreq', 'amblemma', 'comparts']
     lemmaforms = ['ambform']
-    forms = ['len', 'hood', 'start', 'middle' 'end']
+    forms = ['len', 'hood', 'start', 'middle', 'end']
     # forms = []
     separatetables = ['derivation', 'clitic', 'nouncase']
 
@@ -537,9 +557,16 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 # Separate table for derivations and clitics is better
                 qmarks = ','.join(['?'] * len(invals))
                 # FIXME: Do NOT IN feature searches from separate table or not? How to handle empties?
+                # select * from wordfreqs where not (feats glob '*Case=Nom*' OR feats glob '*Case=Par*') limit 1000;
+                # FIXME: Search directly from feats in main table?
                 if c == 'notin':
                     c = 'not in'
                     usetable = 'ft'
+                    # usetable = 'w'
+                    # orparts = " OR ".join([f"{usetable}.feats GLOB ?" for _ in invals])
+                    # whereparts.append(f'NOT ({orparts})')
+                    # args.extend([f'Case=*{_}*' for _ in invals])
+                    # args.extend(invals)
                 else:
                     whereparts.append(f'w.featid = {usetable}.featid')
                 whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
@@ -558,6 +585,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 args.extend(invals)
             _ = [gflist.add(_) for _ in invals]
         else:
+            # FIXME: take inequality from the correct table (features)
             # FIXME: IN query, NOT IN query for start, middle, end
             if k == 'start':
                 usetable = 'w'
@@ -700,27 +728,19 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
 
     wherestr, args, errors, windexedby, useposx = get_querystring(query, orderstring, defaultindex)
     selects = dbconnection.get_queryselects('wordfreqs', useposx)
+    if useposx:
+        orderstring = orderstring.replace('w.frequency', 'w.frequencyx')
+        wherestr = wherestr.replace('w.frequency', 'w.frequencyx')
 
     # FIXME: return query errors if so deemed
-
-    #    if isinstance(query, str):
-    #        wherestr, args, errors, indexers, notlikeindexers = parse_querystring(query)
-    #        print(errors)
-    #    elif isinstance(query, dict):
-    #        defaultindex = True
-    #        wherestr, args, errors, indexers, notlikeindexers = parse_querydict(query)
-
-    #    print(wherestr, args)
-
-    #    windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers, orderby)
 
     if len(wherestr) == 0:
         return pd.DataFrame(), -1, 'No valid query string'
 
     groupby = ""
-    haveposx = [w for w in selects if 'posx' in w]
-    if len(haveposx) > 0:
-        groupby = "group by w.lemma, w.form, w.posx, w.feats"
+    # haveposx = [w for w in selects if 'posx' in w]
+    # if len(haveposx) > 0:
+    #    groupby = "group by w.lemma, w.form, w.posx, w.feats"
 
     # dropcols = []
     # if aggregate:
@@ -794,7 +814,8 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
                 selects.append(f'{alias}.frequency as {aname}')
             addjoins += f' LEFT JOIN {atable} {alias} ON {alias}.form = {wordcomp}'
 
-    sqlstr = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {dbconnection.rowlimit()}'
+    userowlimit = int(dbconnection.rowlimit() * 1.5) if useposx else dbconnection.rowlimit()
+    sqlstr = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {userowlimit}'
     print(sqlstr)
     print(args)
 
@@ -815,6 +836,9 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
                                       params=args)
 
         df = pd.DataFrame(sql_query)
+        df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last')
+        df = df[:10000]
+
         endtime = time.perf_counter()
         print()
         print(f'{len(df)} rows returned in {endtime - starttime:.1f} seconds')
