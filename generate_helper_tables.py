@@ -65,7 +65,7 @@ def generate_form_aggregates(sqlcon: sqlite3.Connection):
     print('Checking table lemmaforms...')
     have = dbutil.adhoc_query(sqlcon, 'select * from lemmaforms limit 1')
     if len(have) > 0:
-        print('Table forms already has content, not inserting')
+        print('Table lemmaforms already has content, not inserting')
     else:
         print('Inserting aggregates into lemmaforms table...')
         formsql = "insert into lemmaforms select lemma, form, posx as pos, sum(frequency) as frequency, 0 as formpct, 0 as formsum from wordfreqs group by lemma, form, posx order by frequency desc"
@@ -83,13 +83,14 @@ def generate_form_aggregates(sqlcon: sqlite3.Connection):
         print('Table forms already has content, not inserting')
     else:
         print('Inserting aggregates into forms table...')
-        formsql = "insert into forms select form, sum(frequency) as frequency, length(form) as len, count(*) as numforms, 0 as hood, '' as revform from lemmaforms group by form order by frequency desc"
+        formsql = "insert into forms select form, sum(frequency) as frequency, count(*) as numforms, 0 as hood from lemmaforms group by form order by frequency desc"
         dbutil.adhoc_query(sqlcon, formsql)
 
+    # This shouldn't be necessary in the new schema..
     print('Adding reverse forms...')
-    formdf = dbutil.adhoc_query(sqlcon, "select form from forms where revform = ''", todf=True, verbose=True)
+    formdf = dbutil.adhoc_query(sqlcon, "select form from wordfreqs where revform = ''", todf=True, verbose=True)
     formrev = [form[::-1] for form in formdf.form]
-    updatestatement = "update forms set revform = ? where form = ?"
+    updatestatement = "update wordfreqs set revform = ? where form = ?"
     insvalues = []
     for form, rev in zip(formdf.form, formrev):
         insvalues.append([rev, form])
@@ -182,6 +183,7 @@ def generate_hood(sqlcon: sqlite3.Connection):
     # print(levdict)
     # print(hamdict)
     record_hood(sqlcon, hamdict)
+    # FIXME: add hood to wordfreqs table
 
 
 def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
@@ -227,13 +229,13 @@ def add_feature_index(sqlcon: sqlite3.Connection):
     else:
         updatestatement = "update wordfreqs set featid = ? where feats = ? and pos = ?"
         insvalues = []
-        for featid, feats, pos in zip(features.featid, features.feats, features.pos):
+        for featid, feats, pos in tqdm(zip(features.featid, features.feats, features.pos), total=len(features)):
             insvalues.append([featid, feats, pos])
 
             chunklen = 100
-            total = math.ceil(len(insvalues)/chunklen)
+            # total = math.ceil(len(insvalues)/chunklen)
             cursor = sqlcon.cursor()
-            for chunk in tqdm(dbutil.chunks(insvalues, chunklen=chunklen), total=total):
+            for chunk in dbutil.chunks(insvalues, chunklen=chunklen):
                 try:
                     cursor.executemany(updatestatement, chunk)
                     sqlcon.commit()
@@ -291,15 +293,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-p', '--posx',
                         action='store_true',
-                        help='Create posx column')
-
-    # parser.add_argument('-r', '--reverse',
-    #                    action='store_true',
-    #                    help='Create reverse column')
-
-    # parser.add_argument('-c', '--compound',
-    #                    action='store_true',
-    #                    help='Create compound column')
+                        help='Record aggregate posx frequency')
 
     parser.add_argument('-f', '--forms',
                         action='store_true',
@@ -346,20 +340,22 @@ if __name__ == '__main__':
 
     # cursor = sqlconn.cursor()
 
+    # These two are necessary for the operation of the database
     if args.posx or args.all:
         record_pos_frequency(sqlconn)
-
-    if args.forms or args.all:
-        generate_form_aggregates(sqlconn)
-
-    if args.lemmas or args.all:
-        generate_lemma_aggregates(sqlconn)
 
     if args.features or args.all:
         add_feature_index(sqlconn)
         create_feature_table(sqlconn, 'derivations', 'derivation')
         create_feature_table(sqlconn, 'clitics', 'clitic')
         create_feature_table(sqlconn, 'nouncases', 'nouncase')
+
+    # These are optional
+    if args.lemmas or args.all:
+        generate_lemma_aggregates(sqlconn)
+
+    if args.forms or args.all:
+        generate_form_aggregates(sqlconn)
 
     if args.hood or args.all:
         generate_hood(sqlconn)
