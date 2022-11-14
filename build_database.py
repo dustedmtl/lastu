@@ -8,9 +8,9 @@
 from os.path import exists
 import sys
 import argparse
+import logging
 from lib import corpus, dbutil
 
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('build-database')
@@ -59,21 +59,28 @@ if not exists(args.input):
     logger.warning('No such file: %s', args.input)
     sys.exit()
 
-sqlcon = None
+dbc = None
 
 if not exists(args.dbfile):
     if args.newfile:
+        creationscripts = ['wordfreqs2.sql', 'features.sql']
         print(f'Creating database at {args.dbfile}')
-        sqlcon = dbutil.get_connection(args.dbfile)
+        dbc = dbutil.DatabaseConnection(args.dbfile)
+        sqlcon = dbc.get_connection()
         cursor = sqlcon.cursor()
-        with open('sql/wordfreqs.sql', 'r', encoding='utf8') as schemafile:
-            sqldata = schemafile.read()
-            cursor.executescript(sqldata)
+        for sqlfile in creationscripts:
+            with open(f'sql/{sqlfile}', 'r', encoding='utf8') as schemafile:
+                sqldata = schemafile.read()
+                cursor.executescript(sqldata)
+                sqlcon.commit()
     else:
         logger.warning('No such file: %s', args.dbfile)
         sys.exit()
 
 # FIXME: check that dbfile is a SQLite database?
+
+if not dbc:
+    dbc = dbutil.DatabaseConnection(args.dbfile)
 
 trashfh = None
 
@@ -91,6 +98,4 @@ if trashfh:
     trashfh.close()
 
 print(f'Storing {len(data[0])} unigram frequencies to database {args.dbfile}')
-if not sqlcon:
-    sqlcon = dbutil.get_connection(args.dbfile)
-dbutil.write_freqs_to_db(sqlcon, data)
+dbutil.write_freqs_to_db(dbc.get_connection(), data)
