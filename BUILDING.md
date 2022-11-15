@@ -1,8 +1,8 @@
 How to build the an executable:
 
-Setup:
-  - Clone the repository
-    - git clone
+# Setup:
+- Clone the repository
+  - git clone
   - Create a virtual environment for packaging (packenv)
     - python3 -m venv packenv
     - python -m venv packenv
