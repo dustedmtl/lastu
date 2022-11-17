@@ -99,3 +99,14 @@ if trashfh:
 
 print(f'Storing {len(data[0])} unigram frequencies to database {args.dbfile}')
 dbutil.write_freqs_to_db(dbc.get_connection(), data)
+
+print('Adding indexes..')
+indexscripts = ['wordfreqs_indexes.sql']
+
+sqlcon = dbc.get_connection()
+cursor = sqlcon.cursor()
+for sqlfile in indexscripts:
+    with open(f'sql/{sqlfile}', 'r', encoding='utf8') as schemafile:
+        sqldata = schemafile.read()
+        cursor.executescript(sqldata)
+        sqlcon.commit()
