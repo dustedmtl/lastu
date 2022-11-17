@@ -6,6 +6,10 @@ tqdm
 # UI
 pyqt6
 
+# Excel writer
+openpyxl
+uliplot
+
 # query debug
 tabulate
 

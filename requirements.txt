@@ -28,6 +28,10 @@ pyproject-flake8
 # UI
 pyqt6
 
+# Excel writer
+openpyxl
+uliplot
+
 # query debug
 tabulate
 types-tabulate
