@@ -15,14 +15,17 @@ import time
 from datetime import datetime
 import logging
 import pandas as pd
+from UliPlot.XLSX import auto_adjust_xlsx_column_width
 
 from PyQt6.QtWidgets import (
     QTableView, QApplication, QMainWindow, QWidget,
     QGridLayout,
     QAbstractScrollArea,
     QFileDialog,
+    QMessageBox,
     QLineEdit, QPushButton, QLabel
 )
+from PyQt6.QtGui import QAction, QKeySequence
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
 
 from lib import dbutil, uiutil
@@ -64,32 +67,21 @@ class TableModel(QAbstractTableModel):
         return None
 
 
-def get_macos_path(currentdir: str):
-    """Get correct working directory for MacOS."""
-    while True:
-        parent, lastdir = split(currentdir)
-        print(parent, lastdir)
-        if lastdir in ['Contents', 'MacOS'] or lastdir.endswith('.app'):
-            currentdir = parent
-        else:
-            break
-    return currentdir
-
-
 class MainWindow(QMainWindow):
 
-    def __init__(self, dbconnection, df=None):
+    def __init__(self, dbconnection, df=None, appconfig=None):
         super().__init__()
         # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
 
         self.dbconnection = dbconnection
+        self.appconfig = appconfig
         self._otherwindows = []
         self.layout = QGridLayout()
 
-        newbutton = QPushButton("New window")
-        newbutton.clicked.connect(self.newWindow)
-        self.layout.addWidget(newbutton, 0, 1, 1, 1)
+        # newbutton = QPushButton("New window")
+        # newbutton.clicked.connect(self.newWindow)
+        # self.layout.addWidget(newbutton, 0, 1, 1, 1)
 
         self.querybox = QLineEdit()
         self.querybox.returnPressed.connect(self.enter)
@@ -115,7 +107,7 @@ class MainWindow(QMainWindow):
         self.table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         # view.setSelectionBehavior(QTableView.SelectRows)
 
-        # FIXME: font
+        # FIXME: font?
 
         self.setData(df)
 
@@ -124,22 +116,93 @@ class MainWindow(QMainWindow):
         self.copyleft = QLabel('Copyright (c) 2022 University of Turku')
         self.layout.addWidget(self.copyleft, 4, 0, 1, 2)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)
-        # FIXME: smaller font
+        # FIXME: smaller font?
+
+        menu = self.menuBar()
+
+        menuaction_file_input = QAction("&Input", self)
+        menuaction_file_input.setStatusTip("Input from wordlist")
+        menuaction_file_input.setShortcut(QKeySequence("Ctrl+i"))
+        menuaction_file_input.triggered.connect(self.inputFileQuery)
+
+        menuaction_file_export = QAction("&Export", self)
+        menuaction_file_export.setStatusTip("Export to file")
+        menuaction_file_export.setShortcut(QKeySequence("Ctrl+s"))
+        menuaction_file_export.triggered.connect(self.exportFile)
+
+        menuaction_file_clipcopy = QAction("&Copy to clipboard", self)
+        menuaction_file_clipcopy.setStatusTip("Copy to clipboard")
+        menuaction_file_clipcopy.setShortcut(QKeySequence("Ctrl+e"))
+        menuaction_file_clipcopy.triggered.connect(self.copyToClip)
+
+        file_menu = menu.addMenu("&File")
+        file_menu.addAction(menuaction_file_input)
+        file_menu.addAction(menuaction_file_export)
+        file_menu.addSeparator()
+        file_menu.addAction(menuaction_file_clipcopy)
+
+        menuaction_window_new = QAction("&New", self)
+        menuaction_window_new.setStatusTip("New window")
+        menuaction_window_new.setShortcut(QKeySequence("Ctrl+n"))
+        menuaction_window_new.triggered.connect(self.newWindow)
+
+        menuaction_window_close = QAction("&Close", self)
+        menuaction_window_close.setStatusTip("Close current window")
+        menuaction_window_close.setShortcut(QKeySequence("Ctrl+w"))
+        menuaction_window_close.triggered.connect(self.closeWindow)
+
+        menuaction_window_smaller = QAction("&Smaller fontsize", self)
+        menuaction_window_smaller.setStatusTip("Smaller fontsize")
+        menuaction_window_smaller.setShortcut(QKeySequence("Ctrl+-"))
+        menuaction_window_smaller.triggered.connect(self.smallerFont)
+
+        menuaction_window_bigger = QAction("&Bigger fontsize", self)
+        menuaction_window_bigger.setStatusTip("Bigger fontsize")
+        menuaction_window_bigger.setShortcut(QKeySequence("Ctrl++"))
+        menuaction_window_bigger.triggered.connect(self.biggerFont)
+
+        window_menu = menu.addMenu("&Window")
+        window_menu.addAction(menuaction_window_new)
+        window_menu.addAction(menuaction_window_close)
+        window_menu.addSeparator()
+        window_menu.addAction(menuaction_window_smaller)
+        window_menu.addAction(menuaction_window_bigger)
 
         widget = QWidget()
         widget.setLayout(self.layout)
+        self.centralwidget = widget
 
         self.setCentralWidget(widget)
 
     def newWindow(self):
-        w2 = MainWindow(self.dbconnection)
+        w2 = MainWindow(self.dbconnection, appconfig=self.appconfig)
         w2.querybox.setText(self.querybox.text())
         self._otherwindows.append(w2)
         w2.setData(self.data)
-        sizehint = w2.layout.sizeHint()
-        width = sizehint.width()
-        w2.setFixedWidth(width+10)
+
+        widget = self.centralwidget
+        currentfont = widget.font()
+        w2widget = w2.centralwidget
+        w2widget.setFont(currentfont)
+
+        w2.table.resizeColumnsToContents()
+        w2.resizeWidthToContents()
+
+        # sizehint = w2.layout.sizeHint()
+        # width = sizehint.width()
+        # w2.setFixedWidth(width+10)
         w2.show()
+
+    def closeWindow(self):
+        self.close()
+
+    def resizeWidthToContents(self):
+        sizehint = self.layout.sizeHint()
+        width = sizehint.width()
+        print(f'Setting window width to {width}')
+        # self.setFixedSize(self.layout.sizeHint())
+        self.setFixedWidth(width+10)
+        # self.setMinimumSize(width, 0)
 
     def enter(self):
         # print('enter pressed')
@@ -160,13 +223,7 @@ class MainWindow(QMainWindow):
             end = time.perf_counter()
 
             self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {end - start:.1f} seconds')
-
-            sizehint = self.layout.sizeHint()
-            width = sizehint.width()
-            print(f'Setting window width to {width}')
-            # self.setFixedSize(self.layout.sizeHint())
-            self.setFixedWidth(width+10)
-            # self.setMinimumSize(width, 0)
+            self.resizeWidthToContents()
 
     def inputFileQuery(self):
         fileinput = QFileDialog()
@@ -181,6 +238,78 @@ class MainWindow(QMainWindow):
             self.statusfield.setText(f'Executing query from input file {filename}')
             self.querybox.setText('')
             self.doQuery(wordinput)
+
+    def exportFile(self):
+        print("Export file called")
+        caption = "Save As"
+
+        file_filters = [
+            "Microsoft Excel (*.xlsx)",
+            "Comma Separated Values (*.csv)",
+            "Tab Separated Values (*.tsv)"
+        ]
+
+        filename, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            caption=caption,
+            directory='',
+            filter=';;'.join(file_filters),
+            initialFilter=file_filters[0],
+        )
+
+        print(filename, selected_filter)
+
+        if filename:
+            if exists(filename):
+                # Existing file, ask the user for confirmation.
+                write_confirmed = QMessageBox.question(
+                    self,
+                    "Overwrite file?",
+                    f"The file {filename} exists. Are you sure you want to overwrite it?",
+                )
+            else:
+                # File does not exist, always-confirmed.
+                write_confirmed = True
+
+            if write_confirmed:
+                df = self.data
+                if 'csv' in selected_filter or 'tsv' in selected_filter:
+                    separator = ',' if 'csv' in selected_filter else '\t'
+                    df.to_csv(filename, sep=separator, index=False)
+                elif 'xlsx' in selected_filter:
+                    with pd.ExcelWriter(filename) as excelwriter:
+                        df.to_excel(excelwriter, sheet_name='WM2 words', index=False)
+                        auto_adjust_xlsx_column_width(df, excelwriter, sheet_name='WM2 words', index=False)
+
+    def copyToClip(self):
+        print("Copy to clipboard")
+        df = self.data
+        df.to_clipboard(index=False)
+
+    def biggerFont(self):
+        widget = self.centralwidget
+        currentfont = widget.font()
+        currentfontsize = currentfont.pointSize()
+        newfontsize = currentfontsize + 1
+        print(f'Changing font size from {currentfontsize} to {newfontsize}')
+        currentfont.setPointSize(newfontsize)
+        widget.setFont(currentfont)
+        self.table.resizeColumnsToContents()
+        self.resizeWidthToContents()
+
+    def smallerFont(self):
+        widget = self.centralwidget
+        currentfont = widget.font()
+        currentfontsize = currentfont.pointSize()
+        newfontsize = currentfontsize - 1
+        print(f'Changing font size from {currentfontsize} to {newfontsize}')
+        currentfont.setPointSize(newfontsize)
+        widget.setFont(currentfont)
+        self.table.resizeColumnsToContents()
+        self.resizeWidthToContents()
+
+    def nullAction(self):
+        print("Action not implemented")
 
     def get_wordinput(self, filename):
         wordinput = defaultdict(list)
@@ -263,7 +392,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
-    w = MainWindow(dbconn)
+    w = MainWindow(dbconn, appconfig=appconfig)
     query = "form = 'silmäsi' and frequency > 10"
     # query = "pos = 'NOUN' and form = 'silmäsi' and frequency > 10"
     # query = "pos = 'NOUN' and frequency > 10 and len > 6 and bigramfreq > 6000000"
