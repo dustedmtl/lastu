@@ -32,6 +32,10 @@ parser.add_argument('-n', '--newfile',
                     action='store_true',
                     help='New db file')
 
+parser.add_argument('-N', '--noindex',
+                    action='store_true',
+                    help='Do not add wordfreqs indexes to the database')
+
 parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help='Verbose')
@@ -100,13 +104,14 @@ if trashfh:
 print(f'Storing {len(data[0])} unigram frequencies to database {args.dbfile}')
 dbutil.write_freqs_to_db(dbc.get_connection(), data)
 
-print('Adding indexes..')
-indexscripts = ['wordfreqs_indexes.sql']
+if not args.noindex:
+    print('Adding indexes..')
+    indexscripts = ['wordfreqs_indexes.sql']
 
-sqlcon = dbc.get_connection()
-cursor = sqlcon.cursor()
-for sqlfile in indexscripts:
-    with open(f'sql/{sqlfile}', 'r', encoding='utf8') as schemafile:
-        sqldata = schemafile.read()
-        cursor.executescript(sqldata)
-        sqlcon.commit()
+    sqlcon = dbc.get_connection()
+    cursor = sqlcon.cursor()
+    for sqlfile in indexscripts:
+        with open(f'sql/{sqlfile}', 'r', encoding='utf8') as schemafile:
+            sqldata = schemafile.read()
+            cursor.executescript(sqldata)
+            sqlcon.commit()
