@@ -5,8 +5,8 @@
 
 # import os
 # from os.path import isdir, isfile, exists
-from typing import Dict
-# import sys
+from typing import Dict, List
+import sys
 import argparse
 import logging
 import math
@@ -30,6 +30,9 @@ def record_pos_frequency(sqlcon: sqlite3.Connection):
     # dbutil.adhoc_query(sqlcon, "alter table wordfreqs add column frequencyx INT default 0")
     # dbutil.adhoc_query(sqlcon, "update wordfreqs set frequencyx = frequency")
 
+    updatestatement = "update wordfreqs set frequencyx = frequency"
+    dbutil.adhoc_query(sqlcon, updatestatement, verbose=True)
+
     print('Fetching information for recording aggregate frequencies...')
     posdf = dbutil.adhoc_query(sqlcon, "select id, lemma, form, frequency, frequencyx, pos, posx, feats from wordfreqs where posx = 'VERB'", todf=True)
 
@@ -46,6 +49,7 @@ def record_pos_frequency(sqlcon: sqlite3.Connection):
     posdf2 = posdf.copy().sort_values(by='id').reset_index()
     posdf2.frequencyx = posagg.frequency
 
+    # Only update the changed values
     changedf = posdf2[(posdf2.frequency != posdf2.frequencyx)].sort_values(by='frequencyx', ascending=False)
     updatestatement = "update wordfreqs set frequencyx = ? where id = ?"
     updates = [[row.frequencyx, row.id] for _idx, row in changedf.iterrows()]
@@ -87,25 +91,25 @@ def generate_form_aggregates(sqlcon: sqlite3.Connection):
         dbutil.adhoc_query(sqlcon, formsql)
 
     # This shouldn't be necessary in the new schema..
-    print('Adding reverse forms...')
-    formdf = dbutil.adhoc_query(sqlcon, "select form from wordfreqs where revform = ''", todf=True, verbose=True)
-    formrev = [form[::-1] for form in formdf.form]
-    updatestatement = "update wordfreqs set revform = ? where form = ?"
-    insvalues = []
-    for form, rev in zip(formdf.form, formrev):
-        insvalues.append([rev, form])
+    # print('Adding reverse forms...')
+    # formdf = dbutil.adhoc_query(sqlcon, "select form from wordfreqs where revform = ''", todf=True, verbose=True)
+    # formrev = [form[::-1] for form in formdf.form]
+    # updatestatement = "update wordfreqs set revform = ? where form = ?"
+    # insvalues = []
+    # for form, rev in zip(formdf.form, formrev):
+    #     insvalues.append([rev, form])
 
-    chunklen = 1000
-    total = math.ceil(len(insvalues)/chunklen)
-    cursor = sqlcon.cursor()
-    for chunk in tqdm(dbutil.chunks(insvalues, chunklen=chunklen), total=total):
-        try:
-            cursor.executemany(updatestatement, chunk)
-            sqlcon.commit()
-        except IntegrityError as e:
-            # this is not ok
-            logging.exception(e)
-            sqlcon.rollback()
+    # chunklen = 1000
+    # total = math.ceil(len(insvalues)/chunklen)
+    # cursor = sqlcon.cursor()
+    # for chunk in tqdm(dbutil.chunks(insvalues, chunklen=chunklen), total=total):
+    #     try:
+    #         cursor.executemany(updatestatement, chunk)
+    #         sqlcon.commit()
+    #     except IntegrityError as e:
+    #         # this is not ok
+    #         logging.exception(e)
+    #         sqlcon.rollback()
 
 
 def record_hood(sqlcon: sqlite3.Connection, counts: Dict):
@@ -183,7 +187,64 @@ def generate_hood(sqlcon: sqlite3.Connection):
     # print(levdict)
     # print(hamdict)
     record_hood(sqlcon, hamdict)
-    # FIXME: add hood to wordfreqs table
+
+
+def update_table(sqlcon: sqlite3.Connection,
+                 table: str,
+                 statement: str,
+                 values: List,
+                 chunklen: int = 1000):
+    """Run update statements."""
+    ...
+    total = math.ceil(len(values)/chunklen)
+    cursor = sqlcon.cursor()
+    print(f'Updating {len(values)} values to {table} table...')
+    print(statement)
+    print(values[0])
+    for chunk in tqdm(dbutil.chunks(values, chunklen=chunklen), total=total):
+        try:
+            cursor.executemany(statement, chunk)
+            sqlcon.commit()
+        except IntegrityError as e:
+            # this is not ok
+            logging.exception(e)
+            sqlcon.rollback()
+
+
+def copy_to_wordfreqs(sqlcon: sqlite3.Connection):
+    """Copy info to wordfreqs table."""
+    fetchst = "select hood, form from forms"
+    data = dbutil.adhoc_query(sqlcon, fetchst)
+    print('Getting hood information from forms table...')
+    updatestatement = "update wordfreqs set hood = ? where form = ? and hood = 0"
+    update_table(sqlcon, 'wordfreqs', updatestatement, data)
+
+    # updvalues = []
+    # for row in data:
+    #     form, hood = row
+    #     updvalues.append([hood, form])
+
+    # print(len(updvalues))
+    # return
+
+    # chunklen = 1000
+    # total = math.ceil(len(updvalues)/chunklen)
+    # cursor = sqlcon.cursor()
+    # print(f'Updating {len(updvalues)} values to wordfreqs table...')
+    # for chunk in tqdm(dbutil.chunks(updvalues, chunklen=chunklen), total=total):
+    #     try:
+    #        cursor.executemany(updatestatement, chunk)
+    #        sqlcon.commit()
+    #    except IntegrityError as e:
+    #        # this is not ok
+    #        logging.exception(e)
+    #        sqlcon.rollback()
+
+    fetchst = "select 1-formpct, lemma, form, pos from lemmaforms"
+    data = dbutil.adhoc_query(sqlcon, fetchst)
+    print('Getting ambform information from lemmaforms table...')
+    updatestatement = "update wordfreqs set ambform = ? where lemma = ? and form = ? and posx = ? and ambform = 0"
+    update_table(sqlcon, 'wordfreqs', updatestatement, data)
 
 
 def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
@@ -217,17 +278,20 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
             logging.exception(e)
             sqlcon.rollback()
 
+    # FIXME: generate amblemma information
+
 
 def add_feature_index(sqlcon: sqlite3.Connection):
     """Add feature index to wordfreqs table."""
-    print('Adding feature index...')
+    # print('Adding feature index...')
     featuresql = "select featid, feats, pos from features"
     features = dbutil.adhoc_query(sqlcon, featuresql, todf=True, verbose=True)
     have = dbutil.adhoc_query(sqlcon, 'select count(*) from wordfreqs where featid = 0')
     if have[0][0] == 0:
         print('No feature ids to update')
     else:
-        updatestatement = "update wordfreqs set featid = ? where feats = ? and pos = ?"
+        print("Updating featid to wordfreqs table...")
+        updatestatement = "update wordfreqs set featid = ? where feats = ? and pos = ? and featid = 0"
         insvalues = []
         for featid, feats, pos in tqdm(zip(features.featid, features.feats, features.pos), total=len(features)):
             insvalues.append([featid, feats, pos])
@@ -243,6 +307,32 @@ def add_feature_index(sqlcon: sqlite3.Connection):
                     # this is not ok
                     logging.exception(e)
                     sqlcon.rollback()
+
+
+def drop_indexes(sqlcon: sqlite3.Connection,
+                 match: str):
+    """Drop matching indexes."""
+    indexes = dbutil.adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
+    droplist = []
+    for idx in indexes:
+        idxname = idx[1]
+        if match in idxname:
+            droplist.append(idxname)
+    for idx in droplist:
+        print(f'Dropping index {idx}...')
+        sqlstr = f'DROP INDEX {idx}'
+        dbutil.adhoc_query(sqlcon, sqlstr)
+
+
+def add_indexes(sqlcon: sqlite3.Connection,
+                sqlfile: str):
+    """Add indexes from a SQL file."""
+    cursor = sqlcon.cursor()
+    print(f'Adding indexes from {sqlfile}...')
+    with open(f'sql/{sqlfile}', 'r', encoding='utf8') as sschemafile:
+        ssqldata = sschemafile.read()
+        cursor.executescript(ssqldata)
+        sqlcon.commit()
 
 
 def create_feature_table(sqlcon: sqlite3.Connection, table: str, feat: str):
@@ -295,28 +385,33 @@ if __name__ == '__main__':
                         action='store_true',
                         help='Record aggregate posx frequency')
 
-    parser.add_argument('-f', '--forms',
+    parser.add_argument('-F', '--features',
                         action='store_true',
-                        help='Forms tables')
+                        help='Generate features tables')
 
     parser.add_argument('-l', '--lemmas',
                         action='store_true',
-                        help='Lemmas tables')
+                        help='Calculate lemma aggregates')
 
-    parser.add_argument('-F', '--features',
+    parser.add_argument('-f', '--forms',
                         action='store_true',
-                        help='Features tables')
+                        help='Calculate form aggregates')
 
     parser.add_argument('-H', '--hood',
                         action='store_true',
-                        help='Neighbourhood')
+                        help='Calculate orthographic neighbourhood')
+
+    parser.add_argument('-c', '--copy',
+                        action='store_true',
+                        help='Copy computed forms information to wordfreqs table')
 
     args = parser.parse_args()
 
     dbc = dbutil.DatabaseConnection(args.dbfile)
     sqlconn = dbc.get_connection()
 
-    print(f'Adding helper tables to {args.dbfile}')
+    print(f'Generating helper table info to {args.dbfile}')
+
     if args.forms or args.all:
         print('Adding forms.sql...')
         with open('sql/forms.sql', 'r', encoding='utf8') as schemafile:
@@ -345,7 +440,9 @@ if __name__ == '__main__':
         record_pos_frequency(sqlconn)
 
     if args.features or args.all:
+        drop_indexes(sqlconn, "_wordfreqs_featid")
         add_feature_index(sqlconn)
+        add_indexes(sqlconn, "wordfreqs_indexes.sql")
         create_feature_table(sqlconn, 'derivations', 'derivation')
         create_feature_table(sqlconn, 'clitics', 'clitic')
         create_feature_table(sqlconn, 'nouncases', 'nouncase')
@@ -359,3 +456,6 @@ if __name__ == '__main__':
 
     if args.hood or args.all:
         generate_hood(sqlconn)
+
+    if args.copy:
+        copy_to_wordfreqs(sqlconn)
