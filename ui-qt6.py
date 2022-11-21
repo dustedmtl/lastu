@@ -46,7 +46,12 @@ class TableModel(QAbstractTableModel):
     def data(self, index: QModelIndex, role: int = None):
         if role == Qt.ItemDataRole.DisplayRole:
             # print(index.row(), index.column(), self._data.iloc[index.row()][index.column()])
-            return str(self._data.iloc[index.row()][index.column()])
+            value = self._data.iloc[index.row()][index.column()]
+            # return str(self._data.iloc[index.row()][index.column()])
+            if isinstance(value, float):
+                return "%.3f" % value
+            return str(value)
+
         return None
 
     def rowCount(self, _parent: QModelIndex = None):
@@ -107,72 +112,75 @@ class MainWindow(QMainWindow):
         self.table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         # view.setSelectionBehavior(QTableView.SelectRows)
 
-        # FIXME: font?
-
         self.setData(df)
 
         self.layout.addWidget(self.table, 3, 0, 1, 2)
 
         self.copyleft = QLabel('Copyright (c) 2022 University of Turku')
+        self.copyleft.setObjectName('copyleft')
         self.layout.addWidget(self.copyleft, 4, 0, 1, 2)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)
-        # FIXME: smaller font?
 
         menu = self.menuBar()
 
-        menuaction_file_input = QAction("&Input", self)
-        menuaction_file_input.setStatusTip("Input from wordlist")
-        menuaction_file_input.setShortcut(QKeySequence("Ctrl+i"))
-        menuaction_file_input.triggered.connect(self.inputFileQuery)
+        menuaction_input = QAction("&Input", self)
+        menuaction_input.setStatusTip("Input from wordlist")
+        menuaction_input.setShortcut(QKeySequence("Ctrl+i"))
+        menuaction_input.triggered.connect(self.inputFileQuery)
 
-        menuaction_file_export = QAction("&Export", self)
-        menuaction_file_export.setStatusTip("Export to file")
-        menuaction_file_export.setShortcut(QKeySequence("Ctrl+s"))
-        menuaction_file_export.triggered.connect(self.exportFile)
+        menuaction_export = QAction("&Export", self)
+        menuaction_export.setStatusTip("Export to file")
+        menuaction_export.setShortcut(QKeySequence("Ctrl+s"))
+        menuaction_export.triggered.connect(self.exportFile)
 
-        menuaction_file_clipcopy = QAction("&Copy to clipboard", self)
-        menuaction_file_clipcopy.setStatusTip("Copy to clipboard")
-        menuaction_file_clipcopy.setShortcut(QKeySequence("Ctrl+e"))
-        menuaction_file_clipcopy.triggered.connect(self.copyToClip)
+        menuaction_new = QAction("&New window", self)
+        menuaction_new.setStatusTip("New window")
+        menuaction_new.setShortcut(QKeySequence("Ctrl+n"))
+        menuaction_new.triggered.connect(self.newWindow)
+
+        menuaction_close = QAction("&Close window", self)
+        menuaction_close.setStatusTip("Close current window")
+        menuaction_close.setShortcut(QKeySequence("Ctrl+w"))
+        menuaction_close.triggered.connect(self.closeWindow)
+
+        menuaction_clipcopy = QAction("&Copy", self)
+        menuaction_clipcopy.setStatusTip("Copy to clipboard")
+        menuaction_clipcopy.setShortcut(QKeySequence("Ctrl+e"))
+        menuaction_clipcopy.triggered.connect(self.copyToClip)
 
         file_menu = menu.addMenu("&File")
-        file_menu.addAction(menuaction_file_input)
-        file_menu.addAction(menuaction_file_export)
+        file_menu.addAction(menuaction_input)
+        file_menu.addAction(menuaction_export)
+        file_menu.addAction(menuaction_clipcopy)
         file_menu.addSeparator()
-        file_menu.addAction(menuaction_file_clipcopy)
+        file_menu.addAction(menuaction_new)
+        file_menu.addAction(menuaction_close)
 
-        menuaction_window_new = QAction("&New", self)
-        menuaction_window_new.setStatusTip("New window")
-        menuaction_window_new.setShortcut(QKeySequence("Ctrl+n"))
-        menuaction_window_new.triggered.connect(self.newWindow)
+        # edit_menu = menu.addMenu("&Edit")
 
-        menuaction_window_close = QAction("&Close", self)
-        menuaction_window_close.setStatusTip("Close current window")
-        menuaction_window_close.setShortcut(QKeySequence("Ctrl+w"))
-        menuaction_window_close.triggered.connect(self.closeWindow)
+        menuaction_smaller = QAction("&Smaller fontsize", self)
+        menuaction_smaller.setStatusTip("Smaller fontsize")
+        menuaction_smaller.setShortcut(QKeySequence("Ctrl+-"))
+        menuaction_smaller.triggered.connect(self.smallerFont)
 
-        menuaction_window_smaller = QAction("&Smaller fontsize", self)
-        menuaction_window_smaller.setStatusTip("Smaller fontsize")
-        menuaction_window_smaller.setShortcut(QKeySequence("Ctrl+-"))
-        menuaction_window_smaller.triggered.connect(self.smallerFont)
-
-        menuaction_window_bigger = QAction("&Bigger fontsize", self)
-        menuaction_window_bigger.setStatusTip("Bigger fontsize")
-        menuaction_window_bigger.setShortcut(QKeySequence("Ctrl++"))
-        menuaction_window_bigger.triggered.connect(self.biggerFont)
+        menuaction_bigger = QAction("&Bigger fontsize", self)
+        menuaction_bigger.setStatusTip("Bigger fontsize")
+        menuaction_bigger.setShortcut(QKeySequence("Ctrl++"))
+        menuaction_bigger.triggered.connect(self.biggerFont)
 
         window_menu = menu.addMenu("&Window")
-        window_menu.addAction(menuaction_window_new)
-        window_menu.addAction(menuaction_window_close)
         window_menu.addSeparator()
-        window_menu.addAction(menuaction_window_smaller)
-        window_menu.addAction(menuaction_window_bigger)
+        window_menu.addAction(menuaction_smaller)
+        window_menu.addAction(menuaction_bigger)
+
+        # tablevfont = self.table.verticalHeader().font()
+        # print(dir(tablevfont))
 
         widget = QWidget()
         widget.setLayout(self.layout)
         self.centralwidget = widget
-
         self.setCentralWidget(widget)
+        self.setCopyleftFont()
 
     def newWindow(self):
         w2 = MainWindow(self.dbconnection, appconfig=self.appconfig)
@@ -184,6 +192,7 @@ class MainWindow(QMainWindow):
         currentfont = widget.font()
         w2widget = w2.centralwidget
         w2widget.setFont(currentfont)
+        w2.setFonts()
 
         w2.table.resizeColumnsToContents()
         w2.resizeWidthToContents()
@@ -201,8 +210,47 @@ class MainWindow(QMainWindow):
         width = sizehint.width()
         print(f'Setting window width to {width}')
         # self.setFixedSize(self.layout.sizeHint())
-        self.setFixedWidth(width+10)
+        self.setFixedWidth(width+5)
         # self.setMinimumSize(width, 0)
+
+    def setCopyleftFont(self):
+        widget = self.centralwidget
+        currentfont = widget.font()
+        currentfontsize = currentfont.pointSize()
+        newfontsize = currentfontsize - 1
+        currentfont.setPointSize(newfontsize)
+        self.copyleft.setFont(currentfont)
+
+    def setFonts(self):
+        self.setCopyleftFont()
+        currentfontsize = self.centralwidget.font().pointSize()
+        tablefontsize = currentfontsize - 1
+        tableheaderfont = self.table.verticalHeader().font()
+        tableheaderfont.setPointSize(tablefontsize)
+        self.table.verticalHeader().setFont(tableheaderfont)
+        self.table.horizontalHeader().setFont(tableheaderfont)
+        self.table.resizeColumnsToContents()
+        self.resizeWidthToContents()
+
+    def biggerFont(self):
+        widget = self.centralwidget
+        currentfont = widget.font()
+        currentfontsize = currentfont.pointSize()
+        newfontsize = currentfontsize + 1
+        print(f'Changing font size from {currentfontsize} to {newfontsize}')
+        currentfont.setPointSize(newfontsize)
+        widget.setFont(currentfont)
+        self.setFonts()
+
+    def smallerFont(self):
+        widget = self.centralwidget
+        currentfont = widget.font()
+        currentfontsize = currentfont.pointSize()
+        newfontsize = currentfontsize - 1
+        print(f'Changing font size from {currentfontsize} to {newfontsize}')
+        currentfont.setPointSize(newfontsize)
+        widget.setFont(currentfont)
+        self.setFonts()
 
     def enter(self):
         # print('enter pressed')
@@ -210,8 +258,8 @@ class MainWindow(QMainWindow):
 
     def textQuery(self):
         querytext = self.querybox.text()
-        # FIXME: ensure that the below text shows
-        self.statusfield.setText(f'Executing query {querytext}')
+        # FIXME: ensure that the below text shows. Issue with threads?
+        self.statusfield.setText(f'Executing query: {querytext}')
         self.doQuery(querytext)
 
     def doQuery(self, queryinput):
@@ -285,28 +333,6 @@ class MainWindow(QMainWindow):
         print("Copy to clipboard")
         df = self.data
         df.to_clipboard(index=False)
-
-    def biggerFont(self):
-        widget = self.centralwidget
-        currentfont = widget.font()
-        currentfontsize = currentfont.pointSize()
-        newfontsize = currentfontsize + 1
-        print(f'Changing font size from {currentfontsize} to {newfontsize}')
-        currentfont.setPointSize(newfontsize)
-        widget.setFont(currentfont)
-        self.table.resizeColumnsToContents()
-        self.resizeWidthToContents()
-
-    def smallerFont(self):
-        widget = self.centralwidget
-        currentfont = widget.font()
-        currentfontsize = currentfont.pointSize()
-        newfontsize = currentfontsize - 1
-        print(f'Changing font size from {currentfontsize} to {newfontsize}')
-        currentfont.setPointSize(newfontsize)
-        widget.setFont(currentfont)
-        self.table.resizeColumnsToContents()
-        self.resizeWidthToContents()
 
     def nullAction(self):
         print("Action not implemented")
