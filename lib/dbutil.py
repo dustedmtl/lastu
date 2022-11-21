@@ -149,7 +149,7 @@ def write_freqs_to_db(connection: sqlite3.Connection,
     print(wordvalues[0])
     print(featvalues[0])
 
-    chunklen = 10000
+    chunklen = 100000
     totwordchunks = math.ceil(len(wordvalues)/chunklen)
 
     print(f'Inserting {len(wordvalues)} rows in {totwordchunks} chunks...')
@@ -367,7 +367,7 @@ class DatabaseConnection:
         dropcols = ['w.posx', 'w.id', 'w.featid',
                     'w.frequencyx',
                     'w.revform',
-                    'w.hood', 'w.ambform',  # for now
+                    # 'w.hood', 'w.ambform',  # for now
                     'ft.featid', 'ft.feats', 'ft.pos', 'ft.posx',
                     'l.pos', 'l.lemma', 'l.comparts',
                     'l.amblemma',
@@ -673,7 +673,7 @@ def parse_querydict(querydict: Dict) -> Tuple[str, List, List, List, List]:
             indexers.add(querypart)
             whereparts.append(f'w.{querypart} = ?')
             args.append(queryval)
-    wherestr = "WHERE " + " OR ".join(whereparts)
+    wherestr = "WHERE (" + " OR ".join(whereparts) + ") "
     return wherestr, args, errors, list(indexers), []
 
 
@@ -855,8 +855,9 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
                                       params=args)
 
         df = pd.DataFrame(sql_query)
-        df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last')
-        df = df[:10000]
+        # FIXME: the below are only for useposx
+        df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last').reset_index().drop('index', axis=1)
+        df = df[:dbconnection.rowlimit()]
 
         endtime = time.perf_counter()
         print()
