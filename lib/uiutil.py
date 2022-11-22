@@ -104,7 +104,7 @@ def get_config(filename: str) -> Tuple[Optional[configparser.ConfigParser], Opti
         config.read(currfn)
         return config, basedir
 
-    return None, None
+    return None, basedir
 
 
 def get_configvar(cfg: configparser.ConfigParser,
