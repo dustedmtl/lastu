@@ -36,8 +36,10 @@ uliplot
 tabulate
 types-tabulate
 
-# edit distance
-symspellpy
+# edit distance / neighbourhood calculations
+# these don't install out of the box for Windows
+# symspellpy
+# uralicNLP
 
 # building
 # pyinstaller
