@@ -21,8 +21,8 @@ from tqdm.autonotebook import tqdm
 from tabulate import tabulate
 from .mytypes import Freqs
 
-logger = logging.getLogger('ui-qt6')
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger('wm2')
+# logger.setLevel(logging.DEBUG)
 
 
 def get_connection(dbfile: str) -> sqlite3.Connection:

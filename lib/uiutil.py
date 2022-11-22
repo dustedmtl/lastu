@@ -10,8 +10,8 @@ import logging
 import configparser
 from pathlib import Path
 
-logger = logging.getLogger('ui-qt6')
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger('wm2')
+# logger.setLevel(logging.DEBUG)
 
 
 class ConfigurationError(Exception):
@@ -31,7 +31,7 @@ def get_macos_path(currentdir: str):
     """Get correct working directory for MacOS."""
     while True:
         parent, lastdir = os.path.split(currentdir)
-        print(parent, lastdir)
+        # logger.debug('Parent: %s, lastdir: %s', parent, lastdir)
         if lastdir in ['Contents', 'MacOS'] or lastdir.endswith('.app'):
             currentdir = parent
         else:
@@ -44,7 +44,7 @@ def get_windows_path(currentdir: str):
     # FIXME: actually implement this
     while True:
         parent, lastdir = os.path.split(currentdir)
-        # print(parent, lastdir)
+        logger.debug('Parent: %s, lastdir: %s', parent, lastdir)
         if lastdir in ['Contents', 'MacOS'] or lastdir.endswith('.app'):
             currentdir = parent
         else:
@@ -70,6 +70,7 @@ def get_config(filename: str) -> Tuple[Optional[configparser.ConfigParser], Opti
 
     currfn = os.path.join('.', filename)
     if os.path.exists(currfn):
+        logger.debug('Using %s as configuration file', currfn)
         config.read(currfn)
         return config, '.'
 
@@ -87,16 +88,19 @@ def get_config(filename: str) -> Tuple[Optional[configparser.ConfigParser], Opti
         else:
             # unsupported
             ...
+        logger.debug("Got base dir from system: %s", basedir)
 
     if basedir:
         currfn = os.path.join(basedir, filename)
         if os.path.exists(currfn):
+            logger.debug('Using %s as configuration file', currfn)
             config.read(currfn)
             return config, basedir
 
     homedir = str(Path.home())
     currfn = os.path.join(homedir, filename)
     if os.path.exists(currfn):
+        logger.debug('Using %s as configuration file', currfn)
         config.read(currfn)
         return config, basedir
 
@@ -114,5 +118,5 @@ def get_configvar(cfg: configparser.ConfigParser,
         value = value.replace('~', str(homedir))
         return value
     except Exception as e:
-        print(f'Issue with config: section {section} key {key}', e)
+        logger.warning('Issue with config: section %s key %s: %s', section, key, e)
     return None
