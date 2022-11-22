@@ -155,6 +155,11 @@ class MainWindow(QMainWindow):
         menuaction_close.setShortcut(QKeySequence("Ctrl+w"))
         menuaction_close.triggered.connect(self.closeWindow)
 
+        menuaction_quit = QAction("&Quit application", self)
+        menuaction_quit.setStatusTip("Quit application")
+        menuaction_quit.setShortcut(QKeySequence("Ctrl+q"))
+        menuaction_quit.triggered.connect(self.quit)
+
         menuaction_clipcopy = QAction("&Copy", self)
         menuaction_clipcopy.setStatusTip("Copy to clipboard")
         menuaction_clipcopy.setShortcut(QKeySequence("Ctrl+e"))
@@ -167,6 +172,8 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(menuaction_new)
         file_menu.addAction(menuaction_close)
+        file_menu.addSeparator()
+        file_menu.addAction(menuaction_quit)
 
         # edit_menu = menu.addMenu("&Edit")
 
@@ -215,6 +222,10 @@ class MainWindow(QMainWindow):
 
     def closeWindow(self):
         self.close()
+
+    def quit(self):
+        logger.debug("Application quit called")
+        app.quit()
 
     def resizeWidthToContents(self):
         sizehint = self.layout.sizeHint()
