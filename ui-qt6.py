@@ -8,7 +8,9 @@
 # pylint: disable=invalid-name
 
 import sys
-from os.path import exists, getsize, join, split
+from typing import Optional
+from os.path import exists, getsize, join
+import configparser
 from collections import defaultdict
 from pathlib import Path
 import time
@@ -31,10 +33,20 @@ from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
 from lib import dbutil, uiutil
 
 homedir = Path.home()
-logger = logging.getLogger('ui-qt6')
+logger = logging.getLogger('wm2')
+log_format = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
+                               datefmt='%d.%m.%Y %H:%M:%S')
+# log_format = '[%(asctime)s] [%(levelname)s] - %(message)s'
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(join(homedir, 'ui-qt6.txt'))
-logger.addHandler(handler)
+logfile_handler = logging.FileHandler(join(homedir, 'wm2log.txt'))
+logfile_handler.setFormatter(log_format)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(log_format)
+stream_handler.setLevel(logging.DEBUG)
+
+logger.addHandler(logfile_handler)
+logger.addHandler(stream_handler)
 
 
 class TableModel(QAbstractTableModel):
@@ -173,14 +185,13 @@ class MainWindow(QMainWindow):
         window_menu.addAction(menuaction_smaller)
         window_menu.addAction(menuaction_bigger)
 
-        # tablevfont = self.table.verticalHeader().font()
-        # print(dir(tablevfont))
-
         widget = QWidget()
         widget.setLayout(self.layout)
         self.centralwidget = widget
         self.setCentralWidget(widget)
-        self.setCopyleftFont()
+        # print(widget.font().pointSize(), self.table.verticalHeader().font().pointSize())
+        self.setFonts()
+        # self.setCopyleftFont()
 
     def newWindow(self):
         w2 = MainWindow(self.dbconnection, appconfig=self.appconfig)
@@ -208,7 +219,7 @@ class MainWindow(QMainWindow):
     def resizeWidthToContents(self):
         sizehint = self.layout.sizeHint()
         width = sizehint.width()
-        print(f'Setting window width to {width}')
+        logger.debug('Setting window width to %d', width)
         # self.setFixedSize(self.layout.sizeHint())
         self.setFixedWidth(width+5)
         # self.setMinimumSize(width, 0)
@@ -224,9 +235,10 @@ class MainWindow(QMainWindow):
     def setFonts(self):
         self.setCopyleftFont()
         currentfontsize = self.centralwidget.font().pointSize()
-        tablefontsize = currentfontsize - 1
+        tablefontsize = currentfontsize - 2
         tableheaderfont = self.table.verticalHeader().font()
         tableheaderfont.setPointSize(tablefontsize)
+        # print(currentfontsize, self.table.verticalHeader().font().pointSize(), tablefontsize)
         self.table.verticalHeader().setFont(tableheaderfont)
         self.table.horizontalHeader().setFont(tableheaderfont)
         self.table.resizeColumnsToContents()
@@ -237,7 +249,7 @@ class MainWindow(QMainWindow):
         currentfont = widget.font()
         currentfontsize = currentfont.pointSize()
         newfontsize = currentfontsize + 1
-        print(f'Changing font size from {currentfontsize} to {newfontsize}')
+        logger.debug('Changing font size from %d to %d', currentfontsize, newfontsize)
         currentfont.setPointSize(newfontsize)
         widget.setFont(currentfont)
         self.setFonts()
@@ -247,7 +259,7 @@ class MainWindow(QMainWindow):
         currentfont = widget.font()
         currentfontsize = currentfont.pointSize()
         newfontsize = currentfontsize - 1
-        print(f'Changing font size from {currentfontsize} to {newfontsize}')
+        logger.debug('Changing font size from %d to %d', currentfontsize, newfontsize)
         currentfont.setPointSize(newfontsize)
         widget.setFont(currentfont)
         self.setFonts()
@@ -288,7 +300,7 @@ class MainWindow(QMainWindow):
             self.doQuery(wordinput)
 
     def exportFile(self):
-        print("Export file called")
+        logger.debug("Export file called")
         caption = "Save As"
 
         file_filters = [
@@ -305,7 +317,7 @@ class MainWindow(QMainWindow):
             initialFilter=file_filters[0],
         )
 
-        print(filename, selected_filter)
+        logger.debug('Output from export file dialog: %s', filename)
 
         if filename:
             if exists(filename):
@@ -330,12 +342,12 @@ class MainWindow(QMainWindow):
                         auto_adjust_xlsx_column_width(df, excelwriter, sheet_name='WM2 words', index=False)
 
     def copyToClip(self):
-        print("Copy to clipboard")
+        logger.debug("Copy to clipboard called")
         df = self.data
         df.to_clipboard(index=False)
 
     def nullAction(self):
-        print("Action not implemented")
+        logger.info("Action not implemented")
 
     def get_wordinput(self, filename):
         wordinput = defaultdict(list)
@@ -379,44 +391,69 @@ class MainWindow(QMainWindow):
         self.table.resizeColumnsToContents()
 
 
-if __name__ == "__main__":
+def selectDataBase() -> Optional[str]:
+    """Database selector."""
+    fileinput = QFileDialog(caption="Choose database file to load")
+    fileinput.setFileMode(QFileDialog.FileMode.ExistingFile)
+    fileinput.setNameFilter("Database files (*.db)")
+    fileinput.setViewMode(QFileDialog.ViewMode.Detail)
 
-    logger.info('\nLaunching application at %s', datetime.now())
-    inifile = 'wm2.ini'
-    appconfig, currworkdir = uiutil.get_config(inifile)
-    # print(appconfig, currworkdir)
-    if not appconfig:
-        logger.info("Configuration file '%s' not found", inifile)
-        # FIXME: error window if ini file not found
+    if fileinput.exec():
+        filenames = fileinput.selectedFiles()
+        filename = filenames[0]
+        return filename
 
-    dbdir = uiutil.get_configvar(appconfig, 'input', 'datadir')
-    dbfile = uiutil.get_configvar(appconfig, 'input', 'database')
+    return None
+
+
+def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[str]:
+    """Get database file using various methods."""
+    dbdir = uiutil.get_configvar(cfg, 'input', 'datadir')
+    dbf = uiutil.get_configvar(cfg, 'input', 'database')
 
     if not dbdir:
-        if not currworkdir:
+        if not currdir:
             logger.error('No data directory found')
             raise uiutil.ConfigurationError('No data directory found')
-        dbdir = join(currworkdir, 'data')
-        logger.info('No data directory specified, using current working directory %s', currworkdir)
-    if not dbfile:
-        dbfile = 's24_c2.db'
+        dbdir = join(currdir, 'data')
+        logger.info('No data directory specified, using current working directory %s', currdir)
+    if not dbf:
+        dbf = 'wm2database.db'
 
-    dbfp = join(dbdir, dbfile)
-    logger.info("Using database file path %s", dbfp)
-    if not exists(dbfp) or getsize(dbfp) == 0:
-        logger.debug("File not found: %s; trying current directory for finding data file", dbfp)
-        dbfp = join('data', dbfile)
-        if not exists(dbfp) or getsize(dbfp) == 0:
-            logger.error("No such file: %s", dbfp)
-            raise FileNotFoundError(dbfp)
+    dbpath = join(dbdir, dbf)
+    logger.info("Trying database file in path %s", dbpath)
+    if not exists(dbpath) or getsize(dbpath) == 0:
+        dbpath = join('data', dbf)
+        logger.info("File not found: %s; trying current directory for finding data file", dbpath)
+        if not exists(dbpath) or getsize(dbpath) == 0:
+            choosedb = selectDataBase()
+            logger.debug('Database chosen with file dialog: %s', choosedb)
+            if not choosedb:
+                logger.error("No such file: %s", dbpath)
+                raise FileNotFoundError(dbpath)
+            dbpath = choosedb
 
-    try:
-        logger.info("Connecting to %s...", dbfp)
-        dbconn = dbutil.DatabaseConnection(dbfp)
-    except Exception as e:
-        logger.error("Couldn't connect to %s: %s", dbfp, e)
+    return dbpath
+
+if __name__ == "__main__":
+
+    logger.info('Launching application at %s', datetime.now())
+    inifile = 'wm2.ini'
+    appconfig, currdir = uiutil.get_config(inifile)
+    # print(appconfig, currworkdir)
+    if not appconfig:
+        logger.warning("Configuration file '%s' not found", inifile)
+        # FIXME: error window if ini file not found
 
     app = QApplication(sys.argv)
+    dbfile = getDataBaseFile(appconfig, currdir)
+    logger.debug('Got final database file: %s', dbfile)
+
+    try:
+        logger.info("Connecting to %s...", dbfile)
+        dbconn = dbutil.DatabaseConnection(dbfile)
+    except Exception as e:
+        logger.error("Couldn't connect to %s: %s", dbfile, e)
 
     w = MainWindow(dbconn, appconfig=appconfig)
     query = "form = 'silmäsi' and frequency > 10"
