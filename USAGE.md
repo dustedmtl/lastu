@@ -1,7 +1,7 @@
 # Usage
 
 The application needs two files to with an optional init file:
- - The executable / application (<code>wm2.exe</code> / <code>wm2.app</code>)
+ - The executable / application (`wm2.exe` / <code>wm2.app</code>)
  - The database file (SQLite3)
  - The init file <code>wm2.ini</code> (optional)
 
