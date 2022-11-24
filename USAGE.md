@@ -1,9 +1,9 @@
 # Usage
 
 The application needs two files to with an optional init file:
- - The executable / application (`wm2.exe` / <code>wm2.app</code>)
+ - The executable / application (`wm2.exe` / `wm2.app`)
  - The database file (SQLite3)
- - The init file <code>wm2.ini</code> (optional)
+ - The init file `wm2.ini` (optional)
 
 ## Init file and database file
 
@@ -12,49 +12,49 @@ At this point the main function of the init file is to tell the application what
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
  - The user's home directory
-   - Mac: <code>/Users/\<username\>/wm2.ini</code>
-   - Windows: <code>C:\\Users\\\<username\>\\wm2.ini</code>
+   - Mac: `/Users/\<username\>/wm2.ini`
+   - Windows: `C:\\Users\\\<username\>\\wm2.ini`
 
-If the init file is not found, the database filename will default to <code>wm2database.db</code> and
-the application will try to locate it from the <code>data</code> subdirectory.
+If the init file is not found, the database filename will default to `wm2database.db` and
+the application will try to locate it from the `data` subdirectory.
 
 ## User interface
 
 ### Window management
 
 The user interface consists of one or more windows. Shortcuts for window management:
-  - <code>C-N</code> - new window
-  - <code>C-W</code> - close currently active window
-  - <code>C-Q</code> - quit application
+  - `C-N` - new window
+  - `C-W` - close currently active window
+  - `C-Q` - quit application
 
 ### Queries
 
 A query consists of one or more parts separated by the keyword 'and':
- - <code>form = 'auto'</code>
- - <code>lemma = 'voi' and nouncase = 'Ine'</code>
+ - `form = 'auto'`
+ - `lemma = 'voi' and nouncase = 'Ine'`
 
-The quotes around <code>\<value></code> are optional.
+The quotes around `\<value>` are optional.
 
 A query part may relate to a string, numeric or boolean value.
- - string: <code>\<key></code> <code>\<operator></code> <code>\<value></code>
- - numeric: <code>\<key></code> <code>\<operator></code> <code>\<value></code>
- - boolean: <code>\<key></code> OR <code>NOT \<key></code>
+ - string: `\<key>` `\<operator>` `\<value>`
+ - numeric: `\<key>` `\<operator>` `\<value>`
+ - boolean: `\<key>` OR `NOT \<key>`
 
 Allowed keys:
- - string: <code>lemma</code>, <code>form</code>, <code>pos</code>, <code>start</code>, <code>middle</code>, <code>end</code>, <code>nouncase</code>, <code>number</code>, <code>clitic</code>, <code>derivation</code>, ...
- - numeric: <code>len</code>, <code>frequency</code>, <code>initgramfreq</code>, <code>fingramfreq</code>, <code>bigramfreq</code>, ...
- - boolean: <code>compound</code>
+ - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `nouncase`, `number`, `clitic`, `derivation`, ...
+ - numeric: `len`, `frequency`, `initgramfreq`, `fingramfreq`, `bigramfreq`, ...
+ - boolean: `compound`
 
 Allowed operators:
- - string: <code>=</code> <code>!=</code> <code>in</code> <code>like</code>
-   - word <code>NOT</code> can be prepended to <code>in</code> and <code>like</code> 
- - numeric: <code>=</code> <code>!=</code> <code><</code> <code>></code> <code><=</code> <code>>=</code>
+ - string: `=` `!=` `in` `like`
+   - word `NOT` can be prepended to `in` and `like` 
+ - numeric: `=` `!=` `<` `>` `<=` `>=`
 
 Keys, operators and values are case-sensitive (this will change in the future):
  - all keys and operators are lowercase.
  - values are also lowercase, except..
-   - Word classes (PoS) are uppercase (<code>NOUN</code>)
-   - UD morphogical features such as case and clitic are titlecase (<code>Ine</code>, <code>Ko</code>)
+   - Word classes (PoS) are uppercase (`NOUN`)
+   - UD morphogical features such as case and clitic are titlecase (`Ine`, `Ko`)
 
 TBD:
  - handle cases of input automatically
@@ -63,7 +63,7 @@ TBD:
 ### Input and output
 
 Input and output commands:
-  - <code>C-I</code> - query from wordlist
-  - <code>C-S</code> - export to file (csv/tsv/xlsx)
-  - <code>C-E</code> - copy to clipboard
+  - `C-I` - query from wordlist
+  - `C-S` - export to file (csv/tsv/xlsx)
+  - `C-E` - copy to clipboard
 
