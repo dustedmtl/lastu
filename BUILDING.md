@@ -19,8 +19,10 @@
 - Build
   - Mac:
     - `pyinstaller --windowed ui-qt6.py`
+    - OR `pyinstaller ui-qt6.spec`
   - Windows:
     - `pyinstaller --onefile ui-qt6.py`
+    - OR `pyinstaller ui-qt6-win.spec`
   - See also : https://pyinstaller.org/en/stable/usage.html
 
 ## Distribution
