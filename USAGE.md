@@ -26,10 +26,37 @@ The user interface consists of one or more windows. Shortcuts for window managem
   - <code>C-N</code> - new window
   - <code>C-W</code> - close currently active window
   - <code>C-Q</code> - quit application
-  
+
 ### Queries
 
-TBD
+A query consists of one or more parts separated by the keyword 'and':
+ - <code>form = 'auto'</code>
+ - <code>lemma = 'voi' and nouncase = 'Ine'</code>
+
+The quotes around <code>\<value></code> are optional.
+
+A query part may relate to a string, numeric or boolean value.
+ - string: <code>\<key></code> <code>\<operator></code> <code>\<value></code>
+ - numeric: <code>\<key></code> <code>\<operator></code> <code>\<value></code>
+ - boolean: <code>\<key></code> OR <code>NOT \<key></code>
+
+Allowed keys:
+ - string: lemma, form, pos, start, middle, end, nouncase, number, clitic, derivation, ...
+ - numeric: len, frequency, initgramfreq, fingramfreq, bigramfreq, ...
+ - boolean: compound
+
+Allowed operators:
+ - string: = != in like
+   - for in and like, 
+ - numeric: = != < > <= >=
+
+Keys, operators and values are case-sensitive. This will change in the future.
+ - all keys and operators are lowercase.
+ - values are also lowercase, except..
+   - Word classes (PoS) are uppercase (NOUN)
+   - UD morphogical features such as case and clitic are titlecase (Ine, Ko)
+
+TBD: List of UD tags etc
 
 ### Input and output
 
