@@ -47,15 +47,16 @@ Allowed keys:
 
 Allowed operators:
  - string: <code>=</code> <code>!=</code> <code>in</code> <code>like</code>
-   - word <code>NOT</code> can be prepended for <code>in<code> and <code>like<code>, 
+   - word <code>NOT</code> can be prepended for <code>in</code> and <code>like</code> 
  - numeric: <code>=</code> <code>!=</code> <code><</code> <code>></code> <code><=</code> <code>>=</code>
 
-Keys, operators and values are case-sensitive. This will change in the future.
+Keys, operators and values are case-sensitive (this will change in the future):
  - all keys and operators are lowercase.
  - values are also lowercase, except..
    - Word classes (PoS) are uppercase (<code>NOUN</code>)
    - UD morphogical features such as case and clitic are titlecase (<code>Ine</code>, <code>Ko</code>)
 
+TBD: handle cases of input automatically
 TBD: List of UD tags etc
 
 ### Input and output
