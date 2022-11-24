@@ -41,20 +41,20 @@ A query part may relate to a string, numeric or boolean value.
  - boolean: <code>\<key></code> OR <code>NOT \<key></code>
 
 Allowed keys:
- - string: lemma, form, pos, start, middle, end, nouncase, number, clitic, derivation, ...
- - numeric: len, frequency, initgramfreq, fingramfreq, bigramfreq, ...
- - boolean: compound
+ - string: <code>lemma</code>, <code>form</code>, <code>pos</code>, <code>start</code>, <code>middle</code>, <code>end</code>, <code>nouncase</code>, <code>number</code>, <code>clitic</code>, <code>derivation</code>, ...
+ - numeric: <code>len</code>, <code>frequency</code>, <code>initgramfreq</code>, <code>fingramfreq</code>, <code>bigramfreq</code>, ...
+ - boolean: <code>compound</code>
 
 Allowed operators:
- - string: = != in like
-   - for in and like, 
- - numeric: = != < > <= >=
+ - string: <code>=</code> <code>!=</code> <code>in</code> <code>like</code>
+   - word <code>NOT</code> can be prepended for <code>in<code> and <code>like<code>, 
+ - numeric: <code>=</code> <code>!=</code> <code><</code> <code>></code> <code><=</code> <code>>=</code>
 
 Keys, operators and values are case-sensitive. This will change in the future.
  - all keys and operators are lowercase.
  - values are also lowercase, except..
-   - Word classes (PoS) are uppercase (NOUN)
-   - UD morphogical features such as case and clitic are titlecase (Ine, Ko)
+   - Word classes (PoS) are uppercase (<code>NOUN</code>)
+   - UD morphogical features such as case and clitic are titlecase (<code>Ine</code>, <code>Ko</code>)
 
 TBD: List of UD tags etc
 
