@@ -1,4 +1,4 @@
-# Building an executable
+# Packaging an executable
 
 ## Setup
 - Clone the repository
@@ -26,4 +26,8 @@
   - See also : https://pyinstaller.org/en/stable/usage.html
 
 ## Distribution
+- TBD
+
+# Building a database
+
 - TBD
