@@ -12,8 +12,8 @@ At this point the main function of the init file is to tell the application what
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
  - The user's home directory
-   - Mac: `/Users/\<username\>/wm2.ini`
-   - Windows: `C:\\Users\\\<username\>\\wm2.ini`
+   - Mac: `/Users/<username>/wm2.ini`
+   - Windows: `C:\Users\<username>\wm2.ini`
 
 If the init file is not found, the database filename will default to `wm2database.db` and
 the application will try to locate it from the `data` subdirectory.
@@ -33,12 +33,12 @@ A query consists of one or more parts separated by the keyword 'and':
  - `form = 'auto'`
  - `lemma = 'voi' and nouncase = 'Ine'`
 
-The quotes around `\<value>` are optional.
+The quotes around `<value>` are optional.
 
 A query part may relate to a string, numeric or boolean value.
- - string: `\<key>` `\<operator>` `\<value>`
- - numeric: `\<key>` `\<operator>` `\<value>`
- - boolean: `\<key>` OR `NOT \<key>`
+ - string: `<key>` `<operator>` `<value>`
+ - numeric: `<key>` `<operator>` `<value>`
+ - boolean: `<key>` OR `NOT <key>`
 
 Allowed keys:
  - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `nouncase`, `number`, `clitic`, `derivation`, ...
