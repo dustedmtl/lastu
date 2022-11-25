@@ -62,6 +62,8 @@ class TableModel(QAbstractTableModel):
             # return str(self._data.iloc[index.row()][index.column()])
             if isinstance(value, float):
                 return "%.3f" % value
+            if isinstance(value, str) and len(value) > 50:
+                value = value[:50] + "..."
             return str(value)
 
         return None
