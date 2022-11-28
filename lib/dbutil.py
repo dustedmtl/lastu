@@ -328,6 +328,10 @@ class DatabaseConnection:
             'Clitic': 'clitic'
         }
 
+    def new_connection(self):
+        """Get new (transient) database connection."""
+        return get_connection(self.dbfile)
+
     def record_columns(self):
         """Store column lists."""
         for table in self.tables:
@@ -497,7 +501,8 @@ indexorder = ['w.form', 'w.revform', 'w.frequency', 'w.lemma', 'w.len',
 # fields that have good indexes
 indexfields = {
     'w.frequency': 'idx_wordfreqs_freq_pos',
-    'w.form': 'idx_wordfreqs_freq_form',
+#    'w.form': 'idx_wordfreqs_freq_form',
+    'w.form': 'idx_wordfreqs_form_freq',
     'w.lemma': 'idx_wordfreqs_freq_lemma',
     'w.revform': 'idx_wordfreqs_freq_revform',
     'w.len': 'idx_wordfreqs_freq_len',
@@ -550,7 +555,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
         fullcol = f'{usetable}.{k}'
         # print(f'{fullcol},{k},{c},{v}')
         if fullcol in indexorder:
-            if c == 'like' or c == 'not like':
+            if c in ['like', 'not like']:
                 # % not at the beginning of string of like query: no forced indexing
                 if not v.startswith('%'):
                     indexers.append(fullcol)
@@ -742,13 +747,14 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
                             orderby: str = 'w.frequency',
                             query: Union[str, Dict] = None,
                             defaultindex: bool = False,
+                            newconnection: bool = False,
                             lemmas: bool = False,
                             # aggregate: bool = True,
                             grams: bool = False) -> Tuple[pd.DataFrame, int, str]:
     """Get frequencies as dataframe."""
     # FIXME: validate rowlimit
 
-    connection = dbconnection.connection
+    connection = dbconnection.new_connection() if newconnection else dbconnection.connection
 
     # FIXME: orderstring takes posx into account
     orderstring = get_orderby(orderby)
