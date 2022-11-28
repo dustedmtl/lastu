@@ -518,7 +518,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
     wherestr = ""
     args = []
     useposx = True
-    gfields = defaultdict(set)  # type: ignore
+    # gfields = defaultdict(set)  # type: ignore
 
     indexers = []
     notlikeindexers = []
@@ -563,7 +563,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 notlikeindexers.append(fullcol)
                 indexers.append(fullcol)
 
-        gflist = gfields.get(k, set())
+        # gflist = gfields.get(k, set())
         if c in ['in', 'notin'] and c not in ['start', 'middle', 'end']:
             invals = [w.strip() for w in v.split(',')]
             if k in ['derivationx', 'cliticx']:
@@ -583,7 +583,6 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 usetable = k[0]
                 # Separate table for derivations and clitics is better
                 qmarks = ','.join(['?'] * len(invals))
-                # FIXME: Do NOT IN feature searches from separate table or not? How to handle empties?
                 # select * from wordfreqs where not (feats glob '*Case=Nom*' OR feats glob '*Case=Par*') limit 1000;
                 # FIXME: Search directly from feats in main table?
                 if c == 'notin':
@@ -610,7 +609,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                     c = 'not in'
                 whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
                 args.extend(invals)
-            _ = [gflist.add(_) for _ in invals]
+            # _ = [gflist.add(_) for _ in invals]
         else:
             # FIXME: IN query, NOT IN query for start, middle, end
             if k == 'start':
@@ -628,8 +627,10 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                     args.append(f'?*{v}*?')
                     # whereparts.append(f'instr({usetable}.form, ?) > 1')
                     # args.append(v)
-                    # whereparts.append(f'{usetable}.revform NOT GLOB ?')
-                    # args.append(v[::-1] + "*")
+                    whereparts.append(f'{usetable}.form NOT GLOB ?')
+                    args.append(v + "*")
+                    whereparts.append(f'{usetable}.revform NOT GLOB ?')
+                    args.append(v[::-1] + "*")
                 else:
                     whereparts.append(f'instr({usetable}.form, ?) == 0')
                     args.append(v)
@@ -650,9 +651,9 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
             # FIXME: take inequality from the correct table (features)
             whereparts.append(f'{usetable}.{k} {c} ?')
             args.append(v)
-            if c == '=':
-                gflist.add(v)
-        gfields[k] = gflist
+            # if c == '=':
+            #    gflist.add(v)
+        # gfields[k] = gflist
 
     if len(whereparts) > 0:
         wherestr = "WHERE " + " AND ".join(whereparts)
