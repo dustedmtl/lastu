@@ -315,6 +315,7 @@ class DatabaseConnection:
         self.tables = ['wordfreqs', 'features', 'lemmas']
         self.columns = defaultdict(list)  # type: ignore
         self.record_columns()
+        self.fetch_aggregate_frequencies()
 
         self._featmap = {
             'Number': 'nnumber',
@@ -331,6 +332,14 @@ class DatabaseConnection:
     def new_connection(self):
         """Get new (transient) database connection."""
         return get_connection(self.dbfile)
+
+    def fetch_aggregate_frequencies(self):
+        """Fetch aggregate frequencies."""
+        self.wordfreqs = adhoc_query(self.connection, 'select sum(frequency) from wordfreqs', verbose=True)
+        self.initfreqs = adhoc_query(self.connection, 'select sum(frequency) from initgramfreqs', verbose=True)
+        self.finfreqs = adhoc_query(self.connection, 'select sum(frequency) from fingramfreqs', verbose=True)
+        self.bifreqs = adhoc_query(self.connection, 'select sum(frequency) from bigramfreqs', verbose=True)
+        self.wbifreqs = adhoc_query(self.connection, 'select sum(frequency) from wordbigramfreqs', verbose=True)
 
     def record_columns(self):
         """Store column lists."""
@@ -804,14 +813,6 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     for table in jointables:
         if table == fromtable:
             continue
-#        if table == "wordfreqs w":
-#            # addjoins += " LEFT JOIN wordfreqs w ON w.feats = ft.feats AND w.pos = ft.pos"
-#            addjoins += " LEFT JOIN wordfreqs w ON w.featid = ft.featid"
-#        if table == "features ft" and addfeats:
-#            # addjoins += " LEFT JOIN features ft ON w.feats = ft.feats AND w.pos = ft.pos"
-#            addjoins += " LEFT JOIN features ft ON w.featid = ft.featid"
-#        if table == "forms f":
-#            addjoins += " LEFT JOIN forms f ON w.form = f.form"
 
     if 'd.derivation' in wherestr:
         addfrom += ", derivations d"
@@ -883,3 +884,36 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         querymessage = errmsg
 
     return df, querystatus, querymessage
+
+
+def add_relative_frequencies(dbc: DatabaseConnection,
+                             df: pd.DataFrame,
+                             scale: int = 1e6,
+                             drop: bool = False) -> pd.DataFrame:
+    """Add relative frequencies."""
+    resdf = df.copy()
+    fieldmap = {
+        'frequency': dbc.wordfreqs,
+        'initgramfreq': dbc.initfreqs,
+        'fingramfreq': dbc.finfreqs,
+        'bigramfreq': dbc.wbifreqs,
+        }
+    columns = df.columns
+    addidx = 0
+    for k, v in fieldmap.items():
+        try:
+            kidx = list(columns).index(k)
+            # print(k, kidx, v)
+            # print(df[k], v, scale)
+            newcol = np.array(df[k]) / v * scale
+            # print(df[k], v, scale, newcol[0])
+            # print(f'Inserting column rel{k} in position {kidx + 1 + addidx}')
+            resdf.insert(kidx + 1 + addidx, f'rel{k}', newcol[0])
+            if drop:
+                resdf = resdf.drop(k, axis=1)
+            else:
+                addidx += 1
+        except ValueError as e:
+            # ignore
+            print(e)
+    return resdf
