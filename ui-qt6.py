@@ -48,16 +48,19 @@ logger = logging.getLogger('wm2')
 log_format = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
                                datefmt='%d.%m.%Y %H:%M:%S')
 # log_format = '[%(asctime)s] [%(levelname)s] - %(message)s'
+# logger.setFormat(log_format)
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                    datefmt='%d.%m.%Y %H:%M:%S')
 logger.setLevel(logging.DEBUG)
 logfile_handler = logging.FileHandler(join(homedir, 'wm2log.txt'))
 logfile_handler.setFormatter(log_format)
 
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(log_format)
-stream_handler.setLevel(logging.DEBUG)
+# stream_handler = logging.StreamHandler()
+# stream_handler.setFormatter(log_format)
+# stream_handler.setLevel(logging.DEBUG)
 
 logger.addHandler(logfile_handler)
-logger.addHandler(stream_handler)
+# logger.addHandler(stream_handler)
 
 
 class TableModel(QAbstractTableModel):
