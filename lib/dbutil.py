@@ -404,7 +404,7 @@ class DatabaseConnection:
 # FIXME: get supported features from database connection?
 def parse_query(query: str) -> Tuple[List[List[str]], List]:
     """Parse query to SQL key-values."""
-    parts = query.split('and')
+    parts = query.lower().split('and')
     kvparts = []
     errors: List[str] = []
 
@@ -540,8 +540,10 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
         k, c, v = andpart
         usetable = 'w'
         if k in separatetables:
+            v = ','.join([w.title() for w in v.split(',')])
             usetable = k[0]
         elif k in features:
+            v = ','.join([w.title() for w in v.split(',')])
             usetable = 'ft'
         elif k in lemmas:
             usetable = 'l'
@@ -552,6 +554,8 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
         elif k.endswith('freq'):
             usetable = k[0]
             k = 'frequency'
+        if k == 'pos':
+            v = v.upper()
         fullcol = f'{usetable}.{k}'
         # print(f'{fullcol},{k},{c},{v}')
         if fullcol in indexorder:
