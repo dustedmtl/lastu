@@ -28,7 +28,18 @@ from PyQt6.QtWidgets import (
     QLineEdit, QPushButton, QLabel
 )
 from PyQt6.QtGui import QAction, QKeySequence
-from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
+from PyQt6.QtCore import (
+    QAbstractTableModel,
+    Qt,
+    QModelIndex,
+    QObject,
+    QRunnable,
+    QThreadPool,
+    QTimer,
+    pyqtSlot,
+    pyqtSignal,
+)
+
 
 from lib import dbutil, uiutil
 
@@ -86,13 +97,46 @@ class TableModel(QAbstractTableModel):
         return None
 
 
+class Signals(QObject):
+    finished = pyqtSignal(float)
+    error = pyqtSignal(str, str)
+    result = pyqtSignal(float, pd.DataFrame)
+
+
+class DBWorker(QRunnable):
+    def __init__(self, dbconnection, querytxt: str):
+        super().__init__()
+        self.signals = (
+            Signals()
+        )
+        self.dbconnection = dbconnection
+        self.querytxt = querytxt
+
+    @pyqtSlot()
+    def run(self):
+        start = time.perf_counter()
+        try:
+            newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.dbconnection,
+                                                                              query=self.querytxt,
+                                                                              newconnection=True,
+                                                                              grams=True)
+            if querystatus < 0:
+                raise Exception(querymessage)
+            end = time.perf_counter()
+            diff = end - start
+            self.signals.finished.emit(diff)
+            self.signals.result.emit(diff, newdf)
+        except Exception as we:
+            logger.error("Issue with query %s: %s", self.querytxt, we)
+            self.signals.error.emit(self.querytxt, str(we))
+
+
 class MainWindow(QMainWindow):
 
     def __init__(self, dbconnection, df=None, appconfig=None):
         super().__init__()
         # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
-
         self.dbconnection = dbconnection
         self.appconfig = appconfig
         self._otherwindows = []
@@ -202,20 +246,20 @@ class MainWindow(QMainWindow):
         self.setFonts()
         # self.setCopyleftFont()
 
+
     def newWindow(self):
-        w2 = MainWindow(self.dbconnection, appconfig=self.appconfig)
+        w2 = MainWindow(self.dbconnection, df=self.data, appconfig=self.appconfig)
         w2.querybox.setText(self.querybox.text())
         self._otherwindows.append(w2)
-        w2.setData(self.data)
-
+        # w2.setData(self.data)
         widget = self.centralwidget
         currentfont = widget.font()
         w2widget = w2.centralwidget
         w2widget.setFont(currentfont)
         w2.setFonts()
 
-        w2.table.resizeColumnsToContents()
-        w2.resizeWidthToContents()
+        # w2.table.resizeColumnsToContents()
+        # w2.resizeWidthToContents()
 
         # sizehint = w2.layout.sizeHint()
         # width = sizehint.width()
@@ -283,20 +327,29 @@ class MainWindow(QMainWindow):
 
     def textQuery(self):
         querytext = self.querybox.text()
-        # FIXME: ensure that the below text shows. Issue with threads?
         self.statusfield.setText(f'Executing query: {querytext}')
         self.doQuery(querytext)
+        # FIXME: disable queries which thread is running
 
     def doQuery(self, queryinput):
-        start = time.perf_counter()
-        querydf = self.dbquery(queryinput)
+        # start = time.perf_counter()
+        worker = DBWorker(dbconnection=self.dbconnection, querytxt=queryinput)
+        worker.signals.result.connect(self.setQueryResult)
+        worker.signals.finished.connect(self.setQueryFinished)
+        worker.signals.error.connect(self.setQueryError)
+        threadpool.start(worker)
 
-        if querydf is not None:
+    def setQueryFinished(self, exectime: float):
+        logging.debug('Query finished in %.1f seconds', exectime)
+
+    def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
+        if querydf is not None and len(querydf) > 0:
             self.setData(querydf)
-            end = time.perf_counter()
-
-            self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {end - start:.1f} seconds')
+            self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.resizeWidthToContents()
+
+    def setQueryError(self, text: str, error: str):
+        self.statusfield.setText(f'Issue with query {text}: {error}')
 
     def inputFileQuery(self):
         fileinput = QFileDialog()
@@ -383,18 +436,6 @@ class MainWindow(QMainWindow):
                     print(f'Invalid input: {line}', e)
         return wordinput
 
-    def dbquery(self, text: str):
-        try:
-            newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.dbconnection, query=text, grams=True)
-            # print(querystatus, querymessage)
-            if querystatus < 0:
-                raise Exception(querymessage)
-            return newdf
-        except Exception as e:
-            logger.error("Issue with query %s: %s", query, e)
-            self.statusfield.setText(f'Issue with query {text}: {e}')
-            return None
-
     def setData(self, df: pd.DataFrame = None):
         if df is None:
             df = pd.DataFrame()
@@ -460,6 +501,10 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     dbfile = getDataBaseFile(appconfig, currdir)
+
+    threadpool = QThreadPool()
+    print(f"Multithreading with maximum {threadpool.maxThreadCount()} threads")
+
     logger.debug('Got final database file: %s', dbfile)
 
     try:
