@@ -1,0 +1,5 @@
+# type=lemma
+# Only process lemmas
+kuusi
+voida
+voi

@@ -1,0 +1,4 @@
+# type=form
+# Only process surface forms
+kuusi
+auto
