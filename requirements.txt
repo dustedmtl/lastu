@@ -45,7 +45,7 @@ types-tabulate
 # pyinstaller
 
 # corpora
-pyconll
+# pyconll
 conllu
 
 # scientific
