@@ -2,3 +2,4 @@
 # Only process unwords
 babalapa
 auti
+sautk
