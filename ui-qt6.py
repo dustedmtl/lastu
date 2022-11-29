@@ -142,6 +142,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("WM2")
         self.dbconnection = dbconnection
         self.originaldata = df
+        self.query_ongoing = False
+        self.query_desc = ""
         self.appconfig = appconfig
         self._otherwindows = []
         self.layout = QGridLayout()
@@ -379,25 +381,32 @@ class MainWindow(QMainWindow):
     def textQuery(self):
         querytext = self.querybox.text()
         self.statusfield.setText(f'Executing query: {querytext}')
+        self.query_desc = ''
         self.doQuery(querytext)
-        # FIXME: disable queries which thread is running
 
     def doQuery(self, queryinput):
         # start = time.perf_counter()
-        worker = DBWorker(dbconnection=self.dbconnection, querytxt=queryinput)
-        worker.signals.result.connect(self.setQueryResult)
-        worker.signals.finished.connect(self.setQueryFinished)
-        worker.signals.error.connect(self.setQueryError)
-        threadpool.start(worker)
+        if self.query_ongoing:
+            logging.warning('Query already ongoing, please wait')
+        else:
+            # FIXME: disable some input menu actions for the duration of the query?
+            worker = DBWorker(dbconnection=self.dbconnection,
+                              querytxt=queryinput)
+            worker.signals.result.connect(self.setQueryResult)
+            worker.signals.finished.connect(self.setQueryFinished)
+            worker.signals.error.connect(self.setQueryError)
+            self.query_ongoing = True
+            threadpool.start(worker)
 
     def setQueryFinished(self, exectime: float):
         logging.debug('Query finished in %.1f seconds', exectime)
+        self.query_ongoing = False
 
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
         if querydf is not None and len(querydf) > 0:
             self.setData(querydf)
             self.originaldata = self.data
-            self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
+            self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.resizeWidthToContents()
 
     def setQueryError(self, text: str, error: str):
@@ -409,13 +418,30 @@ class MainWindow(QMainWindow):
         fileinput.setNameFilter("Text files (*.txt)")
         fileinput.setViewMode(QFileDialog.ViewMode.Detail)
 
+        listtypes = ['lemma', 'form', 'unword']
+
         if fileinput.exec():
             filenames = fileinput.selectedFiles()
             filename = filenames[0]
-            wordinput = self.get_wordinput(filename)
-            self.statusfield.setText(f'Executing query from input file {filename}')
+            wordinput = dbutil.get_wordinput(filename)
             self.querybox.setText('')
-            self.doQuery(wordinput)
+            self.query_desc = f' from file {filename}'
+            # print(wordinput)
+            inputkeys = list(wordinput.keys())
+            try:
+                if len(inputkeys) != 1:
+                    raise ValueError(f'No valid data found in file {filename}')
+                if inputkeys[0] not in listtypes:
+                    raise ValueError(f'No valid data found in file {filename}')
+                if inputkeys[0] == 'unword':
+                    self.query_desc = ''
+                    unworddf = dbutil.get_unword_bigrams(self.dbconnection, wordinput)
+                    self.setQueryResult(0, unworddf)
+                else:
+                    self.statusfield.setText(f'Executing query from input file {filename}')
+                    self.doQuery(wordinput)
+            except ValueError as ve:
+                self.statusfield.setText(str(ve))
 
     def exportFile(self):
         logger.debug("Export file called")
@@ -466,27 +492,6 @@ class MainWindow(QMainWindow):
 
     def nullAction(self):
         logger.info("Action not implemented")
-
-    def get_wordinput(self, filename):
-        wordinput = defaultdict(list)
-        with open(filename, 'r', encoding='utf-8') as f:
-            for line in f.readlines():
-                try:
-                    if len(line.strip()) == 0:
-                        continue
-                    if line.startswith('#'):
-                        continue
-                    kw, value = line.strip().split('=')
-                    kw = kw.strip()
-                    value = value.strip()
-                    print(f'-{kw}-{value}-')
-                    if kw not in ['lemma', 'form', 'unword']:
-                        print(f'Invalid category: {line}')
-                    else:
-                        wordinput[kw].append(value)
-                except Exception as e:
-                    print(f'Invalid input: {line}', e)
-        return wordinput
 
     def setData(self, df: pd.DataFrame = None):
         if df is None:

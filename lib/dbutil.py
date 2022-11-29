@@ -902,6 +902,8 @@ def add_relative_frequencies(dbc: DatabaseConnection,
     addidx = 0
     for k, v in fieldmap.items():
         try:
+            if k not in columns:
+                continue
             kidx = list(columns).index(k)
             # print(k, kidx, v)
             # print(df[k], v, scale)
@@ -916,4 +918,67 @@ def add_relative_frequencies(dbc: DatabaseConnection,
         except ValueError as e:
             # ignore
             print(e)
+    return resdf
+
+
+def get_wordinput(filename: str) -> Dict[str, List]:
+    """Get word input for lemma, form or unword."""
+    wordinput = defaultdict(list)
+    cats = ['lemma', 'form', 'unword']
+    got_type = None
+
+    with open(filename, 'r', encoding='utf-8') as f:
+        for line in f.readlines():
+            try:
+                if len(line.strip()) == 0:
+                    continue
+                if line.startswith('#'):
+                    if not got_type:
+                        # print(line.strip())
+                        # print(re.match('.*type=(\w+)', line.strip(), re.M))
+                        if (matches := re.match('.*type=(\w+)', line.strip())) is not None:
+                            got_type = matches.group(1)
+                            if got_type not in cats:
+                                # print(f'Invalid type: {got_type}')
+                                got_type = None
+                    continue
+                if got_type:
+                    kw = line.strip()
+                    wordinput[got_type].append(kw)
+            except Exception as e:
+                print(f'Error with line: {line}', e)
+    return wordinput
+
+
+def get_unword_bigrams(dbc: DatabaseConnection,
+                       data: Dict[str, List]) -> pd.DataFrame:
+    """Get bigram frequencies for unwords."""
+    formgrams = defaultdict(list)
+    fetchbigs = set()
+    for form in data['unword']:
+        grams = [form[i:j] for i, j in zip(range(0, len(form)-1), range(2, len(form)+1))]
+        fetchbigs.update(grams)
+        formgrams[form] = grams
+
+    # print(fetchbigs)
+    # print(formgrams)
+    qmarks = ','.join([f"'{w}'" for w in fetchbigs])
+    sql = f"select * from bigramfreqs where form in ({qmarks})"
+    bigdf = adhoc_query(dbc.get_connection(), sql, todf=True)
+    resdf = pd.DataFrame(formgrams.keys(), columns=['form'])
+
+    formbigs = []
+    for _idx, row in resdf.iterrows():
+        form = row.form
+        bgsum = 0
+        for bg in formgrams[form]:
+            bgsum += bigdf[bigdf.form == bg].frequency.values[0]
+        # print(form, bgsum, bgsum / len(form))
+        formbigs.append(int(bgsum / len(form)))
+
+    # relbigs = np.array(formbigs) / dbc.wbifreqs * 1e6
+    # print(wordbigramtotal, relbigs)
+    resdf['bigramfreq'] = formbigs
+    # resdf['relbigramfreq'] = relbigs[0]
+
     return resdf
