@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QLineEdit, QPushButton, QLabel
 )
-from PyQt6.QtGui import QAction, QKeySequence
+from PyQt6.QtGui import QAction, QKeySequence, QActionGroup
 from PyQt6.QtCore import (
     QAbstractTableModel,
     Qt,
@@ -141,6 +141,7 @@ class MainWindow(QMainWindow):
         # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
         self.dbconnection = dbconnection
+        self.originaldata = df
         self.appconfig = appconfig
         self._otherwindows = []
         self.layout = QGridLayout()
@@ -226,6 +227,32 @@ class MainWindow(QMainWindow):
 
         # edit_menu = menu.addMenu("&Edit")
 
+        freq_abs = QAction("&Show absolute frequencies", self)
+        freq_rel = QAction("&Show relative frequencies", self)
+        freq_all = QAction("&Show both frequencies", self)
+
+        freq_all.triggered.connect(self.showBothFrequencies)
+        freq_abs.triggered.connect(self.showAbsoluteFrequencies)
+        freq_rel.triggered.connect(self.showRelativeFrequencies)
+
+        freq_all.setCheckable(True)
+        freq_abs.setCheckable(True)
+        freq_abs.setChecked(True)
+        freq_rel.setCheckable(True)
+
+        freq_boxes = QActionGroup(self)
+        freq_boxes.setExclusionPolicy(QActionGroup.ExclusionPolicy.Exclusive)
+
+        ag1 = freq_boxes.addAction(freq_all)
+        ag2 = freq_boxes.addAction(freq_abs)
+        ag3 = freq_boxes.addAction(freq_rel)
+
+        data_menu = menu.addMenu("&Data")
+        data_submenu = data_menu.addMenu("Frequencies")
+        data_submenu.addAction(ag1)
+        data_submenu.addAction(ag2)
+        data_submenu.addAction(ag3)
+
         menuaction_smaller = QAction("&Smaller fontsize", self)
         menuaction_smaller.setStatusTip("Smaller fontsize")
         menuaction_smaller.setShortcut(QKeySequence("Ctrl+-"))
@@ -252,6 +279,7 @@ class MainWindow(QMainWindow):
 
     def newWindow(self):
         w2 = MainWindow(self.dbconnection, df=self.data, appconfig=self.appconfig)
+        w2.originaldata = w2.data
         w2.querybox.setText(self.querybox.text())
         self._otherwindows.append(w2)
         # w2.setData(self.data)
@@ -271,6 +299,26 @@ class MainWindow(QMainWindow):
 
     def closeWindow(self):
         self.close()
+
+    def showBothFrequencies(self):
+        logger.debug("Show both frequencies called")
+        df = dbutil.add_relative_frequencies(self.dbconnection,
+                                             self.originaldata)
+        self.setFilteredData(df)
+        self.resizeWidthToContents()
+
+    def showAbsoluteFrequencies(self):
+        logger.debug("Show absolute frequencies called")
+        self.setData(self.originaldata)
+        self.resizeWidthToContents()
+
+    def showRelativeFrequencies(self):
+        logger.debug("Show relative frequencies called")
+        df = dbutil.add_relative_frequencies(self.dbconnection,
+                                             self.originaldata,
+                                             drop=True)
+        self.setFilteredData(df)
+        self.resizeWidthToContents()
 
     def quit(self):
         logger.debug("Application quit called")
@@ -348,6 +396,7 @@ class MainWindow(QMainWindow):
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
         if querydf is not None and len(querydf) > 0:
             self.setData(querydf)
+            self.originaldata = self.data
             self.statusfield.setText(f'Executing query.. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.resizeWidthToContents()
 
@@ -442,6 +491,12 @@ class MainWindow(QMainWindow):
     def setData(self, df: pd.DataFrame = None):
         if df is None:
             df = pd.DataFrame()
+        self.data = df
+        self.model = TableModel(df)
+        self.table.setModel(self.model)
+        self.table.resizeColumnsToContents()
+
+    def setFilteredData(self, df: pd.DataFrame):
         self.data = df
         self.model = TableModel(df)
         self.table.setModel(self.model)
