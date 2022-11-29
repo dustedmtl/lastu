@@ -527,7 +527,6 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
     wherestr = ""
     args = []
     useposx = True
-    # gfields = defaultdict(set)  # type: ignore
 
     indexers = []
     notlikeindexers = []
@@ -576,8 +575,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 notlikeindexers.append(fullcol)
                 indexers.append(fullcol)
 
-        # gflist = gfields.get(k, set())
-        if c in ['in', 'notin'] and c not in ['start', 'middle', 'end']:
+        if c in ['in', 'notin']:
             invals = [w.strip() for w in v.split(',')]
             if k in ['derivationx', 'cliticx']:
                 # This is the old implementation
@@ -620,26 +618,30 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 qmarks = ','.join(['?'] * len(invals))
                 if c == 'notin':
                     c = 'not in'
-                whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
-                args.extend(invals)
-            # _ = [gflist.add(_) for _ in invals]
-        else:
-            # FIXME: IN query, NOT IN query for start, middle, end
-            if k == 'start':
-                usetable = 'w'
-                if c == '=':
-                    whereparts.append(f'{usetable}.form GLOB ?')
+
+                # FIXME: IN query, NOT IN query middle
+                if k in ['start', 'end']:
+                    whereor = []
+                    usecol = 'form'
+                    if k == 'end':
+                        usecol = 'revform'
+                        invals = [v[::-1] for v in invals]
+                    invals = [v + '*' for v in invals]
+                    for v in invals:
+                        if c == 'in':
+                            whereor.append(f'{usetable}.{usecol} GLOB ?')
+                        else:
+                            whereor.append(f'{usetable}.{usecol} NOT GLOB ?')
+                    whereparts.append(f"({' OR '.join(whereor)})")
+                    args.extend(invals)
                 else:
-                    whereparts.append(f'{usetable}.form NOT GLOB ?')
-                args.append(v + '*')
-                continue
+                    whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
+                    args.extend(invals)
+        else:
             if k == 'middle':
-                # usetable = 'w'
                 if c == '=':
                     whereparts.append(f'{usetable}.form GLOB ?')
                     args.append(f'?*{v}*?')
-                    # whereparts.append(f'instr({usetable}.form, ?) > 1')
-                    # args.append(v)
                     whereparts.append(f'{usetable}.form NOT GLOB ?')
                     args.append(v + "*")
                     whereparts.append(f'{usetable}.revform NOT GLOB ?')
@@ -648,14 +650,20 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                     whereparts.append(f'instr({usetable}.form, ?) == 0')
                     args.append(v)
                 continue
-            if k == 'end':
-                # usetable = 'f'
-                if c == '=':
-                    whereparts.append(f'{usetable}.revform GLOB ?')
+
+            if k in ['start', 'end']:
+                if k == 'end':
+                    usecol = 'revform'
+                    args.append(v[::-1] + "*")
                 else:
-                    whereparts.append(f'{usetable}.revform NOT GLOB ?')
-                args.append(v[::-1] + "*")
+                    usecol = 'form'
+                    args.append(v + '*')
+                if c == '=':
+                    whereparts.append(f'{usetable}.{usecol} GLOB ?')
+                else:
+                    whereparts.append(f'{usetable}.{usecol} NOT GLOB ?')
                 continue
+
             if k == 'pos':
                 if v == 'AUX':
                     useposx = False
@@ -664,9 +672,6 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
             # FIXME: take inequality from the correct table (features)
             whereparts.append(f'{usetable}.{k} {c} ?')
             args.append(v)
-            # if c == '=':
-            #    gflist.add(v)
-        # gfields[k] = gflist
 
     if len(whereparts) > 0:
         wherestr = "WHERE " + " AND ".join(whereparts)
