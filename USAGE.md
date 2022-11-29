@@ -70,6 +70,10 @@ Input and output commands:
   - `C-S` - export to file (csv/tsv/xlsx)
   - `C-E` - copy to clipboard
 
+## Logging
+
+The application logs to the file `wm2log.txt`in the user's home directory.
+
 ## Jupyter notebooks
 
 TBD
