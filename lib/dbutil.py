@@ -510,7 +510,7 @@ indexorder = ['w.form', 'w.revform', 'w.frequency', 'w.lemma', 'w.len',
 # fields that have good indexes
 indexfields = {
     'w.frequency': 'idx_wordfreqs_freq_pos',
-#    'w.form': 'idx_wordfreqs_freq_form',
+    # 'w.form': 'idx_wordfreqs_freq_form',
     'w.form': 'idx_wordfreqs_form_freq',
     'w.lemma': 'idx_wordfreqs_freq_lemma',
     'w.revform': 'idx_wordfreqs_freq_revform',
@@ -893,7 +893,7 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
 
 def add_relative_frequencies(dbc: DatabaseConnection,
                              df: pd.DataFrame,
-                             scale: int = 1e6,
+                             scale: float = 1e6,
                              drop: bool = False) -> pd.DataFrame:
     """Add relative frequencies."""
     resdf = df.copy()
