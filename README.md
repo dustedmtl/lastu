@@ -2,6 +2,11 @@
 
 Program for generating stimulus words for psycholinguistic research.
 
+Documentation:
+ - Using the application: [USAGE](USAGE.md)
+ - Building databases the application: [BUILDING](BUILDING.md)
+ - Packaging the application into an executable: [PACKAGING](PACKAGING.md)
+
 # License
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
