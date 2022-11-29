@@ -26,7 +26,7 @@
   - `-s <sentencecount>`
   - `-c <filecount>`
 
-## Additional 
+## Additional scripts
 
 ### Add indexes
  - `sqlite3 data/<dbfile> < sql/wordfreqs_indexes.sql`
@@ -45,4 +45,12 @@
    - `-l`
    - `-H`
    - `-c`
+
+## Managing a database
+
+### Combining one or more database files
+
+### Rebuilding indexes
+
+### Pruning a database
 
