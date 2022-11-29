@@ -28,6 +28,3 @@
 ## Distribution
 - TBD
 
-# Building a database
-
-- TBD
