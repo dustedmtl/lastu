@@ -2,6 +2,7 @@
 
 The application needs two files to with an optional init file:
  - The executable / application (`wm2.exe` / `wm2.app`)
+   - Alternatively, use the source version with `python3 ui-qt6.py`
  - The database file (SQLite3)
  - The init file `wm2.ini` (optional)
 
