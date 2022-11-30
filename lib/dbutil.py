@@ -434,6 +434,12 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
     formoperators = ['=', '!=', 'in', 'notin']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
+    shortcuts = {
+        'freq': 'frequency',
+        'case': 'nouncase',
+        'number': 'nnumber',
+    }
+
     # FIXME: use a queue mechanism for this?
     for part in parts:
         try:
@@ -467,6 +473,7 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
             else:
                 key, comparator, value = vals
                 value = value.strip("'").strip('"')
+                key = shortcuts.get(key, key)
 
                 isok = False
 
@@ -875,7 +882,7 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         if useposx:
             df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last').reset_index().drop('index', axis=1)
             df = df[:dbconnection.rowlimit()]
-        df = reorder_columns(df)
+        df = reorder_columns(df).rename({'nouncase': 'case', 'nnumber': 'number'}, axis=1)
 
         endtime = time.perf_counter()
         print()
