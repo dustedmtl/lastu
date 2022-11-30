@@ -931,9 +931,9 @@ def add_relative_frequencies(dbc: DatabaseConnection,
     resdf = df.copy()
     fieldmap = {
         'frequency': dbc.wordfreqs,
+        'bigramfreq': dbc.bifreqs,
         'initgramfreq': dbc.initfreqs,
         'fingramfreq': dbc.finfreqs,
-        'bigramfreq': dbc.wbifreqs,
         }
     columns = df.columns
     addidx = 0
@@ -944,6 +944,8 @@ def add_relative_frequencies(dbc: DatabaseConnection,
             kidx = list(columns).index(k)
             # print(k, kidx, v)
             # print(df[k], v, scale)
+            if k == 'bigramfreq':
+                scale = 1000
             newcol = np.array(df[k]) / v * scale
             # print(df[k], v, scale, newcol[0])
             # print(f'Inserting column rel{k} in position {kidx + 1 + addidx}')
