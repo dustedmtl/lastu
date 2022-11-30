@@ -11,10 +11,11 @@ import sys
 from typing import Optional
 from os.path import exists, getsize, join
 import configparser
-from collections import defaultdict
+# from collections import defaultdict
 from pathlib import Path
 import time
 from datetime import datetime
+# import inspect
 import logging
 import pandas as pd
 from UliPlot.XLSX import auto_adjust_xlsx_column_width
@@ -54,6 +55,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
 logger.setLevel(logging.DEBUG)
 logfile_handler = logging.FileHandler(join(homedir, 'wm2log.txt'))
 logfile_handler.setFormatter(log_format)
+logfile_handler.setLevel(logging.DEBUG)
 
 # stream_handler = logging.StreamHandler()
 # stream_handler.setFormatter(log_format)
@@ -101,7 +103,7 @@ class TableModel(QAbstractTableModel):
 
 
 class Signals(QObject):
-    finished = pyqtSignal(float)
+    finished = pyqtSignal()
     error = pyqtSignal(str, str)
     result = pyqtSignal(float, pd.DataFrame)
 
@@ -127,11 +129,13 @@ class DBWorker(QRunnable):
                 raise Exception(querymessage)
             end = time.perf_counter()
             diff = end - start
-            self.signals.finished.emit(diff)
+            logger.debug('Query finished in %.1f seconds', diff)
+            self.signals.finished.emit()
             self.signals.result.emit(diff, newdf)
         except Exception as we:
             logger.error("Issue with query %s: %s", self.querytxt, we)
             self.signals.error.emit(self.querytxt, str(we))
+            self.signals.finished.emit()
 
 
 class MainWindow(QMainWindow):
@@ -275,9 +279,8 @@ class MainWindow(QMainWindow):
         self.centralwidget = widget
         self.setCentralWidget(widget)
         # print(widget.font().pointSize(), self.table.verticalHeader().font().pointSize())
-        self.setFonts()
+        # self.setFonts()
         # self.setCopyleftFont()
-
 
     def newWindow(self):
         w2 = MainWindow(self.dbconnection, df=self.data, appconfig=self.appconfig)
@@ -329,6 +332,8 @@ class MainWindow(QMainWindow):
     def resizeWidthToContents(self):
         sizehint = self.layout.sizeHint()
         width = sizehint.width()
+        # for s in inspect.stack():
+        #    print(s)
         logger.debug('Setting window width to %d', width)
         # self.setFixedSize(self.layout.sizeHint())
         self.setFixedWidth(width+5)
@@ -387,7 +392,7 @@ class MainWindow(QMainWindow):
     def doQuery(self, queryinput):
         # start = time.perf_counter()
         if self.query_ongoing:
-            logging.warning('Query already ongoing, please wait')
+            logger.warning('Query already ongoing, please wait')
         else:
             # FIXME: disable some input menu actions for the duration of the query?
             worker = DBWorker(dbconnection=self.dbconnection,
@@ -398,8 +403,8 @@ class MainWindow(QMainWindow):
             self.query_ongoing = True
             threadpool.start(worker)
 
-    def setQueryFinished(self, exectime: float):
-        logging.debug('Query finished in %.1f seconds', exectime)
+    def setQueryFinished(self):
+        # print('Query finished')
         self.query_ongoing = False
 
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
@@ -566,7 +571,8 @@ if __name__ == "__main__":
     dbfile = getDataBaseFile(appconfig, currdir)
 
     threadpool = QThreadPool()
-    print(f"Multithreading with maximum {threadpool.maxThreadCount()} threads")
+    logger.debug("Multithreading with maximum %d threads",
+                 threadpool.maxThreadCount())
 
     logger.debug('Got final database file: %s', dbfile)
 
@@ -577,12 +583,9 @@ if __name__ == "__main__":
         logger.error("Couldn't connect to %s: %s", dbfile, e)
 
     w = MainWindow(dbconn, appconfig=appconfig)
-    query = "form = 'silmäsi' and frequency > 10"
-    # query = "pos = 'NOUN' and form = 'silmäsi' and frequency > 10"
-    # query = "pos = 'NOUN' and frequency > 10 and len > 6 and bigramfreq > 6000000"
-    # query = "pos = 'NOUN' and frequency > 10 and len > 6"
 
     # initial query
+    query = "form = 'silmäsi' and frequency > 10"
     w.querybox.setText(query)
     w.textQuery()
     w.show()
