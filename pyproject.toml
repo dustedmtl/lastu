@@ -51,6 +51,7 @@ module = [
        "sklearn.metrics",
        "tnparser.pipeline",
        "UliPlot.XLSX",
+       "symspellpy",
        # UI models
        "xlwings",
        "wx",
