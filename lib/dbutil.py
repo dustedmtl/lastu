@@ -509,7 +509,7 @@ indexorder = ['w.form', 'w.revform', 'w.frequency', 'w.lemma', 'w.len',
 
 # fields that have good indexes
 indexfields = {
-    'w.frequency': 'idx_wordfreqs_freq_pos',
+    'w.frequency': 'idx_wordfreqs_freq_len',
     # 'w.form': 'idx_wordfreqs_freq_form',
     'w.form': 'idx_wordfreqs_form_freq',
     'w.lemma': 'idx_wordfreqs_freq_lemma',
@@ -872,9 +872,10 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
                                       params=args)
 
         df = pd.DataFrame(sql_query)
-        # FIXME: the below are only for useposx
-        df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last').reset_index().drop('index', axis=1)
-        df = df[:dbconnection.rowlimit()]
+        if useposx:
+            df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last').reset_index().drop('index', axis=1)
+            df = df[:dbconnection.rowlimit()]
+        df = reorder_columns(df)
 
         endtime = time.perf_counter()
         print()
@@ -889,6 +890,30 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         querymessage = errmsg
 
     return df, querystatus, querymessage
+
+
+def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Reorder dataframe columns."""
+    ordermap = {
+        'lemma': ['lemmalen', 'lemmafreq', 'amblemma'],
+        'frequency': ['bigramfreq', 'initgramfreq', 'fingramfreq'],
+        'len': ['hood', 'ambform']
+    }
+    columns = list(df.columns)
+    for col, modlist in ordermap.items():
+        anchoridx = columns.index(col)
+        # print(col, anchoridx)
+        addidx = 1
+        for modcol in modlist:
+            if modcol in columns:
+                newidx = anchoridx + addidx
+                # print(modcol, newidx)
+                columns.remove(modcol)
+                columns.insert(newidx, modcol)
+                addidx += 1
+            # print(columns)
+    df = df.reindex(columns=columns)
+    return df
 
 
 def add_relative_frequencies(dbc: DatabaseConnection,
