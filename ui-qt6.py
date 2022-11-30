@@ -26,6 +26,8 @@ from PyQt6.QtWidgets import (
     QAbstractScrollArea,
     QFileDialog,
     QMessageBox,
+    # QCheckBox,
+    # QToolBar,
     QLineEdit, QPushButton, QLabel
 )
 from PyQt6.QtGui import QAction, QKeySequence, QActionGroup
@@ -36,7 +38,7 @@ from PyQt6.QtCore import (
     QObject,
     QRunnable,
     QThreadPool,
-    QTimer,
+    # QTimer,
     pyqtSlot,
     pyqtSignal,
 )
@@ -156,6 +158,32 @@ class MainWindow(QMainWindow):
         # newbutton.clicked.connect(self.newWindow)
         # self.layout.addWidget(newbutton, 0, 1, 1, 1)
 
+        # self.lemmacb = QCheckBox()
+        # self.formcb = QCheckBox()
+        # self.freqcb = QCheckBox()
+        # self.featcb = QCheckBox()
+        # self.lemmacb.setCheckState(Qt.CheckState.Checked)
+        # self.formcb.setCheckState(Qt.CheckState.Checked)
+        # self.freqcb.setCheckState(Qt.CheckState.Checked)
+        # self.featcb.setCheckState(Qt.CheckState.Checked)
+        # self.lemmacb.stateChanged.connect(self.nullAction)
+        # self.formcb.stateChanged.connect(self.nullAction)
+        # self.freqcb.stateChanged.connect(self.nullAction)
+        # self.featcb.stateChanged.connect(self.nullAction)
+
+        # toolbar = QToolBar("Data")
+        # toolbar.addWidget(QLabel('Data'))
+        # toolbar.addSeparator()
+        # toolbar.addWidget(QLabel('Lemmas'))
+        # toolbar.addWidget(self.lemmacb)
+        # toolbar.addWidget(QLabel('Forms'))
+        # toolbar.addWidget(self.formcb)
+        # toolbar.addWidget(QLabel('Frequencies'))
+        # toolbar.addWidget(self.freqcb)
+        # toolbar.addWidget(QLabel('Features'))
+        # toolbar.addWidget(self.featcb)
+        # self.layout.addWidget(toolbar, 1, 0, 1, 1)
+
         self.querybox = QLineEdit()
         self.querybox.returnPressed.connect(self.enter)
         self.layout.addWidget(self.querybox, 1, 0, 1, 1)
@@ -168,9 +196,9 @@ class MainWindow(QMainWindow):
         # self.layout.addWidget(self.statusfield, 1, 0, 1, 2)
         self.layout.addWidget(self.statusfield, 2, 0, 1, 1)
 
-        filebutton = QPushButton("Input")
-        filebutton.clicked.connect(self.inputFileQuery)
-        self.layout.addWidget(filebutton, 2, 1, 1, 1)
+        # filebutton = QPushButton("Input")
+        # filebutton.clicked.connect(self.inputFileQuery)
+        # self.layout.addWidget(filebutton, 2, 1, 1, 1)
 
         self.table = QTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
@@ -237,9 +265,9 @@ class MainWindow(QMainWindow):
         self.freq_rel = QAction("&Show relative frequencies", self)
         self.freq_all = QAction("&Show both frequencies", self)
 
-        self.freq_all.triggered.connect(self.showBothFrequencies)
-        self.freq_abs.triggered.connect(self.showAbsoluteFrequencies)
-        self.freq_rel.triggered.connect(self.showRelativeFrequencies)
+        self.freq_all.triggered.connect(self.filterColumns)
+        self.freq_abs.triggered.connect(self.filterColumns)
+        self.freq_rel.triggered.connect(self.filterColumns)
 
         self.freq_all.setCheckable(True)
         self.freq_abs.setCheckable(True)
@@ -253,11 +281,42 @@ class MainWindow(QMainWindow):
         ag2 = freq_boxes.addAction(self.freq_abs)
         ag3 = freq_boxes.addAction(self.freq_rel)
 
+        self.hide_columns = QAction("&Hide empty columns", self)
+        self.hide_columns.setCheckable(True)
+        self.hide_columns.triggered.connect(self.filterColumns)
+
         data_menu = menu.addMenu("&Data")
         data_submenu = data_menu.addMenu("Frequencies")
         data_submenu.addAction(ag1)
         data_submenu.addAction(ag2)
         data_submenu.addAction(ag3)
+        data_menu.addAction(self.hide_columns)
+
+        self.cataction_lemma = QAction("&Show lemmas", self)
+        self.cataction_lemma.setCheckable(True)
+        self.cataction_lemma.setChecked(True)
+        self.cataction_lemma.triggered.connect(self.filterColumns)
+
+        self.cataction_form = QAction("&Show forms", self)
+        self.cataction_form.setCheckable(True)
+        self.cataction_form.setChecked(True)
+        self.cataction_form.triggered.connect(self.filterColumns)
+
+        self.cataction_freq = QAction("&Show frequencies", self)
+        self.cataction_freq.setCheckable(True)
+        self.cataction_freq.setChecked(True)
+        self.cataction_freq.triggered.connect(self.filterColumns)
+
+        self.cataction_feat = QAction("&Show features", self)
+        self.cataction_feat.setCheckable(True)
+        self.cataction_feat.setChecked(True)
+        self.cataction_feat.triggered.connect(self.filterColumns)
+
+        data_catmenu = data_menu.addMenu("Categories")
+        data_catmenu.addAction(self.cataction_lemma)
+        data_catmenu.addAction(self.cataction_form)
+        data_catmenu.addAction(self.cataction_freq)
+        data_catmenu.addAction(self.cataction_feat)
 
         menuaction_smaller = QAction("&Smaller fontsize", self)
         menuaction_smaller.setStatusTip("Smaller fontsize")
@@ -294,35 +353,85 @@ class MainWindow(QMainWindow):
         w2widget.setFont(currentfont)
         w2.setFonts()
 
-        # w2.table.resizeColumnsToContents()
-        # w2.resizeWidthToContents()
+        # Inherit checkboxes
+        w2.freq_all.setChecked(self.freq_all.isChecked())
+        w2.freq_abs.setChecked(self.freq_abs.isChecked())
+        w2.freq_rel.setChecked(self.freq_rel.isChecked())
+        w2.hide_columns.setChecked(self.hide_columns.isChecked())
 
-        # sizehint = w2.layout.sizeHint()
-        # width = sizehint.width()
-        # w2.setFixedWidth(width+10)
+        w2.cataction_lemma.setChecked(self.cataction_lemma.isChecked())
+        w2.cataction_form.setChecked(self.cataction_form.isChecked())
+        w2.cataction_freq.setChecked(self.cataction_freq.isChecked())
+        w2.cataction_feat.setChecked(self.cataction_feat.isChecked())
+
         w2.show()
 
     def closeWindow(self):
         self.close()
 
-    def showBothFrequencies(self):
-        logger.debug("Show both frequencies called")
-        df = dbutil.add_relative_frequencies(self.dbconnection,
-                                             self.originaldata)
-        self.setFilteredData(df)
-        self.resizeWidthToContents()
+    def unique_cols(self, df):
+        a = df.to_numpy()
+        return (a[0] == a).all(0)
 
-    def showAbsoluteFrequencies(self):
-        logger.debug("Show absolute frequencies called")
-        self.setData(self.originaldata)
-        self.resizeWidthToContents()
+    def hideEmpty(self, df):
+        values = list(df.loc[0].values)
+        columns = df.columns
+        uniques = self.unique_cols(df)
+        hide = []
+        for col, val, unique in zip(columns, values, uniques):
+            # print(col, val, unique)
+            if val == '_' and unique:
+                hide.append(col)
+        if hide:
+            logger.debug('Hiding empty columns: %s', hide)
+            df = df.drop(hide, axis=1)
+        return df
 
-    def showRelativeFrequencies(self):
-        logger.debug("Show relative frequencies called")
-        df = dbutil.add_relative_frequencies(self.dbconnection,
-                                             self.originaldata,
-                                             drop=True)
-        self.setFilteredData(df)
+    def hideCategories(self, df):
+        shows = {
+            'lemma': self.cataction_lemma.isChecked(),
+            'form': self.cataction_form.isChecked(),
+            'bigramfreq': self.cataction_freq.isChecked(),
+            'feats': self.cataction_feat.isChecked(),
+        }
+        columns = list(df.columns)
+        # print(shows)
+        anchors = ['lemma', 'form', 'bigramfreq', 'feats']
+        mode = None
+        drops = []
+        for col in columns:
+            if col in anchors:
+                mode = col
+            if mode:
+                if mode not in shows:
+                    continue
+                if not shows[mode]:
+                    drops.append(col)
+        if drops:
+            logger.debug('Hiding category columns: %s', drops)
+            df = df.drop(drops, axis=1)
+        return df
+
+    def filterColumns(self):
+        if self.freq_all.isChecked():
+            logger.debug("Showing both frequencies")
+            df = dbutil.add_relative_frequencies(self.dbconnection,
+                                                 self.originaldata)
+        elif self.freq_rel.isChecked():
+            logger.debug("Showing relative frequencies")
+            df = dbutil.add_relative_frequencies(self.dbconnection,
+                                                 self.originaldata,
+                                                 drop=True)
+        else:
+            logger.debug("Showing absolute frequencies")
+            df = self.originaldata
+
+        df = self.hideCategories(df)
+
+        if self.hide_columns.isChecked():
+            df = self.hideEmpty(df)
+
+        self.setData(df)
         self.resizeWidthToContents()
 
     def quit(self):
@@ -337,7 +446,8 @@ class MainWindow(QMainWindow):
         logger.debug('Setting window width to %d', width)
         # self.setFixedSize(self.layout.sizeHint())
         self.setFixedWidth(width+5)
-        # self.setMinimumSize(width, 0)
+        if width < 600:
+            self.setMinimumSize(600, 0)
 
     def setCopyleftFont(self):
         widget = self.centralwidget
@@ -412,12 +522,13 @@ class MainWindow(QMainWindow):
             self.setData(querydf)
             self.originaldata = self.data
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
-            if self.freq_all.isChecked():
-                self.showBothFrequencies()
-            elif self.freq_rel.isChecked():
-                self.showRelativeFrequencies()
-            else:
-                self.resizeWidthToContents()
+            self.filterColumns()
+#            if self.freq_all.isChecked():
+#                self.showBothFrequencies()
+#            elif self.freq_rel.isChecked():
+#                self.showRelativeFrequencies()
+#            else:
+#                self.resizeWidthToContents()
 
     def setQueryError(self, text: str, error: str):
         self.statusfield.setText(f'Issue with query {text}: {error}')
@@ -511,11 +622,11 @@ class MainWindow(QMainWindow):
         self.table.setModel(self.model)
         self.table.resizeColumnsToContents()
 
-    def setFilteredData(self, df: pd.DataFrame):
-        self.data = df
-        self.model = TableModel(df)
-        self.table.setModel(self.model)
-        self.table.resizeColumnsToContents()
+#    def setFilteredData(self, df: pd.DataFrame):
+#        self.data = df
+#        self.model = TableModel(df)
+#        self.table.setModel(self.model)
+#        self.table.resizeColumnsToContents()
 
 
 def selectDataBase() -> Optional[str]:
@@ -561,6 +672,7 @@ def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[st
             dbpath = choosedb
 
     return dbpath
+
 
 if __name__ == "__main__":
 
