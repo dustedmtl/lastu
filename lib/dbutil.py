@@ -635,10 +635,13 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                         usecol = 'revform'
                         invals = [v[::-1] for v in invals]
                     invals = [v + '*' for v in invals]
+                    # invals = [v + '%' for v in invals]
                     for v in invals:
                         if c == 'in':
+                            # whereor.append(f'{usetable}.{usecol} LIKE ?')
                             whereor.append(f'{usetable}.{usecol} GLOB ?')
                         else:
+                            # whereor.append(f'{usetable}.{usecol} NOT LIKE ?')
                             whereor.append(f'{usetable}.{usecol} NOT GLOB ?')
                     whereparts.append(f"({' OR '.join(whereor)})")
                     args.extend(invals)
@@ -742,6 +745,7 @@ def get_querystring(query: Union[str, Dict] = None,
     """Get final query string and other things."""
     useposx = True
     if isinstance(query, str):
+        logger.info('Query: %s', query)
         wherestr, args, errors, indexers, notlikeindexers, useposx = parse_querystring(query)
         # print(errors)
     elif isinstance(query, dict):
@@ -790,6 +794,9 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     # args: List[str] = []
 
     wherestr, args, errors, windexedby, useposx = get_querystring(query, orderstring, defaultindex)
+    if errors:
+        raise ValueError('\n'.join(errors))
+
     selects = dbconnection.get_queryselects('wordfreqs', useposx)
     if useposx:
         orderstring = orderstring.replace('w.frequency', 'w.frequencyx')
