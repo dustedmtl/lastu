@@ -126,7 +126,8 @@ class DBWorker(QRunnable):
             newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(self.dbconnection,
                                                                               query=self.querytxt,
                                                                               newconnection=True,
-                                                                              grams=True)
+                                                                              grams=True,
+                                                                              lemmas=True)
             if querystatus < 0:
                 raise Exception(querymessage)
             end = time.perf_counter()
@@ -261,9 +262,13 @@ class MainWindow(QMainWindow):
 
         # edit_menu = menu.addMenu("&Edit")
 
+        self.freq_all = QAction("&Show both frequencies", self)
         self.freq_abs = QAction("&Show absolute frequencies", self)
         self.freq_rel = QAction("&Show relative frequencies", self)
-        self.freq_all = QAction("&Show both frequencies", self)
+
+        self.freq_all.setShortcut(QKeySequence("Ctrl+1"))
+        self.freq_abs.setShortcut(QKeySequence("Ctrl+2"))
+        self.freq_rel.setShortcut(QKeySequence("Ctrl+3"))
 
         self.freq_all.triggered.connect(self.filterColumns)
         self.freq_abs.triggered.connect(self.filterColumns)
@@ -282,6 +287,7 @@ class MainWindow(QMainWindow):
         ag3 = freq_boxes.addAction(self.freq_rel)
 
         self.hide_columns = QAction("&Hide empty columns", self)
+        self.hide_columns.setShortcut(QKeySequence("Ctrl+4"))
         self.hide_columns.setCheckable(True)
         self.hide_columns.triggered.connect(self.filterColumns)
 
@@ -295,21 +301,25 @@ class MainWindow(QMainWindow):
         self.cataction_lemma = QAction("&Show lemmas", self)
         self.cataction_lemma.setCheckable(True)
         self.cataction_lemma.setChecked(True)
+        self.cataction_lemma.setShortcut(QKeySequence("Ctrl+5"))
         self.cataction_lemma.triggered.connect(self.filterColumns)
 
         self.cataction_form = QAction("&Show forms", self)
         self.cataction_form.setCheckable(True)
         self.cataction_form.setChecked(True)
+        self.cataction_form.setShortcut(QKeySequence("Ctrl+6"))
         self.cataction_form.triggered.connect(self.filterColumns)
 
         self.cataction_freq = QAction("&Show frequencies", self)
         self.cataction_freq.setCheckable(True)
         self.cataction_freq.setChecked(True)
+        self.cataction_freq.setShortcut(QKeySequence("Ctrl+7"))
         self.cataction_freq.triggered.connect(self.filterColumns)
 
         self.cataction_feat = QAction("&Show features", self)
         self.cataction_feat.setCheckable(True)
         self.cataction_feat.setChecked(True)
+        self.cataction_feat.setShortcut(QKeySequence("Ctrl+8"))
         self.cataction_feat.triggered.connect(self.filterColumns)
 
         data_catmenu = data_menu.addMenu("Categories")
@@ -353,7 +363,7 @@ class MainWindow(QMainWindow):
         w2widget.setFont(currentfont)
         w2.setFonts()
 
-        # Inherit checkboxes
+        # Inherit menu checkboxes
         w2.freq_all.setChecked(self.freq_all.isChecked())
         w2.freq_abs.setChecked(self.freq_abs.isChecked())
         w2.freq_rel.setChecked(self.freq_rel.isChecked())
