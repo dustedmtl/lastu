@@ -336,10 +336,11 @@ class DatabaseConnection:
     def fetch_aggregate_frequencies(self):
         """Fetch aggregate frequencies."""
         self.wordfreqs = adhoc_query(self.connection, 'select sum(frequency) from wordfreqs', verbose=True)
+        self.lemmafreqs = adhoc_query(self.connection, 'select sum(lemmafreq) from lemmas', verbose=True)
         self.initfreqs = adhoc_query(self.connection, 'select sum(frequency) from initgramfreqs', verbose=True)
         self.finfreqs = adhoc_query(self.connection, 'select sum(frequency) from fingramfreqs', verbose=True)
         self.bifreqs = adhoc_query(self.connection, 'select sum(frequency) from bigramfreqs', verbose=True)
-        self.wbifreqs = adhoc_query(self.connection, 'select sum(frequency) from wordbigramfreqs', verbose=True)
+        # self.wbifreqs = adhoc_query(self.connection, 'select sum(frequency) from wordbigramfreqs', verbose=True)
 
     def record_columns(self):
         """Store column lists."""
@@ -383,7 +384,7 @@ class DatabaseConnection:
                     # 'w.hood', 'w.ambform',  # for now
                     'ft.featid', 'ft.feats', 'ft.pos', 'ft.posx',
                     'l.pos', 'l.lemma', 'l.comparts',
-                    'l.amblemma',
+                    # 'l.amblemma',
                     ]
         for col in self.columns[table]:
             if table == 'wordfreqs':
@@ -930,6 +931,7 @@ def add_relative_frequencies(dbc: DatabaseConnection,
     """Add relative frequencies."""
     resdf = df.copy()
     fieldmap = {
+        'lemmafreq': dbc.lemmafreqs,
         'frequency': dbc.wordfreqs,
         'bigramfreq': dbc.bifreqs,
         'initgramfreq': dbc.initfreqs,
