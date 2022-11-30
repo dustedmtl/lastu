@@ -233,25 +233,25 @@ class MainWindow(QMainWindow):
 
         # edit_menu = menu.addMenu("&Edit")
 
-        freq_abs = QAction("&Show absolute frequencies", self)
-        freq_rel = QAction("&Show relative frequencies", self)
-        freq_all = QAction("&Show both frequencies", self)
+        self.freq_abs = QAction("&Show absolute frequencies", self)
+        self.freq_rel = QAction("&Show relative frequencies", self)
+        self.freq_all = QAction("&Show both frequencies", self)
 
-        freq_all.triggered.connect(self.showBothFrequencies)
-        freq_abs.triggered.connect(self.showAbsoluteFrequencies)
-        freq_rel.triggered.connect(self.showRelativeFrequencies)
+        self.freq_all.triggered.connect(self.showBothFrequencies)
+        self.freq_abs.triggered.connect(self.showAbsoluteFrequencies)
+        self.freq_rel.triggered.connect(self.showRelativeFrequencies)
 
-        freq_all.setCheckable(True)
-        freq_abs.setCheckable(True)
-        freq_abs.setChecked(True)
-        freq_rel.setCheckable(True)
+        self.freq_all.setCheckable(True)
+        self.freq_abs.setCheckable(True)
+        self.freq_abs.setChecked(True)
+        self.freq_rel.setCheckable(True)
 
         freq_boxes = QActionGroup(self)
         freq_boxes.setExclusionPolicy(QActionGroup.ExclusionPolicy.Exclusive)
 
-        ag1 = freq_boxes.addAction(freq_all)
-        ag2 = freq_boxes.addAction(freq_abs)
-        ag3 = freq_boxes.addAction(freq_rel)
+        ag1 = freq_boxes.addAction(self.freq_all)
+        ag2 = freq_boxes.addAction(self.freq_abs)
+        ag3 = freq_boxes.addAction(self.freq_rel)
 
         data_menu = menu.addMenu("&Data")
         data_submenu = data_menu.addMenu("Frequencies")
@@ -412,7 +412,12 @@ class MainWindow(QMainWindow):
             self.setData(querydf)
             self.originaldata = self.data
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
-            self.resizeWidthToContents()
+            if self.freq_all.isChecked():
+                self.showBothFrequencies()
+            elif self.freq_rel.isChecked():
+                self.showRelativeFrequencies()
+            else:
+                self.resizeWidthToContents()
 
     def setQueryError(self, text: str, error: str):
         self.statusfield.setText(f'Issue with query {text}: {error}')
