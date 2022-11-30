@@ -136,7 +136,7 @@ class DBWorker(QRunnable):
             self.signals.finished.emit()
             self.signals.result.emit(diff, newdf)
         except Exception as we:
-            logger.error("Issue with query %s: %s", self.querytxt, we)
+            logger.error("Issue with query '%s':\n%s", self.querytxt, we)
             self.signals.error.emit(self.querytxt, str(we))
             self.signals.finished.emit()
 
@@ -533,15 +533,18 @@ class MainWindow(QMainWindow):
             self.originaldata = self.data
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.filterColumns()
-#            if self.freq_all.isChecked():
-#                self.showBothFrequencies()
-#            elif self.freq_rel.isChecked():
+        else:
+            self.statusfield.setText(f'Executing query{self.query_desc} .. done: no results in {exectime:.1f} seconds')
+
 #                self.showRelativeFrequencies()
 #            else:
 #                self.resizeWidthToContents()
 
     def setQueryError(self, text: str, error: str):
-        self.statusfield.setText(f'Issue with query {text}: {error}')
+        if '\n' in error:
+            self.statusfield.setText('Issue with query:\n%s' % error)
+        else:
+            self.statusfield.setText(f'Issue with query: {error}')
 
     def inputFileQuery(self):
         fileinput = QFileDialog()
