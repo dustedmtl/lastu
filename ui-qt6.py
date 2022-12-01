@@ -22,6 +22,7 @@ from UliPlot.XLSX import auto_adjust_xlsx_column_width
 
 from PyQt6.QtWidgets import (
     QTableView, QApplication, QMainWindow, QWidget,
+    QHeaderView,
     QGridLayout,
     QAbstractScrollArea,
     QFileDialog,
@@ -33,6 +34,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QAction, QKeySequence, QActionGroup
 from PyQt6.QtCore import (
     QAbstractTableModel,
+    # QSortFilterProxyModel,
     Qt,
     QModelIndex,
     QObject,
@@ -172,7 +174,9 @@ class MainWindow(QMainWindow):
         # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
         self.dbconnection = dbconnection
-        self.originaldata = df
+        # self.originaldata = df
+        self.data = df
+        self.hidecolumns = set()
         self.query_ongoing = False
         self.query_desc = ""
         self.appconfig = appconfig
@@ -225,12 +229,11 @@ class MainWindow(QMainWindow):
         self.table = QTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setAlternatingRowColors(True)
+        self.table.setSortingEnabled(True)
 
         # cell width is based on their contents
         self.table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         # view.setSelectionBehavior(QTableView.SelectRows)
-
-        self.setData(df)
 
         self.layout.addWidget(self.table, 3, 0, 1, 2)
 
@@ -307,17 +310,17 @@ class MainWindow(QMainWindow):
         ag2 = freq_boxes.addAction(self.freq_abs)
         ag3 = freq_boxes.addAction(self.freq_rel)
 
-        self.hide_columns = QAction("&Hide empty columns", self)
-        self.hide_columns.setShortcut(QKeySequence("Ctrl+4"))
-        self.hide_columns.setCheckable(True)
-        self.hide_columns.triggered.connect(self.filterColumns)
+        self.hide_empty_columns = QAction("&Hide empty columns", self)
+        self.hide_empty_columns.setShortcut(QKeySequence("Ctrl+4"))
+        self.hide_empty_columns.setCheckable(True)
+        self.hide_empty_columns.triggered.connect(self.filterColumns)
 
         data_menu = menu.addMenu("&Data")
         data_submenu = data_menu.addMenu("Frequencies")
         data_submenu.addAction(ag1)
         data_submenu.addAction(ag2)
         data_submenu.addAction(ag3)
-        data_menu.addAction(self.hide_columns)
+        data_menu.addAction(self.hide_empty_columns)
 
         self.cataction_lemma = QAction("&Show lemmas", self)
         self.cataction_lemma.setCheckable(True)
@@ -364,11 +367,16 @@ class MainWindow(QMainWindow):
         window_menu.addAction(menuaction_smaller)
         window_menu.addAction(menuaction_bigger)
 
+        if df:
+            self.setData(df)
+            # self.filterColumns()
+
         widget = QWidget()
         widget.setLayout(self.layout)
         self.centralwidget = widget
         self.setCentralWidget(widget)
         if original:
+            self.table.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.DescendingOrder)
             if (fontsize := self.config.getConfigValue('style.fontsize')) is not None:
                 self.setFonts(fontsize)
         # print(widget.font().pointSize(), self.table.verticalHeader().font().pointSize())
@@ -378,13 +386,15 @@ class MainWindow(QMainWindow):
     def newWindow(self):
         logger.debug('Opening new window')
         w2 = MainWindow(self.dbconnection, original=False)
-        w2.originaldata = w2.data
+        # w2.originaldata = w2.data
         w2.appconfig = self.appconfig
         w2.config = self.config
         w2.querybox.setText(self.querybox.text())
         # FIXME: proper way to manage windows?
         self._otherwindows.append(w2)
+        w2.hidecolumns = self.hidecolumns
         w2.setData(self.data)
+        # w2.filterColumns()
         widget = self.centralwidget
         currentfont = widget.font()
         w2widget = w2.centralwidget
@@ -395,12 +405,17 @@ class MainWindow(QMainWindow):
         w2.freq_all.setChecked(self.freq_all.isChecked())
         w2.freq_abs.setChecked(self.freq_abs.isChecked())
         w2.freq_rel.setChecked(self.freq_rel.isChecked())
-        w2.hide_columns.setChecked(self.hide_columns.isChecked())
+        w2.hide_empty_columns.setChecked(self.hide_empty_columns.isChecked())
 
         w2.cataction_lemma.setChecked(self.cataction_lemma.isChecked())
         w2.cataction_form.setChecked(self.cataction_form.isChecked())
         w2.cataction_freq.setChecked(self.cataction_freq.isChecked())
         w2.cataction_feat.setChecked(self.cataction_feat.isChecked())
+
+        # Inherit sort order
+        sortcol = self.table.horizontalHeader().sortIndicatorSection()
+        sortorder = self.table.horizontalHeader().sortIndicatorOrder()
+        w2.table.horizontalHeader().setSortIndicator(sortcol, sortorder)
 
         w2.show()
 
@@ -411,7 +426,8 @@ class MainWindow(QMainWindow):
         a = df.to_numpy()
         return (a[0] == a).all(0)
 
-    def hideEmpty(self, df):
+    def hideEmpty(self):
+        df = self.data
         values = list(df.loc[0].values)
         columns = df.columns
         uniques = self.unique_cols(df)
@@ -422,21 +438,20 @@ class MainWindow(QMainWindow):
                 hide.append(col)
         if hide:
             logger.debug('Hiding empty columns: %s', hide)
-            df = df.drop(hide, axis=1)
-        return df
+        return hide
 
-    def hideCategories(self, df):
+    def hideCategories(self):
+        df = self.data
         shows = {
             'lemma': self.cataction_lemma.isChecked(),
             'form': self.cataction_form.isChecked(),
             'bigramfreq': self.cataction_freq.isChecked(),
             'feats': self.cataction_feat.isChecked(),
         }
+        hide = []
         columns = list(df.columns)
-        # print(shows)
         anchors = ['lemma', 'form', 'bigramfreq', 'feats']
         mode = None
-        drops = []
         for col in columns:
             if col in anchors:
                 mode = col
@@ -444,32 +459,60 @@ class MainWindow(QMainWindow):
                 if mode not in shows:
                     continue
                 if not shows[mode]:
-                    drops.append(col)
-        if drops:
-            logger.debug('Hiding category columns: %s', drops)
-            df = df.drop(drops, axis=1)
-        return df
+                    hide.append(col)
+        if hide:
+            logger.debug('Hiding category columns: %s', hide)
+
+        return hide
+
+    def hideFrequencies(self):
+        fields = [
+            'lemmafreq',
+            'frequency',
+            'bigramfreq',
+            'initgramfreq',
+            'fingramfreq',
+        ]
+        hide = []
+
+        if self.freq_abs.isChecked():
+            # remove relative freqs
+            hide = ['rel' + f for f in fields]
+        elif self.freq_rel.isChecked():
+            # remove absolute freqs
+            hide = fields
+
+        if hide:
+            logger.debug('Hiding frequency columns: %s', hide)
+
+        return hide
 
     def filterColumns(self):
-        if self.freq_all.isChecked():
-            logger.debug("Showing both frequencies")
-            df = dbutil.add_relative_frequencies(self.dbconnection,
-                                                 self.originaldata)
-        elif self.freq_rel.isChecked():
-            logger.debug("Showing relative frequencies")
-            df = dbutil.add_relative_frequencies(self.dbconnection,
-                                                 self.originaldata,
-                                                 drop=True)
-        else:
-            logger.debug("Showing absolute frequencies")
-            df = self.originaldata
 
-        df = self.hideCategories(df)
+        # for f in inspect.stack():
+        #    print('-', inspect.getframeinfo(f[0]))
 
-        if self.hide_columns.isChecked():
-            df = self.hideEmpty(df)
+        hidecolumns = set()
+        hidefreqs = self.hideFrequencies()
+        hidecats = self.hideCategories()
+        hidecolumns.update(hidefreqs)
+        hidecolumns.update(hidecats)
+        if self.hide_empty_columns.isChecked():
+            hideempty = self.hideEmpty()
+            hidecolumns.update(hideempty)
+        self.hidecolumns = hidecolumns
 
-        self.setData(df)
+        # assume dataframe has been stored to data
+        header = self.table.horizontalHeader()
+        columns = list(self.data.columns)
+
+        for colidx, col in enumerate(columns):
+            if col in self.hidecolumns:
+                # print('Hiding', col, colidx)
+                header.hideSection(colidx)
+            else:
+                header.showSection(colidx)
+
         self.resizeWidthToContents()
 
     def quit(self):
@@ -564,19 +607,16 @@ class MainWindow(QMainWindow):
 
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
         if querydf is not None and len(querydf) > 0:
-            # self.setData(querydf)
-            self.data = querydf
-            self.originaldata = self.data
+            df = dbutil.add_relative_frequencies(self.dbconnection, querydf)
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
-            self.filterColumns()
+            self.setData(df)
+            self.table.horizontalHeader().sortIndicatorChanged.connect(self.sortData)
+            # self.filterColumns()
+            # self.resizeWidthToContents()
         else:
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: no results in {exectime:.1f} seconds')
 
-#                self.showRelativeFrequencies()
-#            else:
-#                self.resizeWidthToContents()
-
-    def setQueryError(self, text: str, error: str):
+    def setQueryError(self, _text: str, error: str):
         if '\n' in error:
             self.statusfield.setText('Issue with query:\n%s' % error)
         else:
@@ -627,7 +667,7 @@ class MainWindow(QMainWindow):
                                                    'xlsx')
         initialfull = file_filters[0]
 
-        print(self.config.cfgdict)
+        # print(self.config.cfgdict)
         for outformat in file_filters:
             if initialformat in outformat:
                 initialfull = outformat
@@ -676,24 +716,83 @@ class MainWindow(QMainWindow):
     def nullAction(self):
         logger.info("Action not implemented")
 
+    # @dbutil.query_timing
     def setData(self, df: pd.DataFrame = None):
         # for f in inspect.stack():
         #    print('-', inspect.getframeinfo(f[0]))
         if df is None:
             df = pd.DataFrame()
         self.data = df
+        # print(self.table.horizontalHeader().sortIndicatorSection())
+        # print(self.table.horizontalHeader().sortIndicatorOrder())
+        self.setSortedData()
+        self.model = TableModel(self.data)
+
+        # self.proxyModel = QSortFilterProxyModel()
+        # self.proxyModel.setSourceModel(self.model)
+        # self.table.setModel(self.proxyModel)
+        self.table.setModel(self.model)
+
+        self.hideRows()
+        self.table.resizeColumnsToContents()
+        self.filterColumns()
+        # print(dir(self.table))
+        # print(dir(self.model))
+        # print(dir(self.table.horizontalHeader()))
+        # self.resizeWidthToContents()
+
+    def hideRows(self):
+        df = self.data
         showrows = self.config.getConfigValue('query.showrows', 1000)
         if len(df) > showrows:
             logger.debug('Showing maximum %d rows of %d', showrows, len(df))
-        self.model = TableModel(df[:showrows])
-        self.table.setModel(self.model)
-        self.table.resizeColumnsToContents()
+            # self.model = TableModel(df[:showrows])
+            rowheader = self.table.verticalHeader()
+            # rowcount = rowheader.count()
+            for rowidx in range(showrows, len(df)):
+                # print('Hiding row', rowidx, rowcount)
+                rowheader.hideSection(rowidx)
 
-#    def setFilteredData(self, df: pd.DataFrame):
-#        self.data = df
-#        self.model = TableModel(df)
-#        self.table.setModel(self.model)
-#        self.table.resizeColumnsToContents()
+    def setSortedData(self):
+        if self.data is not None:
+            col = None
+            colidx = self.table.horizontalHeader().sortIndicatorSection()
+            # print(colidx)
+            if colidx == -1:
+                try:
+                    columns = list(self.data.columns)
+                    colidx = columns.index('frequency')
+                    col = 'frequency'
+                    direction = Qt.SortOrder.DescendingOrder
+                    self.table.horizontalHeader().setSortIndicator(colidx, direction)
+                except Exception as e:
+                    logger.warning('Issue with sorting: %s', e)
+            else:
+                col = list(self.data.columns)[colidx]
+                direction = self.table.horizontalHeader().sortIndicatorOrder()
+
+            if col:
+                ascending = direction == Qt.SortOrder.AscendingOrder
+                # print(col, colidx, ascending)
+                df = self.data.sort_values(by=col, ascending=ascending)
+                # print(df)
+                self.data = df
+
+    def sortData(self, _colidx, _direction):
+        # print('Sorting', colidx, direction)
+        self.setData(self.data)
+#        self.setSortedData()
+#        if self.data is not None:
+#            col = list(self.data.columns)[colidx]
+#            ascending = direction == Qt.SortOrder.AscendingOrder
+#            # print(col, colidx, ascending)
+#            df = self.data.sort_values(by=col, ascending=ascending)
+#            self.setData(df)
+
+        # self.table.sortByColumn(col, direction)
+        # self.hideRows()
+        # self.table.resizeColumnsToContents()
+        # self.resizeWidthToContents()
 
 
 def selectDataBase() -> Optional[str]:
