@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS lemmas (
        PRIMARY KEY (lemma, pos)
 );
 
-CREATE INDEX IF NOT EXISTS lemmas_freq_pos ON lemmas(lemmafreq, pos);
-CREATE INDEX IF NOT EXISTS lemmas_freq_lemma ON lemmas(lemmafreq, lemma);
-CREATE INDEX IF NOT EXISTS lemmas_freq_len ON lemmas(lemmafreq, lemmalen);
-CREATE INDEX IF NOT EXISTS lemmas_len_lemma ON lemmas(lemmalen, lemma);
-CREATE INDEX IF NOT EXISTS lemmas_freq_amb ON lemmas(lemmafreq, amblemma);
+CREATE INDEX IF NOT EXISTS lemmas_freq_pos ON lemmas(lemmafreq DESC, pos);
+CREATE INDEX IF NOT EXISTS lemmas_freq_lemma ON lemmas(lemmafreq DESC, lemma);
+CREATE INDEX IF NOT EXISTS lemmas_freq_len ON lemmas(lemmafreq DESC, lemmalen);
+CREATE INDEX IF NOT EXISTS lemmas_len_lemma ON lemmas(lemmalen DESC, lemma);
+CREATE INDEX IF NOT EXISTS lemmas_freq_amb ON lemmas(lemmafreq DESC, amblemma);
 
-CREATE INDEX IF NOT EXISTS lemmas_comparts ON lemmas(comparts);
+--CREATE INDEX IF NOT EXISTS lemmas_comparts ON lemmas(comparts);
