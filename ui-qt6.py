@@ -141,9 +141,33 @@ class DBWorker(QRunnable):
             self.signals.finished.emit()
 
 
+class ConfigFile():
+    def __init__(self, appcfg=None):
+        super().__init__()
+        self.cfgdict = {}
+        if appcfg:
+            for section in appcfg.sections():
+                for key, value in appcfg[section].items():
+                    value = value.strip('"').strip("'")
+                    if value.isnumeric():
+                        value = int(value)
+                    if value == 'True':
+                        value = True
+                    elif value == 'False':
+                        value = False
+                    self.cfgdict[f'{section}.{key}'] = value
+
+    def getConfigValue(self, key, defaultvalue=None):
+        return self.cfgdict.get(key, defaultvalue)
+
+
 class MainWindow(QMainWindow):
 
-    def __init__(self, dbconnection, df=None, appconfig=None):
+    def __init__(self,
+                 dbconnection,
+                 df=None,
+                 appconfig=None,
+                 original=True):
         super().__init__()
         # super(MainWindow, self).__init__()
         self.setWindowTitle("WM2")
@@ -152,12 +176,9 @@ class MainWindow(QMainWindow):
         self.query_ongoing = False
         self.query_desc = ""
         self.appconfig = appconfig
+        self.config = ConfigFile(appconfig)
         self._otherwindows = []
         self.layout = QGridLayout()
-
-        # newbutton = QPushButton("New window")
-        # newbutton.clicked.connect(self.newWindow)
-        # self.layout.addWidget(newbutton, 0, 1, 1, 1)
 
         # self.lemmacb = QCheckBox()
         # self.formcb = QCheckBox()
@@ -347,16 +368,23 @@ class MainWindow(QMainWindow):
         widget.setLayout(self.layout)
         self.centralwidget = widget
         self.setCentralWidget(widget)
+        if original:
+            if (fontsize := self.config.getConfigValue('style.fontsize')) is not None:
+                self.setFonts(fontsize)
         # print(widget.font().pointSize(), self.table.verticalHeader().font().pointSize())
         # self.setFonts()
         # self.setCopyleftFont()
 
     def newWindow(self):
-        w2 = MainWindow(self.dbconnection, df=self.data, appconfig=self.appconfig)
+        logger.debug('Opening new window')
+        w2 = MainWindow(self.dbconnection, original=False)
         w2.originaldata = w2.data
+        w2.appconfig = self.appconfig
+        w2.config = self.config
         w2.querybox.setText(self.querybox.text())
+        # FIXME: proper way to manage windows?
         self._otherwindows.append(w2)
-        # w2.setData(self.data)
+        w2.setData(self.data)
         widget = self.centralwidget
         currentfont = widget.font()
         w2widget = w2.centralwidget
@@ -467,7 +495,14 @@ class MainWindow(QMainWindow):
         currentfont.setPointSize(newfontsize)
         self.copyleft.setFont(currentfont)
 
-    def setFonts(self):
+    def setFonts(self, size: int = None):
+        if size:
+            widget = self.centralwidget
+            currentfont = widget.font()
+            logger.debug('Setting font size to %d', size)
+            currentfont.setPointSize(size)
+            widget.setFont(currentfont)
+
         self.setCopyleftFont()
         currentfontsize = self.centralwidget.font().pointSize()
         tablefontsize = currentfontsize - 2
@@ -529,7 +564,8 @@ class MainWindow(QMainWindow):
 
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
         if querydf is not None and len(querydf) > 0:
-            self.setData(querydf)
+            # self.setData(querydf)
+            self.data = querydf
             self.originaldata = self.data
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.filterColumns()
@@ -587,18 +623,31 @@ class MainWindow(QMainWindow):
             "Tab Separated Values (*.tsv)"
         ]
 
+        initialformat = self.config.getConfigValue('output.outformat',
+                                                   'xlsx')
+        initialfull = file_filters[0]
+
+        print(self.config.cfgdict)
+        for outformat in file_filters:
+            if initialformat in outformat:
+                initialfull = outformat
+                logger.debug('Choosing initial output format: %s', initialfull)
+                break
+
         filename, selected_filter = QFileDialog.getSaveFileName(
             self,
             caption=caption,
             directory='',
             filter=';;'.join(file_filters),
-            initialFilter=file_filters[0],
+            initialFilter=initialfull,
         )
 
         logger.debug('Output from export file dialog: %s', filename)
 
         if filename:
-            if exists(filename):
+            warnoverwrite = self.config.getConfigValue('output.warnoverwrite',
+                                                       False)
+            if warnoverwrite and exists(filename):
                 # Existing file, ask the user for confirmation.
                 write_confirmed = QMessageBox.question(
                     self,
@@ -628,10 +677,15 @@ class MainWindow(QMainWindow):
         logger.info("Action not implemented")
 
     def setData(self, df: pd.DataFrame = None):
+        # for f in inspect.stack():
+        #    print('-', inspect.getframeinfo(f[0]))
         if df is None:
             df = pd.DataFrame()
         self.data = df
-        self.model = TableModel(df)
+        showrows = self.config.getConfigValue('query.showrows', 1000)
+        if len(df) > showrows:
+            logger.debug('Showing maximum %d rows of %d', showrows, len(df))
+        self.model = TableModel(df[:showrows])
         self.table.setModel(self.model)
         self.table.resizeColumnsToContents()
 
@@ -696,7 +750,7 @@ if __name__ == "__main__":
     if not appconfig:
         logger.warning("Configuration file '%s' not found", inifile)
         # FIXME: error window if ini file not found
-
+    configfile = ConfigFile(appconfig)
     app = QApplication(sys.argv)
     dbfile = getDataBaseFile(appconfig, currdir)
 
@@ -709,6 +763,9 @@ if __name__ == "__main__":
     try:
         logger.info("Connecting to %s...", dbfile)
         dbconn = dbutil.DatabaseConnection(dbfile)
+        if (rowlimit := configfile.getConfigValue('query.fetchrows')) is not None:
+            logger.debug('Setting row limit to %d', rowlimit)
+            dbconn.rowlimit(rowlimit)
     except Exception as e:
         logger.error("Couldn't connect to %s: %s", dbfile, e)
 
