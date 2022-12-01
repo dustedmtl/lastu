@@ -415,6 +415,7 @@ class MainWindow(QMainWindow):
         # Inherit sort order
         sortcol = self.table.horizontalHeader().sortIndicatorSection()
         sortorder = self.table.horizontalHeader().sortIndicatorOrder()
+        w2.table.horizontalHeader().sortIndicatorChanged.connect(w2.sortData)
         w2.table.horizontalHeader().setSortIndicator(sortcol, sortorder)
 
         w2.show()
@@ -773,7 +774,7 @@ class MainWindow(QMainWindow):
 
             if col:
                 ascending = direction == Qt.SortOrder.AscendingOrder
-                # print(col, colidx, ascending)
+                print(col, colidx, ascending)
                 df = self.data.sort_values(by=col, ascending=ascending)
                 # print(df)
                 self.data = df
