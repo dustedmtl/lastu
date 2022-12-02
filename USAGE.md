@@ -20,6 +20,21 @@ The init file itself is looked for from two locations:
 If the init file is not found, the database filename will default to `wm2database.db` and
 the application will try to locate it from the `data` subdirectory.
 
+### Init file configuration
+
+The most important configuration options:
+ - input
+   - datadir and database
+ - output
+   - outformat
+ - query
+   - fetchrows
+     - the maximum number of rows to fetch from the database
+   - showrows
+     - the maximum number of rows to show in the UI
+ - style
+   - fontsize
+
 ## User interface
 
 ### Window management
@@ -49,18 +64,28 @@ Allowed keys:
 
 Allowed operators:
  - string: `=` `!=` `in` `like`
-   - word `NOT` can be prepended to `in` and `like` 
+   - word `NOT` can be prepended to `in` and `like`
+   - the use of the LIKE operator is generally not recommended
+   - for IN, the value may contain comma-separated values
  - numeric: `=` `!=` `<` `>` `<=` `>=`
 
-Keys, operators and values are case-sensitive (this will change in the future):
+Shortcuts
+ - the following keys have shortcuts:
+   - `freq` for `frequency`
+   - `case` for `nouncase`
+
+Keys, operators and values are case-insensitive. The cases for the data based on the underlying UD data:
  - all keys and operators are lowercase.
  - values are also lowercase, except..
    - Word classes (PoS) are uppercase (`NOUN`)
    - UD morphogical features such as case and clitic are titlecase (`Ine`, `Ko`)
 
+The query parser will convert all the user-supplied values to the appropriate case.
+
 TBD:
- - handle cases of input automatically
  - List of UD tags etc
+ - Explain AUX/VERB handling
+ - Examples
 
 ### Input and output
 
@@ -69,6 +94,13 @@ Input and output commands:
     - See sample input files in the [samples directory](samples/)
   - `C-S` - export to file (csv/tsv/xlsx)
   - `C-E` - copy to clipboard
+
+### Hiding and showing columns
+
+The data menu lists the various column hide/show options:
+ - `C-1` to `C-3`: showing frequency columns
+ - `C-4`: showing columns (morphological features) that can be hiddin
+ - `C-5` to `C-8`: showing categories
 
 ## Logging
 
