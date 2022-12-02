@@ -40,7 +40,7 @@ def query_timing(func):
         end = time.perf_counter()
         difference = end - start
         if difference > 0.01:
-            logger.info('Query execution took %.1f seconds', difference)
+            logger.debug('Query execution took %.1f seconds', difference)
         return results
     return wrapper
 
@@ -491,14 +491,19 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                     if comparator in formoperators:
                         isok = True
                     else:
-                        print(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        errors.append(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        # print(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        # logger.debug("Query comparator for '%s' not ok: '%s'", key, comparator)
                 elif key in strkeys:
                     if comparator in stroperators:
                         isok = True
                     else:
-                        print(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        errors.append(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        # print(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        # logger.debug("Query comparator for '%s' not ok: '%s'", key, comparator)
                 else:
-                    print(f"Query key '{key}' not ok")
+                    errors.append(f"Query key '{key}' not ok")
+                    # print(f"Query key '{key}' not ok")
 
             if isok:
                 kvparts.append([key, comparator, value])
@@ -717,8 +722,10 @@ def get_indexer(indexers: List,
                 orderby: str,
                 useposx: bool) -> str:
     """Possibly force indexer."""
-    print(f'Indexers: {indexers}')
-    print(f'Not LIKE indexers: {notlikeindexers}')
+    logger.debug('Indexers: %s', indexers)
+    # print(f'Indexers: {indexers}')
+    logger.debug('Not LIKE indexers: %s', notlikeindexers)
+    # print(f'Not LIKE indexers: {notlikeindexers}')
 
     orderby = orderby.split(' ')[0]
     windexedby = ""
@@ -735,7 +742,7 @@ def get_indexer(indexers: List,
                 windexedby = f"indexed by {indexfields[orderby]}"
         if useposx:
             windexedby = windexedby.replace('_freq', '_freqx')
-        print(f'Force indexer other than autoindex: {windexedby}')
+        logger.debug('Force indexer other than autoindex %s:', windexedby)
     return windexedby
 
 
@@ -754,7 +761,8 @@ def get_querystring(query: Union[str, Dict] = None,
 
     if useposx:
         orderby = orderby.replace('w.frequency', 'w.frequencyx')
-    print(wherestr, args)
+    logger.info('Wherestring, arguments: %s, %s', wherestr, args)
+    # print(wherestr, args)
     windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers, orderby, useposx)
     return wherestr, args, errors, windexedby, useposx
 
@@ -867,8 +875,10 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
 
     userowlimit = int(dbconnection.rowlimit() * 1.5) if useposx else dbconnection.rowlimit()
     sqlstr = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {userowlimit}'
-    print(sqlstr)
-    print(args)
+    logger.debug('SQL: %s', sqlstr)
+    logger.debug('Arguments: %s', args)
+    # print(sqlstr)
+    # print(args)
 
     querystatus = 0
     querymessage = 'success'
@@ -877,9 +887,7 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         explainer = pd.read_sql_query('explain query plan ' + sqlstr,
                                       connection,
                                       params=args)
-        print()
-        print('Query plan:')
-        print(tabulate(explainer, headers=explainer.columns))
+        logger.debug('Query plan:\n%s', tabulate(explainer, headers=explainer.columns))
 
         starttime = time.perf_counter()
         sql_query = pd.read_sql_query(sqlstr,
@@ -893,13 +901,16 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         df = reorder_columns(df).rename({'nouncase': 'case', 'nnumber': 'number'}, axis=1)
 
         endtime = time.perf_counter()
-        print()
-        print(f'{len(df)} rows returned in {endtime - starttime:.1f} seconds')
+        logger.info('%d rows returned in %.1f seconds', len(df), endtime - starttime)
+        # print()
+        # print(f'{len(df)} rows returned in {endtime - starttime:.1f} seconds')
 
     except DatabaseError as e:
-        print(str(e))
+        logger.error(str(e))
+        # print(str(e))
         _, errmsg = str(e).split(': ', 1)
-        print(errmsg)
+        logger.error(errmsg)
+        # print(errmsg)
         logging.exception(e)
         df = pd.DataFrame()
         querymessage = errmsg
