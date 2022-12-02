@@ -15,7 +15,7 @@ import configparser
 from pathlib import Path
 import time
 from datetime import datetime
-# import inspect
+import inspect
 import logging
 import logging.config
 import pandas as pd
@@ -431,8 +431,9 @@ class MainWindow(QMainWindow):
         # Inherit sort order
         sortcol = self.table.horizontalHeader().sortIndicatorSection()
         sortorder = self.table.horizontalHeader().sortIndicatorOrder()
-        w2.table.horizontalHeader().sortIndicatorChanged.connect(w2.sortData)
         w2.table.horizontalHeader().setSortIndicator(sortcol, sortorder)
+        # w2.table.horizontalHeader().sortIndicatorChanged.connect(w2.sortData)
+        w2.table.horizontalHeader().sectionClicked.connect(self.sortData)
 
         w2.show()
 
@@ -627,7 +628,8 @@ class MainWindow(QMainWindow):
             df = dbutil.add_relative_frequencies(self.dbconnection, querydf)
             self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.setData(df)
-            self.table.horizontalHeader().sortIndicatorChanged.connect(self.sortData)
+            self.table.horizontalHeader().sectionClicked.connect(self.sortData)
+            # self.table.horizontalHeader().sortIndicatorChanged.connect(self.sortData)
             # self.filterColumns()
             # self.resizeWidthToContents()
         else:
@@ -762,6 +764,8 @@ class MainWindow(QMainWindow):
         df = self.data
         showrows = self.config.getConfigValue('query.showrows', 1000)
         if len(df) > showrows:
+            for f in inspect.stack():
+                logger.debug(inspect.getframeinfo(f[0]))
             logger.info('Showing maximum %d rows of %d', showrows, len(df))
             # self.model = TableModel(df[:showrows])
             rowheader = self.table.verticalHeader()
@@ -791,13 +795,13 @@ class MainWindow(QMainWindow):
             if col:
                 ascending = direction == Qt.SortOrder.AscendingOrder
                 # print(col, colidx, ascending)
-                logger.debug('Sorting data based on column %d/%s, %s',
-                             colidx, col, direction)
+                logger.info('Sorting data based on column %d/%s, %s',
+                            colidx, col, direction)
                 df = self.data.sort_values(by=col, ascending=ascending)
                 # print(df)
                 self.data = df
 
-    def sortData(self, _colidx, _direction):
+    def sortData(self, _colidx, _direction = None):
         # print('Sorting', colidx, direction)
         self.setData(self.data)
 #        self.setSortedData()
