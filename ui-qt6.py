@@ -17,6 +17,7 @@ import time
 from datetime import datetime
 # import inspect
 import logging
+import logging.config
 import pandas as pd
 from UliPlot.XLSX import auto_adjust_xlsx_column_width
 
@@ -49,24 +50,39 @@ from PyQt6.QtCore import (
 from lib import dbutil, uiutil
 
 homedir = Path.home()
+
+wm2logconfig = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'root': {
+        'handlers': ['console', 'file_handler'],
+        'level': 'DEBUG'
+    },
+    'formatters': {
+        'default_formatter': {
+            'format': '%(asctime)s %(levelname)s %(message)s',
+            'datefmt': '%d.%m.%Y %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default_formatter',
+            'level': 'INFO'
+        },
+        'file_handler': {
+            'class': 'logging.FileHandler',
+            'formatter': 'default_formatter',
+            'filename': join(homedir, 'wm2log.txt'),
+            'level': 'DEBUG'
+        }
+    },
+}
+
+logging.config.dictConfig(wm2logconfig)
 logger = logging.getLogger('wm2')
-log_format = logging.Formatter('%(asctime)s %(levelname)s %(message)s',
-                               datefmt='%d.%m.%Y %H:%M:%S')
-# log_format = '[%(asctime)s] [%(levelname)s] - %(message)s'
-# logger.setFormat(log_format)
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                    datefmt='%d.%m.%Y %H:%M:%S')
-logger.setLevel(logging.DEBUG)
-logfile_handler = logging.FileHandler(join(homedir, 'wm2log.txt'))
-logfile_handler.setFormatter(log_format)
-logfile_handler.setLevel(logging.DEBUG)
-
-# stream_handler = logging.StreamHandler()
-# stream_handler.setFormatter(log_format)
-# stream_handler.setLevel(logging.DEBUG)
-
-logger.addHandler(logfile_handler)
-# logger.addHandler(stream_handler)
+# logger.info('info log')
+logger.debug('Starting logger')
 
 
 class TableModel(QAbstractTableModel):
@@ -683,7 +699,7 @@ class MainWindow(QMainWindow):
             initialFilter=initialfull,
         )
 
-        logger.debug('Output from export file dialog: %s', filename)
+        logger.info('Output from export file dialog: %s', filename)
 
         if filename:
             warnoverwrite = self.config.getConfigValue('output.warnoverwrite',
@@ -746,7 +762,7 @@ class MainWindow(QMainWindow):
         df = self.data
         showrows = self.config.getConfigValue('query.showrows', 1000)
         if len(df) > showrows:
-            logger.debug('Showing maximum %d rows of %d', showrows, len(df))
+            logger.info('Showing maximum %d rows of %d', showrows, len(df))
             # self.model = TableModel(df[:showrows])
             rowheader = self.table.verticalHeader()
             # rowcount = rowheader.count()
@@ -774,7 +790,9 @@ class MainWindow(QMainWindow):
 
             if col:
                 ascending = direction == Qt.SortOrder.AscendingOrder
-                print(col, colidx, ascending)
+                # print(col, colidx, ascending)
+                logger.info('Sorting data based on column %d/%s, %s',
+                            colidx, col, direction)
                 df = self.data.sort_values(by=col, ascending=ascending)
                 # print(df)
                 self.data = df
