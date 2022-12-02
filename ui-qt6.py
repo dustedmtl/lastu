@@ -789,8 +789,11 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     logger.warning('Issue with sorting: %s', e)
             else:
-                col = list(self.data.columns)[colidx]
-                direction = self.table.horizontalHeader().sortIndicatorOrder()
+                try:
+                    col = list(self.data.columns)[colidx]
+                    direction = self.table.horizontalHeader().sortIndicatorOrder()
+                except IndexError as ie:
+                    logger.debug("Couldn't get column %d from column list: %s", colidx, list(self.data.columns))
 
             if col:
                 ascending = direction == Qt.SortOrder.AscendingOrder
