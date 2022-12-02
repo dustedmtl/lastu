@@ -791,8 +791,8 @@ class MainWindow(QMainWindow):
             if col:
                 ascending = direction == Qt.SortOrder.AscendingOrder
                 # print(col, colidx, ascending)
-                logger.info('Sorting data based on column %d/%s, %s',
-                            colidx, col, direction)
+                logger.debug('Sorting data based on column %d/%s, %s',
+                             colidx, col, direction)
                 df = self.data.sort_values(by=col, ascending=ascending)
                 # print(df)
                 self.data = df
