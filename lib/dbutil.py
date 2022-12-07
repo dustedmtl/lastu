@@ -383,7 +383,7 @@ class DatabaseConnection:
                     'w.revform',
                     # 'w.hood', 'w.ambform',  # for now
                     'ft.featid', 'ft.feats', 'ft.pos', 'ft.posx',
-                    'l.pos', 'l.lemma', 'l.comparts',
+                    'l.pos', 'l.lemma', 'l.comparts', 'l.lemmac',
                     # 'l.amblemma',
                     ]
         for col in self.columns[table]:
@@ -422,7 +422,7 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                'lemmafreq', 'lemmalen', 'amblemma',
                'hood', 'ambform',
                'initrigramfreq', 'fintrigramfreq', 'bigramfreq']
-    strkeys = ['lemma', 'form', 'pos',
+    strkeys = ['lemma', 'lemmac', 'form', 'pos',
                'nouncase', 'nnumber',
                'tense', 'person', 'verbform',
                'posspers', 'possnum',
@@ -439,6 +439,7 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
         'freq': 'frequency',
         'case': 'nouncase',
         'number': 'nnumber',
+#        'lemma': 'lemmac',
     }
 
     # FIXME: use a queue mechanism for this?
@@ -474,6 +475,8 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
             else:
                 key, comparator, value = vals
                 value = value.strip("'").strip('"')
+                if key == 'lemma' and comparator != 'like':
+                    key = 'lemmac'
                 key = shortcuts.get(key, key)
 
                 isok = False
@@ -550,7 +553,7 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 'posspers', 'possnum',
                 'derivation', 'clitic'
                 ]
-    lemmas = ['lemmalen', 'lemmafreq', 'amblemma', 'comparts']
+    lemmas = ['lemmac', 'lemmalen', 'lemmafreq', 'amblemma', 'comparts']
     # lemmaforms = ['ambform']
     # forms = ['len', 'hood', 'start', 'middle', 'end']
     # forms = []
@@ -814,8 +817,6 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         orderstring = orderstring.replace('w.frequency', 'w.frequencyx')
         # wherestr = wherestr.replace('w.frequency', 'w.frequencyx')
 
-    # FIXME: return query errors if so deemed
-
     if len(wherestr) == 0:
         return pd.DataFrame(), -1, 'No valid query string'
 
@@ -826,10 +827,14 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
 
     addfrom = ""
     addjoins = ""
+
+    lindexedby = ""
+    # if 'lemmac' in wherestr:
+    #    lindexedby = "indexed by lemmas_lemmac_pos"
     # windexedby = "indexed by idx_wordfreqs_form_freqx"
 
     # jointables = ["wordfreqs w", "features ft", "forms f"]
-    jointables = ["wordfreqs w", "features ft"]
+    # jointables = ["wordfreqs w", "features ft"]
     fromtable = f"wordfreqs w {windexedby}, features ft"
     # fromtable = f"wordfreqs w {windexedby}, features ft, forms f"
     # fromtable = f"wordfreqs w, features ft"
@@ -842,9 +847,15 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     # if (addforms := dbconnection.get_queryselects('forms')):
     #    selects.extend(addforms)
 
-    for table in jointables:
-        if table == fromtable:
-            continue
+    if lemmas:
+        # fromtable += ", lemmas l indexed by lemmas_lemmac_pos"
+        fromtable += f", lemmas l {lindexedby}"
+        wherestr += " AND w.lemma = l.lemma AND w.posx = l.pos"
+        selects.extend(dbconnection.get_queryselects('lemmas'))
+
+#    for table in jointables:
+#        if table == fromtable:
+#            continue
 
     if 'd.derivation' in wherestr:
         addfrom += ", derivations d"
@@ -856,9 +867,9 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         addfrom += ", nouncases n"
         wherestr += " AND w.featid = n.featid"
 
-    if lemmas:
-        selects.extend(dbconnection.get_queryselects('lemmas'))
-        addjoins += ' LEFT JOIN lemmas l ON w.lemma = l.lemma AND w.posx = l.pos'
+#    if lemmas:
+#        selects.extend(dbconnection.get_queryselects('lemmas'))
+#        addjoins += ' LEFT JOIN lemmas l ON w.lemma = l.lemma AND w.posx = l.pos'
 
         # selects.append(1-lf.formpct as ambform)
         # addjoins += ' LEFT JOIN lemmaforms lf ON w.lemma = lf.lemma AND w.form = lf.form AND w.posx = lf.pos'
