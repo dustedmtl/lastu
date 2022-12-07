@@ -46,16 +46,16 @@ The user interface consists of one or more windows. Shortcuts for window managem
 
 ### Queries
 
-A query consists of one or more parts separated by the keyword 'and':
+A query consists of one or more parts separated by the keyword 'and'.
  - `form = 'auto'`
  - `lemma = 'voi' and nouncase = 'Ine'`
-
-The quotes around `<value>` are optional.
 
 A query part may relate to a string, numeric or boolean value.
  - string: `<key>` `<operator>` `<value>`
  - numeric: `<key>` `<operator>` `<value>`
  - boolean: `<key>` OR `NOT <key>`
+
+The quotes around `<value>` are optional.
 
 Allowed keys:
  - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `nouncase`, `number`, `clitic`, `derivation`, ...
