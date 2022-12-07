@@ -23,7 +23,7 @@ the application will try to locate it from the `data` subdirectory.
 ## User interface
 
 There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
-Please see the [UI functions section](#ui-functions) for those.
+Please see the [UI functions](#ui-functions) for those.
 
 ### Queries
 
@@ -32,17 +32,16 @@ A query consists of one or more parts separated by the keyword `and`:
  - `PART` and `PART`
  - `PART` and `PART` and `PART` ...
 
-The query parts  generally follow the form `KEY` `OPERATOR` `VALUE`. Exceptions to these include `NOT`queries and boolean queries.
+The query parts  generally follow the form `KEY OPERATOR VALUE`. Exceptions to these include negative (`NOT`) queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
 Examples:
- - `form = 'auto'`
- - `lemma = 'voi' and nouncase = 'Ine'`
- - `lemmafreq` > `10000` and `lemmalen` < `5`
+ - `form = auto`
+ - `lemma = voi and nouncase = Ine`
+ - `case != Gen`
+ - `lemmafreq > 10000 and lemmalen < 5`
 
-The allowed `OPERATOR`s vary depending on whether the `KEY` queries a string, numeric or boolean property.
-
-The quotes around `VALUE` are optional, i.e. `form = 'auto'` and `form = auto` are equivalent.
+The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
 
 #### String queries
 
@@ -79,11 +78,20 @@ For advanced queries, please see the [advanced usage](#advanced-queries).
 
 #### Numeric queries
 
-TBD
+The numeric properties allow operators for equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater or equal (`>=`) and smaller or equal (`<=`).
+
+Examples:
+ - `len > 10`
 
 #### Boolean queries
 
-TBD
+The only supported boolean query is `compound`.
+
+Examples:
+ - `pos = noun and compound`
+   - compound noun
+ - `pos = adj and not compound`
+   - non-compound adjective
 
 ## Logging
 
@@ -156,7 +164,7 @@ A query part may relate to a string, numeric or boolean value.
 
 Allowed keys:
  - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `case`, `number`, `clitic`, `derivation`, ...
- - numeric: `len`, `freq`, `initgramfreq`, `fingramfreq`, `bigramfreq`, ...
+ - numeric: `len`, `lemmafreq`, `freq`, `initgramfreq`, `fingramfreq`, `bigramfreq`, ...
  - boolean: `compound`
 
 Allowed operators:
