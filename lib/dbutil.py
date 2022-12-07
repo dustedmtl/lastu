@@ -999,7 +999,7 @@ def get_wordinput(filename: str) -> Dict[str, List]:
                     if not got_type:
                         # print(line.strip())
                         # print(re.match('.*type=(\w+)', line.strip(), re.M))
-                        if (matches := re.match('.*type=(\w+)', line.strip())) is not None:
+                        if (matches := re.match('.*type\s*=\s*(\w+)', line.strip())) is not None:
                             got_type = matches.group(1)
                             if got_type not in cats:
                                 # print(f'Invalid type: {got_type}')
