@@ -32,7 +32,7 @@ A query consists of one or more parts separated by the keyword `and`:
  - `PART` and `PART`
  - `PART` and `PART` and `PART` ...
 
-The query parts themselves generally follow the form `KEY` `OPERATOR` `VALUE`. Exceptions to these include `NOT`queries and boolean queries.
+The query parts  generally follow the form `KEY` `OPERATOR` `VALUE`. Exceptions to these include `NOT`queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
 Examples:
@@ -42,48 +42,50 @@ Examples:
 
 The allowed `OPERATOR`s vary depending on whether the `KEY` queries a string, numeric or boolean property.
 
+The quotes around `VALUE` are optional, i.e. `form = 'auto'` and `form = auto` are equivalent.
+
+#### String queries
+
+String properties include `lemma`, `form`, `pos`, `case` `clitic` and `derivation`.
+
+For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`
+
+Examples:
+ - `form = auto'`
+ - `case != Ine`
+ - `lemma in voi,voida`
+ - `clitic not in Kin,Kaan`
+
+The `start`, `middle` and `end` keys allow queries based on the `form` properties
+ - `start = aut`
+   - word starts with `aut`
+ - `end in ssa,ssä`
+   - word ends with `ssa` or `ssä`
+ - `end not in ssa,ssä`
+   - the converse
+ - `middle = ta`
+   - the word contains the substring `ta` but does not start or end with it
+
+Finally, the `LIKE` can be used if the above functions do not suffice.
+This operators allows the querying of any string property using a wildcard syntax, where the wildcard is `%`.
+
+Examples:
+ - `lemma like voi%`
+   - lemma starts with string `voi`
+ - `form like `%ta%`
+   - form contains the substring `ta`
+
+#### Numeric queries
+
+TBD
+
+#### Boolean queries
+
+TBD
+
 ### Logging
 
 The application logs to the file `wm2log.txt`in the user's home directory.
-
-### TBD
-
-A query part may relate to a string, numeric or boolean value.
- - string: `<key>` `<operator>` `<value>`
- - numeric: `<key>` `<operator>` `<value>`
- - boolean: `<key>` OR `NOT <key>`
-
-The quotes around `<value>` are optional.
-
-Allowed keys:
- - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `nouncase`, `number`, `clitic`, `derivation`, ...
- - numeric: `len`, `frequency`, `initgramfreq`, `fingramfreq`, `bigramfreq`, ...
- - boolean: `compound`
-
-Allowed operators:
- - string: `=` `!=` `in` `like`
-   - word `NOT` can be prepended to `in` and `like`
-   - the use of the LIKE operator is generally not recommended
-   - for IN, the value may contain comma-separated values
- - numeric: `=` `!=` `<` `>` `<=` `>=`
-
-Shortcuts
- - the following keys have shortcuts:
-   - `freq` for `frequency`
-   - `case` for `nouncase`
-
-Keys, operators and values are case-insensitive. The cases for the data based on the underlying UD data:
- - all keys and operators are lowercase.
- - values are also lowercase, except..
-   - Word classes (PoS) are uppercase (`NOUN`)
-   - UD morphogical features such as case and clitic are titlecase (`Ine`, `Ko`)
-
-The query parser will convert all the user-supplied values to the appropriate case.
-
-TBD:
- - Explain AUX/VERB handling
- - Examples
- - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
 
 ### Advanced usage
 
@@ -132,16 +134,40 @@ The most important configuration options:
 
 The underlying data comes from [universal dependencies](https://universaldependencies.org/fi/) tagged data.
 
-Some notes about the data:
+Note about the specific properties:
  - all word classes are uppercase
-   - NOUN, VERB, ADJ, ADV, PRON, PROPN, etc
+   - NOUN, VERB, ADJ, ADV, PRON, PROPN, ...
  - morphological features are in Titlecase (Ine)
    - noun cases: Abe, Abl, Acc, Ade, All, Com, Ela, Ess, Gen, Ill, Ine, Ins, Nom, Par, Tra
    - clitics: Han, Ka, Kaan, Kin, Ko, Pa, S
    - derivations: Inen, Ja, Lainen, Llinen, Minen, Sti, Tar, Ton, Ttain, U, Vs
- - word forms and lemmas and lowercase
+ - word forms and lemmas are lowercase
 
 Note that the list of derivations and clitics may be incomplete.
+
+### Advanced queries
+
+A query part may relate to a string, numeric or boolean value.
+ - string: `KEY` `OPERATOR` `VALUE`
+ - numeric: `KEY` `OPERATOR` `VALUE`
+ - boolean: `KEY` OR `NOT VALUE`
+
+Allowed keys:
+ - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `case`, `number`, `clitic`, `derivation`, ...
+ - numeric: `len`, `freq`, `initgramfreq`, `fingramfreq`, `bigramfreq`, ...
+ - boolean: `compound`
+
+Allowed operators:
+ - string: `=` `!=` `in` `like`
+   - word `NOT` can be prepended to `in` and `like`
+   - the use of the LIKE operator is generally not recommended
+   - for IN, the value may contain comma-separated values
+ - numeric: `=` `!=` `<` `>` `<=` `>=`
+
+TBD:
+ - Explain AUX/VERB handling
+ - lemma queries and compounds
+ - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
 
 ## Jupyter notebooks
 
