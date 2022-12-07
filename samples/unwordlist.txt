@@ -1,4 +1,4 @@
-# type=unword
+# type =unword
 # Only process unwords
 babalapa
 auti

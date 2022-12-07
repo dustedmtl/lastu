@@ -1,4 +1,4 @@
-# type=lemma
+# type = lemma
 # Only process lemmas
 kuusi
 voida
