@@ -602,7 +602,7 @@ class MainWindow(QMainWindow):
     def textQuery(self):
         querytext = self.querybox.text()
         self.statusfield.setText(f'Executing query: {querytext}')
-        self.query_desc = ''
+        self.query_desc = querytext
         self.doQuery(querytext)
 
     def doQuery(self, queryinput):
@@ -617,16 +617,18 @@ class MainWindow(QMainWindow):
             worker.signals.finished.connect(self.setQueryFinished)
             worker.signals.error.connect(self.setQueryError)
             self.query_ongoing = True
+            self.querybox.setEnabled(False)
             threadpool.start(worker)
 
     def setQueryFinished(self):
         # print('Query finished')
+        self.querybox.setEnabled(True)
         self.query_ongoing = False
 
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
         if querydf is not None and len(querydf) > 0:
             df = dbutil.add_relative_frequencies(self.dbconnection, querydf)
-            self.statusfield.setText(f'Executing query{self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
+            self.statusfield.setText(f'Executing query: {self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.setData(df)
             self.table.horizontalHeader().sectionClicked.connect(self.sortData)
             # self.table.horizontalHeader().sortIndicatorChanged.connect(self.sortData)
