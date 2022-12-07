@@ -255,8 +255,10 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
         print('Table lemmas already has content, not inserting')
     else:
         print('Inserting aggregates into lemmas table...')
-        lemmasql = "insert into lemmas select lemma, posx as pos, sum(frequency) as lemmafreq, length(lemma) as lemmalen, 0 as amblemma, 0 as comparts from wordfreqs group by lemma, posx order by frequency desc"
+        lemmasql = "insert into lemmas select lemma, replace(lemma, '#', '') as lemmac, posx as pos, sum(frequency) as lemmafreq, length(lemma) as lemmalen, 0 as amblemma, 0 as comparts from wordfreqs group by lemma, posx order by frequency desc"
         dbutil.adhoc_query(sqlcon, lemmasql)
+        updatestatement = "update lemmas set lemmalen = length(lemmac)"
+        dbutil.adhoc_query(sqlcon, updatestatement)
 
     lemmadf = dbutil.adhoc_query(sqlcon, "select lemma from lemmas where instr(lemma, '#') > 0", todf=True, verbose=True)
     print(f'Fetched {len(lemmadf)} compound lemmas')
