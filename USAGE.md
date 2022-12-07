@@ -23,7 +23,7 @@ the application will try to locate it from the `data` subdirectory.
 ## User interface
 
 There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
-Please see the [advanced usage](#advanced-queries) for those.
+Please see the [UI functions section](#ui-functions) for those.
 
 ### Queries
 
@@ -74,6 +74,8 @@ Examples:
    - lemma starts with string `voi`
  - `form like `%ta%`
    - form contains the substring `ta`
+
+For advanced queries, please see the [advanced usage](#advanced-queries).
 
 #### Numeric queries
 
