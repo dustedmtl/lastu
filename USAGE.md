@@ -25,22 +25,22 @@ the application will try to locate it from the `data` subdirectory.
 There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
 Please see the [advanced usage](#advanced-usage) for those.
 
-## Basic usage
-
 ### Queries
 
 A query consists of one or more parts separated by the keyword `and`:
  - `PART`
  - `PART` and `PART`
+ - `PART` and `PART` and `PART` ...
 
+The query parts themselves generally follow the form `KEY` `OPERATOR` `VALUE`. Exceptions to these include `NOT`queries and boolean queries.
+All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
-The query parts themselves generally follow the form `KEY` `OPERATOR` `VALUE`.
-All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependecnies data](#ud-data).
-
-Examples
+Examples:
  - `form = 'auto'`
  - `lemma = 'voi' and nouncase = 'Ine'`
- - 
+ - `lemmafreq` > `10000` and `lemmalen` < `5`
+
+The allowed `OPERATOR`s vary depending on whether the `KEY` queries a string, numeric or boolean property.
 
 ### Logging
 
@@ -87,7 +87,7 @@ TBD:
 
 ### Advanced usage
 
-## UI functrions
+## UI functions
 
 ### Opening and closing windows
 
