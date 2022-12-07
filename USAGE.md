@@ -23,7 +23,7 @@ the application will try to locate it from the `data` subdirectory.
 ## User interface
 
 There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
-Please see the [advanced usage](#advanced-usage) for those.
+Please see the [advanced usage](#advanced-queries) for those.
 
 ### Queries
 
@@ -83,22 +83,22 @@ TBD
 
 TBD
 
-### Logging
+## Logging
 
 The application logs to the file `wm2log.txt`in the user's home directory.
 
-### Advanced usage
+## Advanced usage
 
-## UI functions
+###  UI functions
 
-### Opening and closing windows
+#### Opening and closing windows
 
 The user interface consists of one or more windows. Shortcuts for window management:
   - `C-N` - new window
   - `C-W` - close currently active window
   - `C-Q` - quit application
 
-### Input and output
+#### Input and output
 
 Input and output commands:
   - `C-I` - query from wordlist
@@ -106,7 +106,7 @@ Input and output commands:
   - `C-S` - export to file (csv/tsv/xlsx)
   - `C-E` - copy to clipboard
 
-### Hiding and showing columns
+#### Hiding and showing columns
 
 The data menu lists the various column hide/show options:
  - `C-1` to `C-3`: showing frequency columns
@@ -169,7 +169,7 @@ TBD:
  - lemma queries and compounds
  - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
 
-## Jupyter notebooks
+### Jupyter notebooks
 
 TBD
 
