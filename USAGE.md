@@ -23,7 +23,7 @@ the application will try to locate it from the `data` subdirectory.
 ## User interface
 
 There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
-Please see the [advanced usage](#advanced) for those.
+Please see the [advanced usage](#advanced-usage) for those.
 
 ## Basic usage
 
@@ -33,13 +33,20 @@ A query consists of one or more parts separated by the keyword `and`:
  - `PART`
  - `PART` and `PART`
 
+
+The query parts themselves generally follow the form `KEY` `OPERATOR` `VALUE`.
+All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependecnies data](#ud-data).
+
 Examples
  - `form = 'auto'`
  - `lemma = 'voi' and nouncase = 'Ine'`
+ - 
 
-The query parts themselves generally follow the form `KEY` `OPERATOR` `VALUE`.
-All inputs are lowercase (although the underlying data might not be, please see the section concerning [UD data](#ud).
+### Logging
 
+The application logs to the file `wm2log.txt`in the user's home directory.
+
+### TBD
 
 A query part may relate to a string, numeric or boolean value.
  - string: `<key>` `<operator>` `<value>`
@@ -74,11 +81,9 @@ Keys, operators and values are case-insensitive. The cases for the data based on
 The query parser will convert all the user-supplied values to the appropriate case.
 
 TBD:
- - List of UD tags etc
  - Explain AUX/VERB handling
  - Examples
  - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
-
 
 ### Advanced usage
 
@@ -123,9 +128,20 @@ The most important configuration options:
  - style
    - fontsize
 
-### Logging
+### UD data
 
-The application logs to the file `wm2log.txt`in the user's home directory.
+The underlying data comes from [universal dependencies](https://universaldependencies.org/fi/) tagged data.
+
+Some notes about the data:
+ - all word classes are uppercase
+   - NOUN, VERB, ADJ, ADV, PRON, PROPN, etc
+ - morphological features are in Titlecase (Ine)
+   - noun cases: Abe, Abl, Acc, Ade, All, Com, Ela, Ess, Gen, Ill, Ine, Ins, Nom, Par, Tra
+   - clitics: Han, Ka, Kaan, Kin, Ko, Pa, S
+   - derivations: Inen, Ja, Lainen, Llinen, Minen, Sti, Tar, Ton, Ttain, U, Vs
+ - word forms and lemmas and lowercase
+
+Note that the list of derivations and clitics may be incomplete.
 
 ## Jupyter notebooks
 
