@@ -561,8 +561,11 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
         k, c, v = andpart
         usetable = 'w'
         if k in separatetables:
+            if c in ('in', '=') and v == '_':
+                usetable = 'ft'
+            else:
+                usetable = k[0]
             v = ','.join([w.title() for w in v.split(',')])
-            usetable = k[0]
         elif k in features:
             v = ','.join([w.title() for w in v.split(',')])
             usetable = 'ft'
@@ -604,7 +607,8 @@ def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]
                 whereparts.append(f"({' OR '.join(whereor)})")
                 args.extend(subargs)
             elif k in separatetables:
-                usetable = k[0]
+                if usetable != 'ft':
+                    usetable = k[0]
                 # Separate table for derivations and clitics is better
                 qmarks = ','.join(['?'] * len(invals))
                 # select * from wordfreqs where not (feats glob '*Case=Nom*' OR feats glob '*Case=Par*') limit 1000;
