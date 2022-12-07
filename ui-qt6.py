@@ -542,9 +542,9 @@ class MainWindow(QMainWindow):
         width = sizehint.width()
         # for s in inspect.stack():
         #    print(s)
-        logger.debug('Setting window width to %d', width)
-        # self.setFixedSize(self.layout.sizeHint())
-        self.setFixedWidth(width+5)
+        if self.config.getConfigValue('general.autoresize', False):
+            logger.debug('Setting window width to %d', width)
+            self.setFixedWidth(width+5)
         if width < 600:
             self.setMinimumSize(600, 0)
 
