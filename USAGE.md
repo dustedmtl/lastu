@@ -20,35 +20,26 @@ The init file itself is looked for from two locations:
 If the init file is not found, the database filename will default to `wm2database.db` and
 the application will try to locate it from the `data` subdirectory.
 
-### Init file configuration
-
-The most important configuration options:
- - input
-   - datadir and database
- - output
-   - outformat
- - query
-   - fetchrows
-     - the maximum number of rows to fetch from the database
-   - showrows
-     - the maximum number of rows to show in the UI
- - style
-   - fontsize
-
 ## User interface
 
-### Window management
+There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
+Please see the [advanced usage](#advanced) for those.
 
-The user interface consists of one or more windows. Shortcuts for window management:
-  - `C-N` - new window
-  - `C-W` - close currently active window
-  - `C-Q` - quit application
+## Basic usage
 
 ### Queries
 
-A query consists of one or more parts separated by the keyword 'and'.
+A query consists of one or more parts separated by the keyword `and`:
+ - `PART`
+ - `PART` and `PART`
+
+Examples
  - `form = 'auto'`
  - `lemma = 'voi' and nouncase = 'Ine'`
+
+The query parts themselves generally follow the form `KEY` `OPERATOR` `VALUE`.
+All inputs are lowercase (although the underlying data might not be, please see the section concerning [UD data](#ud).
+
 
 A query part may relate to a string, numeric or boolean value.
  - string: `<key>` `<operator>` `<value>`
@@ -88,6 +79,18 @@ TBD:
  - Examples
  - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
 
+
+### Advanced usage
+
+## UI functrions
+
+### Opening and closing windows
+
+The user interface consists of one or more windows. Shortcuts for window management:
+  - `C-N` - new window
+  - `C-W` - close currently active window
+  - `C-Q` - quit application
+
 ### Input and output
 
 Input and output commands:
@@ -103,7 +106,24 @@ The data menu lists the various column hide/show options:
  - `C-4`: showing columns (morphological features) that can be hiddin
  - `C-5` to `C-8`: showing categories
 
-## Logging
+### Init file configuration
+
+The most important configuration options:
+ - general
+   - autoresize
+ - input
+   - datadir and database
+ - output
+   - outformat
+ - query
+   - fetchrows
+     - the maximum number of rows to fetch from the database
+   - showrows
+     - the maximum number of rows to show in the UI
+ - style
+   - fontsize
+
+### Logging
 
 The application logs to the file `wm2log.txt`in the user's home directory.
 
