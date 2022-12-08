@@ -412,7 +412,7 @@ class DatabaseConnection:
 
 # FIXME: make this a query class
 # FIXME: get supported features from database connection?
-def parse_query(query: str) -> Tuple[List[List[str]], List]:
+def parse_query(query: str, relfieldmap: Dict = None) -> Tuple[List[List[str]], List]:
     """Parse query to SQL key-values."""
     parts = query.lower().split('and')
     kvparts = []
@@ -435,11 +435,15 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
     formoperators = ['=', '!=', 'in', 'notin']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
+    numadd = ['rel' + k for k in numkeys if 'freq' in k]
+    numkeys.extend(numadd)
+
     shortcuts = {
         'freq': 'frequency',
+        'relfreq': 'relfrequency',
         'case': 'nouncase',
         'number': 'nnumber',
-#        'lemma': 'lemmac',
+        # 'lemma': 'lemmac',
     }
 
     # FIXME: use a queue mechanism for this?
@@ -487,7 +491,17 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                         try:
                             v = float(value)
                             value = v
-                            isok = True
+                            try:
+                                if key.startswith('rel'):
+                                    total = relfieldmap[key][0][0]
+                                    scale = 1000 if key == 'relbigramfreq' else 1e6
+                                    # print(value, total, scale)
+                                    value = value / scale * total
+                                    key = key[3:]
+                                isok = True
+                            except Exception as e:
+                                logging.exception("Can't get relative frequency scaler for %s/%st: %s", key, value, e)
+                                errors.append(f"Can't get relative frequency scaler for {key}/{value}")
                         except ValueError as ve:
                             logging.exception("Can't cast %s as float: %s", value, ve)
                             errors.append(f"Query value for key '{key}' not ok: '{value}' is not a number")
@@ -537,9 +551,10 @@ indexfields = {
 }
 
 
-def parse_querystring(querystr: str) -> Tuple[str, List, List, List, List, bool]:
+def parse_querystring(querystr: str,
+                      relfieldmap: Dict = None) -> Tuple[str, List, List, List, List, bool]:
     """Parse the query string."""
-    queryparts, errors = parse_query(querystr)
+    queryparts, errors = parse_query(querystr, relfieldmap)
     # print(queryparts)
 
     whereparts = []
@@ -758,12 +773,13 @@ def get_indexer(indexers: List,
 
 def get_querystring(query: Union[str, Dict] = None,
                     orderby: str = 'w.frequency',
+                    relfieldmap: Dict = None,
                     defaultindex: bool = False) -> Tuple[str, List[str], List[str], str, bool]:
     """Get final query string and other things."""
     useposx = True
     if isinstance(query, str):
         logger.info('Query: %s', query)
-        wherestr, args, errors, indexers, notlikeindexers, useposx = parse_querystring(query)
+        wherestr, args, errors, indexers, notlikeindexers, useposx = parse_querystring(query, relfieldmap)
         # print(errors)
     elif isinstance(query, dict):
         defaultindex = True
@@ -811,7 +827,16 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     # wherestr = ""
     # args: List[str] = []
 
-    wherestr, args, errors, windexedby, useposx = get_querystring(query, orderstring, defaultindex)
+    relfieldmap = {
+        'rellemmafreq': dbconnection.lemmafreqs,
+        'relfrequency': dbconnection.wordfreqs,
+        'relbigramfreq': dbconnection.bifreqs,
+        'relinitgramfreq': dbconnection.initfreqs,
+        'relfingramfreq': dbconnection.finfreqs,
+    }
+
+    wherestr, args, errors, windexedby, useposx = get_querystring(query, orderstring, relfieldmap, defaultindex)
+
     if errors:
         raise ValueError('\n'.join(errors))
 
