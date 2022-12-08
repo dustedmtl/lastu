@@ -20,6 +20,10 @@ The init file itself is looked for from two locations:
 If the init file is not found, the database filename will default to `wm2database.db` and
 the application will try to locate it from the `data` subdirectory.
 
+## Logging
+
+The application generates debug logs to the file `wm2log.txt` and logs executed searches to the file `wm2history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
+
 ## User interface
 
 There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
@@ -93,10 +97,6 @@ Examples:
    - compound noun
  - `pos = adj and not compound`
    - non-compound adjective
-
-## Logging
-
-The application logs to the file `wm2log.txt` in the user's home directory.
 
 ## Advanced usage
 
@@ -179,5 +179,5 @@ Allowed operators:
 TBD:
  - Explain AUX/VERB handling
  - lemma queries and compounds
- - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
+ - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma)
 
