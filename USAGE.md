@@ -113,6 +113,7 @@ The user interface consists of one or more windows. Shortcuts for window managem
 
 Input and output commands:
   - `C-I` - query from wordlist
+    - The first must start with text "# type=`querytype`", where `querytype` is `lemma`, `form` or `unword`
     - See sample input files in the [samples directory](samples/)
   - `C-S` - export to file (csv/tsv/xlsx)
   - `C-E` - copy to clipboard
