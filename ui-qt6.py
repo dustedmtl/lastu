@@ -330,6 +330,11 @@ class MainWindow(QMainWindow):
         menuaction_close.setShortcut(QKeySequence("Ctrl+w"))
         menuaction_close.triggered.connect(self.closeWindow)
 
+        menuaction_opendb = QAction("&Open database", self)
+        menuaction_opendb.setStatusTip("Open database")
+        menuaction_opendb.setShortcut(QKeySequence("Ctrl+d"))
+        menuaction_opendb.triggered.connect(self.openDatabase)
+
         menuaction_quit = QAction("&Quit application", self)
         menuaction_quit.setStatusTip("Quit application")
         menuaction_quit.setShortcut(QKeySequence("Ctrl+q"))
@@ -347,6 +352,8 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(menuaction_new)
         file_menu.addAction(menuaction_close)
+        file_menu.addSeparator()
+        file_menu.addAction(menuaction_opendb)
         file_menu.addSeparator()
         file_menu.addAction(menuaction_quit)
 
@@ -489,6 +496,21 @@ class MainWindow(QMainWindow):
 
     def closeWindow(self):
         self.close()
+
+    def openDatabase(self):
+        choosedb = selectDataBase()
+        logger.info('Database chosen with file dialog: %s', choosedb)
+        if choosedb:
+            try:
+                logger.info("Connecting to %s...", choosedb)
+                dbconn = dbutil.DatabaseConnection(choosedb)
+                if (rowlimit := configfile.getConfigValue('query.fetchrows')) is not None:
+                    logger.debug('Setting row limit to %d', rowlimit)
+                    dbconn.rowlimit(rowlimit)
+                    self.dbconnection = dbconn
+                    self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
+            except Exception as e:
+                logger.error("Couldn't connect to %s: %s", dbfile, e)
 
     def unique_cols(self, df):
         a = df.to_numpy()
@@ -909,7 +931,7 @@ def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[st
         logger.info("File not found: %s; trying current directory for finding data file", dbpath)
         if not exists(dbpath) or getsize(dbpath) == 0:
             choosedb = selectDataBase()
-            logger.debug('Database chosen with file dialog: %s', choosedb)
+            logger.info('Database chosen with file dialog: %s', choosedb)
             if not choosedb:
                 logger.error("No such file: %s", dbpath)
                 raise FileNotFoundError(dbpath)
