@@ -51,17 +51,39 @@ from lib import dbutil, uiutil
 
 homedir = Path.home()
 
+
+class LogQueryFilter(logging.Filter):
+    """Query logging filter."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Reject log lines that don't start with 'Query:'."""
+        message = record.message
+        if message.startswith('Query:'):
+            record.query = message[7:]
+            return True
+
+        return False
+
+
 wm2logconfig = {
     'version': 1,
     'disable_existing_loggers': False,
     'root': {
-        'handlers': ['console', 'file_handler'],
-        'level': 'DEBUG'
+        'handlers': ['console', 'file_handler', 'history_handler'],
+        'level': 'DEBUG',
+    },
+    'filters': {
+        "justquery": {
+            '()': LogQueryFilter,
+        },
     },
     'formatters': {
         'default_formatter': {
             'format': '%(asctime)s %(levelname)s %(message)s',
             'datefmt': '%d.%m.%Y %H:%M:%S'
+        },
+        'just_msg_mam': {
+            'format': '%(query)s',
         },
     },
     'handlers': {
@@ -73,12 +95,25 @@ wm2logconfig = {
         'file_handler': {
             'class': 'logging.FileHandler',
             'formatter': 'default_formatter',
-            'filename': join(homedir, 'wm2log.txt'),
+            # 'filename': join(homedir, 'wm2log.txt'),
             'level': 'DEBUG'
+        },
+        'history_handler': {
+            'class': 'logging.FileHandler',
+            'formatter': 'just_msg_mam',
+            # 'filename': join(homedir, 'wm2history.txt'),
+            'filters': ['justquery'],
+            'level': 'INFO'
         }
     },
 }
 
+# FIXME: log to current directory
+cfg, currdir = uiutil.get_config('wm2.ini')
+# print(cfg, currdir)
+for handler, fn in zip(('file_handler', 'history_handler'),
+                       ('wm2log.txt', 'wm2history.txt')):
+    wm2logconfig['handlers'][handler]['filename'] = join(homedir, fn)
 logging.config.dictConfig(wm2logconfig)
 logger = logging.getLogger('wm2')
 # logger.info('info log')
