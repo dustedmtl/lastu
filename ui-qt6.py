@@ -253,9 +253,14 @@ class MainWindow(QMainWindow):
 
         self.layout.addWidget(self.table, 3, 0, 1, 2)
 
+        self.dbnamefield = QLabel(f'Database file: {self.dbconnection.dbfile}')
+        self.dbnamefield.setObjectName('dbfile')
+        self.layout.addWidget(self.dbnamefield, 4, 0, 1, 1)
+        # self.dbnamefield.setAlignment(Qt.AlignmentFlag.AlignRight)
+
         self.copyleft = QLabel('Copyright (c) 2022 University of Turku')
         self.copyleft.setObjectName('copyleft')
-        self.layout.addWidget(self.copyleft, 4, 0, 1, 2)
+        self.layout.addWidget(self.copyleft, 4, 1, 1, 1)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         menu = self.menuBar()
@@ -564,7 +569,7 @@ class MainWindow(QMainWindow):
             currentfont.setPointSize(size)
             widget.setFont(currentfont)
 
-        self.setCopyleftFont()
+        # self.setCopyleftFont()
         currentfontsize = self.centralwidget.font().pointSize()
         tablefontsize = currentfontsize - 2
         tableheaderfont = self.table.verticalHeader().font()
@@ -806,7 +811,7 @@ class MainWindow(QMainWindow):
                 # print(df)
                 self.data = df
 
-    def sortData(self, _colidx, _direction = None):
+    def sortData(self, _colidx, _direction=None):
         # print('Sorting', colidx, direction)
         self.setData(self.data)
 #        self.setSortedData()
