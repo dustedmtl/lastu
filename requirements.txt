@@ -15,7 +15,10 @@ plotly
 seaborn
 
 # Finnish NLP
+# edit distance / neighbourhood calculations
+# these don't install out of the box for Windows
 uralicNLP; sys_platform != "win32"
+symspellpy; sys_platform != "win32"
 
 # code quality
 typing-extensions
@@ -35,11 +38,6 @@ uliplot
 # query debug
 tabulate
 types-tabulate
-
-# edit distance / neighbourhood calculations
-# these don't install out of the box for Windows
-# symspellpy
-# uralicNLP
 
 # building
 # pyinstaller
