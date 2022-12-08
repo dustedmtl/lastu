@@ -179,7 +179,3 @@ TBD:
  - lemma queries and compounds
  - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
 
-### Jupyter notebooks
-
-TBD
-
