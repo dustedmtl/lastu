@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import (
     QTableView, QApplication, QMainWindow, QWidget,
     QHeaderView,
     QGridLayout,
+    QSizePolicy,
     QAbstractScrollArea,
     QFileDialog,
     QMessageBox,
@@ -269,15 +270,16 @@ class MainWindow(QMainWindow):
 
         self.querybox = QLineEdit()
         self.querybox.returnPressed.connect(self.enter)
-        self.layout.addWidget(self.querybox, 1, 0, 1, 1)
+        self.layout.addWidget(self.querybox, 1, 0, 1, 2)
 
         button = QPushButton("Query")
         button.clicked.connect(self.textQuery)
-        self.layout.addWidget(button, 1, 1, 1, 1)
+        self.layout.addWidget(button, 1, 2, 1, 1)
+        button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
 
         self.statusfield = QLabel()
         # self.layout.addWidget(self.statusfield, 1, 0, 1, 2)
-        self.layout.addWidget(self.statusfield, 2, 0, 1, 1)
+        self.layout.addWidget(self.statusfield, 2, 0, 1, 3)
 
         # filebutton = QPushButton("Input")
         # filebutton.clicked.connect(self.inputFileQuery)
@@ -292,7 +294,7 @@ class MainWindow(QMainWindow):
         self.table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         # view.setSelectionBehavior(QTableView.SelectRows)
 
-        self.layout.addWidget(self.table, 3, 0, 1, 2)
+        self.layout.addWidget(self.table, 3, 0, 1, 3)
 
         self.dbnamefield = QLabel(f'Database file: {self.dbconnection.dbfile}')
         self.dbnamefield.setObjectName('dbfile')
@@ -305,7 +307,7 @@ class MainWindow(QMainWindow):
             copylefttext = f'WM2 version {self.appversion}. {copylefttext}'
         self.copyleft = QLabel(copylefttext)
         self.copyleft.setObjectName('copyleft')
-        self.layout.addWidget(self.copyleft, 4, 1, 1, 1)
+        self.layout.addWidget(self.copyleft, 4, 1, 1, 2)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         menu = self.menuBar()
