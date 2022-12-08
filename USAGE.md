@@ -47,7 +47,7 @@ The allowed operators vary depending on whether the key queries a string, numeri
 
 String properties include `lemma`, `form`, `pos`, `case` `clitic` and `derivation`.
 
-For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`
+For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`.
 
 Examples:
  - `form = auto'`
@@ -55,7 +55,7 @@ Examples:
  - `lemma in voi,voida`
  - `clitic not in Kin,Kaan`
 
-The `start`, `middle` and `end` keys allow queries based on the `form` properties
+The `start`, `middle` and `end` keys allow queries based on the properties of `form`:
  - `start = aut`
    - word starts with `aut`
  - `end in ssa,ssä`
@@ -96,7 +96,7 @@ Examples:
 
 ## Logging
 
-The application logs to the file `wm2log.txt`in the user's home directory.
+The application logs to the file `wm2log.txt` in the user's home directory.
 
 ## Advanced usage
 
