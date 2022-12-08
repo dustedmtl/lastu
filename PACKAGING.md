@@ -24,8 +24,8 @@
     - Update version file 
       - edit file `win-version.yaml`
       - `create-version-file win-version.yaml --outfile win-version.txt`
-    - `pyinstaller --onefile ui-qt6.py`
-    - OR `pyinstaller ui-qt6-win.spec`
+    - Preferred: `pyinstaller ui-qt6-win.spec`
+      - OR `pyinstaller --onefile ui-qt6.py`
   - See also : https://pyinstaller.org/en/stable/usage.html
 
 ## Distribution
