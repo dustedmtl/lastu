@@ -260,7 +260,8 @@ class MainWindow(QMainWindow):
         # self.dbnamefield.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         copylefttext = 'Copyright (c) 2022 University of Turku'
-        if self.appversion is not None:
+        # print(f'-{self.appversion}-')
+        if self.appversion is not None and len(self.appversion) > 0:
             copylefttext = f'WM2 version {self.appversion}. {copylefttext}'
         self.copyleft = QLabel(copylefttext)
         self.copyleft.setObjectName('copyleft')
