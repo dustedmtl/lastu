@@ -1,4 +1,4 @@
-# Usage
+# Quick Guide
 
 The application needs two files to with an optional init file:
  - The executable / application (`wm2.exe` / `wm2.app`)
