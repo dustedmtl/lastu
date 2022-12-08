@@ -584,6 +584,8 @@ def parse_querystring(querystr: str,
         if k in separatetables:
             if c in ('in', '=') and v == '_':
                 usetable = 'ft'
+            elif c == '!=':
+                usetable = 'ft'
             else:
                 usetable = k[0]
             v = ','.join([w.title() for w in v.split(',')])
