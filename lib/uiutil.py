@@ -128,10 +128,12 @@ def get_configvar(cfg: configparser.ConfigParser,
 def get_application_version():
     """Get application version in Windows."""
     appfile = sys.argv[0]
-    print(appfile)
     if sys.platform.startswith('win32'):
-        information_parser = Dispatch("Scripting.FileSystemObject")
-        version = information_parser.GetFileVersion(appfile)
-        return version
+        try:
+            information_parser = Dispatch("Scripting.FileSystemObject")
+            version = information_parser.GetFileVersion(appfile)
+            return version
+        except Exception as e:
+            logging.exception('Got exception with getting executable file info:', str(e))
     else:
         return None
