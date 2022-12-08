@@ -484,9 +484,12 @@ def parse_query(query: str) -> Tuple[List[List[str]], List]:
                 if key in numkeys:
                     if comparator in numoperators:
                         # print(f'Num ok: {key} {comparator}')
-                        if value.isnumeric():
+                        try:
+                            v = float(value)
+                            value = v
                             isok = True
-                        else:
+                        except ValueError as ve:
+                            logging.exception("Can't cast %s as float: %s", value, ve)
                             errors.append(f"Query value for key '{key}' not ok: '{value}' is not a number")
                     else:
                         errors.append(f"Query comparator for '{key}' not ok: '{comparator}'")
@@ -749,7 +752,7 @@ def get_indexer(indexers: List,
                 windexedby = f"indexed by {indexfields[orderby]}"
         if useposx:
             windexedby = windexedby.replace('_freq', '_freqx')
-        logger.debug('Force indexer other than autoindex %s:', windexedby)
+        logger.debug('Force indexer other than autoindex: %s', windexedby)
     return windexedby
 
 
