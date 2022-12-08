@@ -11,7 +11,7 @@ The wordmill2 database contains various properties for lemmas and forms:
  - initial trigram, final trigram and average bigram frequencies (absolute relative)
  - length
  - part of speech
- - orthographic neighbourhood (with Hamming distance 1)
+ - orthographic neighbourhood (with [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance) 1)
  - ambiguity percentages for lemmas and forms
  - most important morphological features (see below)
 
