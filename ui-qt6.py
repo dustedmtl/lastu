@@ -191,6 +191,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("WM2")
         self.dbconnection = dbconnection
         # self.originaldata = df
+        self.appversion = uiutil.get_application_version()
         self.data = df
         self.hidecolumns = set()
         self.query_ongoing = False
@@ -258,7 +259,10 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.dbnamefield, 4, 0, 1, 1)
         # self.dbnamefield.setAlignment(Qt.AlignmentFlag.AlignRight)
 
-        self.copyleft = QLabel('Copyright (c) 2022 University of Turku')
+        copylefttext = 'Copyright (c) 2022 University of Turku'
+        if self.appversion is not None:
+            copylefttext = f'WM2 version {self.appversion}. {copylefttext}'
+        self.copyleft = QLabel(copylefttext)
         self.copyleft.setObjectName('copyleft')
         self.layout.addWidget(self.copyleft, 4, 1, 1, 1)
         self.copyleft.setAlignment(Qt.AlignmentFlag.AlignRight)

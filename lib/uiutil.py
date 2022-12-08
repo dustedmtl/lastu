@@ -10,6 +10,9 @@ import logging
 import configparser
 from pathlib import Path
 
+if sys.platform.startswith('win32'):
+    from win32com.client import *
+
 logger = logging.getLogger('wm2')
 # logger.setLevel(logging.DEBUG)
 
@@ -120,3 +123,15 @@ def get_configvar(cfg: configparser.ConfigParser,
     except Exception as e:
         logger.warning('Issue with config: section %s key %s: %s', section, key, e)
     return None
+
+
+def get_application_version():
+    """Get application version in Windows."""
+    appfile = sys.argv[0]
+    print(appfile)
+    if sys.platform.startswith('win32'):
+        information_parser = Dispatch("Scripting.FileSystemObject")
+        version = information_parser.GetFileVersion(appfile)
+        return version
+    else:
+        return None
