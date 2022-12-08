@@ -161,7 +161,7 @@ Note that the list of derivations and clitics may be incomplete.
 A query part may relate to a string, numeric or boolean value.
  - string: `KEY` `OPERATOR` `VALUE`
  - numeric: `KEY` `OPERATOR` `VALUE`
- - boolean: `KEY` OR `NOT VALUE`
+ - boolean: `KEY` OR `NOT KEY`
 
 Allowed keys:
  - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `case`, `number`, `clitic`, `derivation`, ...
