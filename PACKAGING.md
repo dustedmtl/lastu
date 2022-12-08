@@ -28,6 +28,3 @@
       - OR `pyinstaller --onefile ui-qt6.py`
   - See also : https://pyinstaller.org/en/stable/usage.html
 
-## Distribution
-- TBD
-
