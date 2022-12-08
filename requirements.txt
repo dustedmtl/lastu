@@ -15,7 +15,7 @@ plotly
 seaborn
 
 # Finnish NLP
-# uralicNLP
+uralicNLP; sys_platform != "win32"
 
 # code quality
 typing-extensions
@@ -47,6 +47,9 @@ types-tabulate
 # corpora
 # pyconll
 conllu
+
+# windows information
+pypiwin32; sys_platform == 'win32'
 
 # scientific
 # scipy/sklearn: comment if not on M1 Mac, or use conda
