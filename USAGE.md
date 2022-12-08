@@ -9,7 +9,7 @@ The application needs two files to with an optional init file:
 
 ## Init file and database file
 
-At this point the main function of the init file is to tell the application what the database file is and where it should be found.
+At this point the main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
@@ -47,7 +47,7 @@ The allowed operators vary depending on whether the key queries a string, numeri
 
 String properties include `lemma`, `form`, `pos`, `case` `clitic` and `derivation`.
 
-For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`
+For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`.
 
 Examples:
  - `form = auto'`
@@ -55,7 +55,7 @@ Examples:
  - `lemma in voi,voida`
  - `clitic not in Kin,Kaan`
 
-The `start`, `middle` and `end` keys allow queries based on the `form` properties
+The `start`, `middle` and `end` keys allow queries based on the properties of `form`:
  - `start = aut`
    - word starts with `aut`
  - `end in ssa,ssä`
@@ -71,8 +71,9 @@ This operators allows the querying of any string property using a wildcard synta
 Examples:
  - `lemma like voi%`
    - lemma starts with string `voi`
- - `form like `%ta%`
+ - `form like %ta%`
    - form contains the substring `ta`
+   - note the difference to the operator `middle`!
 
 For advanced queries, please see the [advanced usage](#advanced-queries).
 
@@ -95,7 +96,7 @@ Examples:
 
 ## Logging
 
-The application logs to the file `wm2log.txt`in the user's home directory.
+The application logs to the file `wm2log.txt` in the user's home directory.
 
 ## Advanced usage
 
@@ -178,8 +179,4 @@ TBD:
  - Explain AUX/VERB handling
  - lemma queries and compounds
  - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma9
-
-### Jupyter notebooks
-
-TBD
 

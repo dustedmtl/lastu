@@ -28,6 +28,8 @@
 
 ## Additional scripts
 
+It is necessary to run all of the below scripts to get a functional database.
+
 ### Add indexes
  - `sqlite3 data/<dbfile> < sql/wordfreqs_indexes.sql`
 
@@ -40,11 +42,17 @@
    - `-a`
      - All of the below
    - `-p`
+     - Generate frequency information for pos/posx
    - `-F`
+     - Generate feature tables
    - `-f`
+     - Generate aggregate information for forms
    - `-l`
+     - Generate aggregate information for lemmas
    - `-H`
+     - Generate neighbourhood information for forms
    - `-c`
+     - Generate generated aggregate information to the wordfreqs tables
 
 ## Managing a database
 
