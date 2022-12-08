@@ -3,9 +3,10 @@
 # pylint: disable=invalid-name, line-too-long
 
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 import sys
 import os
+from os.path import join
 import logging
 import configparser
 from pathlib import Path
@@ -134,6 +135,15 @@ def get_application_version():
             version = information_parser.GetFileVersion(appfile)
             return version
         except Exception as e:
-            logging.exception('Got exception with getting executable file info:', str(e))
+            logging.exception('Got exception with getting executable file info: %s', str(e))
     else:
         return None
+
+
+def log_handler(logdict: Dict, directory: str) -> Dict:
+    """Return a log handler configuration that can write to a specified directory."""
+
+    for handler, fn in zip(('file_handler', 'history_handler'),
+                           ('wm2log.txt', 'wm2history.txt')):
+        logdict['handlers'][handler]['filename'] = join(directory, fn)
+    return logdict
