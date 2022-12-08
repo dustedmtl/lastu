@@ -16,3 +16,6 @@ tabulate
 # building
 pyinstaller
 pyinstaller-versionfile
+
+# windows building
+pypiwin32; sys_platform == 'win32'
