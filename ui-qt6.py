@@ -108,16 +108,21 @@ wm2logconfig = {
     },
 }
 
-# FIXME: log to current directory
 cfg, currdir = uiutil.get_config('wm2.ini')
 # print(cfg, currdir)
-for handler, fn in zip(('file_handler', 'history_handler'),
-                       ('wm2log.txt', 'wm2history.txt')):
-    wm2logconfig['handlers'][handler]['filename'] = join(homedir, fn)
-logging.config.dictConfig(wm2logconfig)
-logger = logging.getLogger('wm2')
-# logger.info('info log')
-logger.debug('Starting logger')
+
+try:
+    logconfig = uiutil.log_handler(wm2logconfig, currdir)
+    logging.config.dictConfig(logconfig)
+    logger = logging.getLogger('wm2')
+    logger.debug('Starting logger')
+except ValueError as ve:
+    logconfig = uiutil.log_handler(wm2logconfig, homedir)
+    logging.config.dictConfig(logconfig)
+    logger = logging.getLogger('wm2')
+    logger.debug('Starting logger')
+    logger.warning('Exception: %s', ve)
+    logger.warning('Could not write logs to directory %s: writing to directory %s instead', currdir, homedir)
 
 
 class TableModel(QAbstractTableModel):
