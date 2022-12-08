@@ -71,8 +71,9 @@ This operators allows the querying of any string property using a wildcard synta
 Examples:
  - `lemma like voi%`
    - lemma starts with string `voi`
- - `form like `%ta%`
+ - `form like %ta%`
    - form contains the substring `ta`
+   - note the difference to the operator `middle`!
 
 For advanced queries, please see the [advanced usage](#advanced-queries).
 
