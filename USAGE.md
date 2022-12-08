@@ -9,7 +9,7 @@ The application needs two files to with an optional init file:
 
 ## Init file and database file
 
-At this point the main function of the init file is to tell the application what the database file is and where it should be found.
+At this point the main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
