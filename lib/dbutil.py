@@ -49,6 +49,7 @@ def query_timing(func):
 def adhoc_query(connection: sqlite3.Connection,
                 sqlstr: str,
                 verbose: bool = False,
+                raiseerror: bool = False,
                 todf: bool = False) -> Optional[pd.DataFrame]:
     """Execute an adhoc query."""
     try:
@@ -65,14 +66,19 @@ def adhoc_query(connection: sqlite3.Connection,
         data = cursor.fetchall()
         return data
     except Exception as e:
-        logging.exception(e)
         if not todf:
             connection.rollback()
+        if raiseerror:
+            raise e
+        logging.exception(e)
         return None
 
 
-def chunks(dataset: List, chunklen=1000) -> Iterator:
+def chunks(dataset: Union[List, pd.DataFrame], chunklen=1000) -> Iterator:
     """Create an iterator for dataset chunks."""
+    if isinstance(dataset, pd.DataFrame):
+        dataset = dataset.values.tolist()
+        # print(dataset[:10])
     for i in range(0, len(dataset), chunklen):
         slc = dataset[i:i+chunklen]
         yield slc
