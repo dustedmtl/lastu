@@ -5,19 +5,19 @@
 
 # import os
 # from os.path import isdir, isfile, exists
-from typing import Dict, List
+from typing import Dict, List, Iterator, Tuple
 import sys
 import argparse
 import logging
 import math
 from collections import Counter
-# import pandas as pd
+import pandas as pd
 import sqlite3
 from sqlite3 import IntegrityError
 from tqdm.autonotebook import tqdm
 from symspellpy import SymSpell, Verbosity
 from uralicNLP import uralicApi
-from lib import dbutil
+from lib import dbutil, buildutil
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('generate-helper-tables')
@@ -90,27 +90,6 @@ def generate_form_aggregates(sqlcon: sqlite3.Connection):
         formsql = "insert into forms select form, sum(frequency) as frequency, count(*) as numforms, 0 as hood from lemmaforms group by form order by frequency desc"
         dbutil.adhoc_query(sqlcon, formsql)
 
-    # This shouldn't be necessary in the new schema..
-    # print('Adding reverse forms...')
-    # formdf = dbutil.adhoc_query(sqlcon, "select form from wordfreqs where revform = ''", todf=True, verbose=True)
-    # formrev = [form[::-1] for form in formdf.form]
-    # updatestatement = "update wordfreqs set revform = ? where form = ?"
-    # insvalues = []
-    # for form, rev in zip(formdf.form, formrev):
-    #     insvalues.append([rev, form])
-
-    # chunklen = 1000
-    # total = math.ceil(len(insvalues)/chunklen)
-    # cursor = sqlcon.cursor()
-    # for chunk in tqdm(dbutil.chunks(insvalues, chunklen=chunklen), total=total):
-    #     try:
-    #         cursor.executemany(updatestatement, chunk)
-    #         sqlcon.commit()
-    #     except IntegrityError as e:
-    #         # this is not ok
-    #         logging.exception(e)
-    #         sqlcon.rollback()
-
 
 def record_hood(sqlcon: sqlite3.Connection, counts: Dict):
     """Record neighbourhood to forms table."""
@@ -133,26 +112,15 @@ def record_hood(sqlcon: sqlite3.Connection, counts: Dict):
             sqlcon.rollback()
 
 
-def generate_hood(sqlcon: sqlite3.Connection):
-    """Generate neighbourhood to forms table."""
-    print('Loading form information for neighbourhood calculation...')
-    sdf = dbutil.adhoc_query(sqlcon, "select * from forms", todf=True)
-    sym_spell = SymSpell(max_dictionary_edit_distance=1)
-
-    print('Generating spelling dictionary...')
-    for _idx, row in tqdm(sdf.iterrows(), total=len(sdf)):
-        form = row.form
-        freq = row.frequency
-        sym_spell.create_dictionary_entry(form, freq)
-
+def get_form_suggestions(df: pd.DataFrame, sym_spell) -> Iterator[Tuple[str, List[Tuple[str, int]]]]:
+    """Get iterator for form suggestions."""
+    # sym_spell = SymSpell(max_dictionary_edit_distance=1)
     autofreq = 10000
     minfreq = 100
-    finals = {}  # type: ignore
 
-    print('Generating edit distances...')
-    for _idx, row in tqdm(sdf.iterrows(), total=len(sdf)):
+    for _idx, row in tqdm(df.iterrows(), total=len(df)):
         form = row.form
-        freq = row.frequency
+        # freq = row.frequency
         suggestions = sym_spell.lookup(form, Verbosity.ALL)
         formfinals = []
 
@@ -172,8 +140,54 @@ def generate_hood(sqlcon: sqlite3.Connection):
                     ok = True
             if ok:
                 formfinals.append((suggestion.term, suggestion.count))
+
+        yield form, formfinals
+
+
+def generate_hood(sqlcon: sqlite3.Connection):
+    """Generate neighbourhood to forms table."""
+    print('Loading form information for neighbourhood calculation...')
+    sdf = dbutil.adhoc_query(sqlcon, "select * from forms", todf=True)
+    sym_spell = SymSpell(max_dictionary_edit_distance=1)
+
+    print('Generating spelling dictionary...')
+    for _idx, row in tqdm(sdf.iterrows(), total=len(sdf)):
+        form = row.form
+        freq = row.frequency
+        sym_spell.create_dictionary_entry(form, freq)
+
+    # autofreq = 10000
+    # minfreq = 100
+    finals = {}  # type: ignore
+
+    print('Generating edit distances...')
+    for form, formfinals in get_form_suggestions(sdf, sym_spell):
         finals[form] = formfinals
-        # break
+
+#    for _idx, row in tqdm(sdf.iterrows(), total=len(sdf)):
+#        form = row.form
+#        freq = row.frequency
+#        suggestions = sym_spell.lookup(form, Verbosity.ALL)
+#        formfinals = []
+#
+#        # Drop suggestion when 1) low frequency and 2) no morph analysis
+#        for suggestion in suggestions:
+#            ok = False
+#            res = []
+#            if suggestion.distance == 0:
+#                ...
+#            elif suggestion.count >= autofreq:
+#                ok = True
+#            elif suggestion.count < minfreq:
+#                ...
+#            else:
+#                res = uralicApi.analyze(suggestion.term, "fin")
+#                if len(res) > 0:
+#                    ok = True
+#            if ok:
+#                formfinals.append((suggestion.term, suggestion.count))
+#        finals[form] = formfinals
+#        # break
 
     levdict = Counter()  # type: ignore
     hamdict = Counter()  # type: ignore
@@ -218,27 +232,6 @@ def copy_to_wordfreqs(sqlcon: sqlite3.Connection):
     print('Getting hood information from forms table...')
     updatestatement = "update wordfreqs set hood = ? where form = ? and hood = 0"
     update_table(sqlcon, 'wordfreqs', updatestatement, data)
-
-    # updvalues = []
-    # for row in data:
-    #     form, hood = row
-    #     updvalues.append([hood, form])
-
-    # print(len(updvalues))
-    # return
-
-    # chunklen = 1000
-    # total = math.ceil(len(updvalues)/chunklen)
-    # cursor = sqlcon.cursor()
-    # print(f'Updating {len(updvalues)} values to wordfreqs table...')
-    # for chunk in tqdm(dbutil.chunks(updvalues, chunklen=chunklen), total=total):
-    #     try:
-    #        cursor.executemany(updatestatement, chunk)
-    #        sqlcon.commit()
-    #    except IntegrityError as e:
-    #        # this is not ok
-    #        logging.exception(e)
-    #        sqlcon.rollback()
 
     fetchst = "select 1-formpct, lemma, form, pos from lemmaforms"
     data = dbutil.adhoc_query(sqlcon, fetchst)
@@ -311,30 +304,30 @@ def add_feature_index(sqlcon: sqlite3.Connection):
                     sqlcon.rollback()
 
 
-def drop_indexes(sqlcon: sqlite3.Connection,
-                 match: str):
-    """Drop matching indexes."""
-    indexes = dbutil.adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
-    droplist = []
-    for idx in indexes:
-        idxname = idx[1]
-        if match in idxname:
-            droplist.append(idxname)
-    for idx in droplist:
-        print(f'Dropping index {idx}...')
-        sqlstr = f'DROP INDEX {idx}'
-        dbutil.adhoc_query(sqlcon, sqlstr)
+# def drop_indexes(sqlcon: sqlite3.Connection,
+#                 match: str):
+#    """Drop matching indexes."""
+#    indexes = dbutil.adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
+#    droplist = []
+#    for idx in indexes:
+#        idxname = idx[1]
+#        if match in idxname:
+#            droplist.append(idxname)
+#    for idx in droplist:
+#        print(f'Dropping index {idx}...')
+#        sqlstr = f'DROP INDEX {idx}'
+#        dbutil.adhoc_query(sqlcon, sqlstr)
 
 
-def add_indexes(sqlcon: sqlite3.Connection,
-                sqlfile: str):
-    """Add indexes from a SQL file."""
-    cursor = sqlcon.cursor()
-    print(f'Adding indexes from {sqlfile}...')
-    with open(f'sql/{sqlfile}', 'r', encoding='utf8') as sschemafile:
-        ssqldata = sschemafile.read()
-        cursor.executescript(ssqldata)
-        sqlcon.commit()
+# def add_indexes(sqlcon: sqlite3.Connection,
+#                sqlfile: str):
+#    """Add indexes from a SQL file."""
+#    cursor = sqlcon.cursor()
+#    print(f'Adding indexes from {sqlfile}...')
+#    with open(f'sql/{sqlfile}', 'r', encoding='utf8') as sschemafile:
+#        ssqldata = sschemafile.read()
+#        cursor.executescript(ssqldata)
+#        sqlcon.commit()
 
 
 def create_feature_table(sqlcon: sqlite3.Connection, table: str, feat: str):
@@ -409,10 +402,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    dbc = dbutil.DatabaseConnection(args.dbfile)
-    sqlconn = dbc.get_connection()
+    # dbc = dbutil.DatabaseConnection(args.dbfile)
+    sqlconn = dbutil.get_connection(args.dbfile)
 
     print(f'Generating helper table info to {args.dbfile}')
+    buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
 
     if args.forms or args.all:
         print('Adding forms.sql...')
@@ -435,16 +429,17 @@ if __name__ == '__main__':
             sqldata = schemafile.read()
             ccursor.executescript(sqldata)
 
-    # cursor = sqlconn.cursor()
 
     # These two are necessary for the operation of the database
     if args.posx or args.all:
         record_pos_frequency(sqlconn)
 
     if args.features or args.all:
-        drop_indexes(sqlconn, "_wordfreqs_featid")
+        buildutil.drop_indexes(sqlconn, "_wordfreqs_featid")
+        # FIXME: re-generate features in full?
+        buildutil.add_features(sqlconn)
         add_feature_index(sqlconn)
-        add_indexes(sqlconn, "wordfreqs_indexes.sql")
+        buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
         create_feature_table(sqlconn, 'derivations', 'derivation')
         create_feature_table(sqlconn, 'clitics', 'clitic')
         create_feature_table(sqlconn, 'nouncases', 'nouncase')
