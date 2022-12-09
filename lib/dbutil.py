@@ -677,6 +677,23 @@ def parse_querystring(querystr: str,
                             whereor.append(f'{usetable}.{usecol} NOT GLOB ?')
                     whereparts.append(f"({' OR '.join(whereor)})")
                     args.extend(invals)
+                elif k == 'middle':
+                    if c == 'in':
+                        whereor = []
+                        for v in invals:
+                            whereorparts = []
+                            whereorparts.append(f'{usetable}.form GLOB ?')
+                            args.append(f'?*{v}*?')
+                            whereorparts.append(f'{usetable}.form NOT GLOB ?')
+                            args.append(v + "*")
+                            whereorparts.append(f'{usetable}.revform NOT GLOB ?')
+                            args.append(v[::-1] + "*")
+                            whereor.append(f"({' AND '.join(whereorparts)})")
+                        whereparts.append(f"({' OR '.join(whereor)})")
+                    else:
+                        for v in invals:
+                            whereparts.append(f'instr({usetable}.form, ?) == 0')
+                            args.append(v)
                 else:
                     whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
                     args.extend(invals)
