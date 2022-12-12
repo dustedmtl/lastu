@@ -36,14 +36,16 @@ def drop_helper_tables(sqlcon: sqlite3.Connection, full: bool = False):
     """Drop helper tables from the database."""
     if full:
         tables = [
+            'initgramfreqs', 'fingramfreqs', 'bigramfreqs', 'wordbigramfreqs',
             'forms', 'lemmas', 'lemmaforms',
             'features', 'clitics', 'derivations', 'nouncases',
         ]
     else:
         tables = [
+            'initgramfreqs', 'fingramfreqs', 'bigramfreqs', 'wordbigramfreqs',
             'forms', 'lemmas', 'lemmaforms',
         ]
-        
+
     for table in tables:
         drop_table(sqlcon, table)
 
@@ -82,6 +84,12 @@ def delete_rows(sqlcon: sqlite3.Connection,
     """Delete rows where frequency is equal or lower than this value."""
     deletestr = f"DELETE FROM wordfreqs where frequency <= {frequency}"
     dbutil.adhoc_query(sqlcon, deletestr)
+
+
+def vacuum(sqlcon: sqlite3.Connection):
+    """Vacuum a sqlite database."""
+    print('Vacuuming the database...')
+    dbutil.adhoc_query(sqlcon, "VACUUM;")
 
 
 def add_schema(sqlcon: sqlite3.Connection,
