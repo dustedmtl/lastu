@@ -54,6 +54,8 @@ def adhoc_query(connection: sqlite3.Connection,
     """Execute an adhoc query."""
     try:
         if verbose:
+            logger.info('Executing query: %s', sqlstr)
+        else:
             logger.debug('Executing query: %s', sqlstr)
         if todf:
             df = pd.DataFrame(pd.read_sql_query(sqlstr, connection))
@@ -193,6 +195,7 @@ def write_freqs_to_db(connection: sqlite3.Connection,
             connection.rollback()
 
 
+# FIXME: move gram freq functions to buildutil
 def get_trigram_freqs(connection: sqlite3.Connection) -> Tuple[Counter, Counter, Counter]:
     """Get initrigram, fintrigram, bigram frequencies."""
     init = Counter()  # type: ignore
@@ -231,11 +234,11 @@ def insert_trigram_freqs(connection: sqlite3.Connection,
     for table in ['initgramfreqs', 'fingramfreqs', 'bigramfreqs']:
         ok[table] = True
         print(f'Checking table {table}...', flush=True)
-        have = adhoc_query(connection, f'select * from {table} limit 1', verbose=True)
+        have = adhoc_query(connection, f'select * from {table} limit 1')
         if len(have) > 0:
             if empty:
                 print(f'Emptying table {table}...', flush=True)
-                _ = adhoc_query(connection, f'delete from {table}', verbose=True)
+                _ = adhoc_query(connection, f'delete from {table}')
             else:
                 ok[table] = False
 
@@ -271,7 +274,7 @@ def insert_bigram_freqs(connection: sqlite3.Connection,
     ok = True
     table = 'wordbigramfreqs'
     print(f'Checking table {table}...', flush=True)
-    have = adhoc_query(connection, f'select * from {table} limit 1', verbose=True)
+    have = adhoc_query(connection, f'select * from {table} limit 1')
     if len(have) > 0:
         if empty:
             print(f'Emptying table {table}...', flush=True)
@@ -285,7 +288,7 @@ def insert_bigram_freqs(connection: sqlite3.Connection,
 
     # select = "SELECT DISTINCT(form) from wordfreqs LIMIT 10"
     print(f'Loading distinct forms from {table}...', flush=True)
-    rows = adhoc_query(connection, "SELECT DISTINCT(form) from wordfreqs", verbose=True)
+    rows = adhoc_query(connection, "SELECT DISTINCT(form) from wordfreqs")
     results = [row[0] for row in rows]
 
     insertsql = 'INSERT INTO wordbigramfreqs (form, frequency) VALUES (?, ?)'
