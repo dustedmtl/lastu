@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Manage database."""
 
 # pylint: disable=invalid-name, consider-using-with
@@ -11,14 +10,37 @@ import argparse
 from sqlite3 import IntegrityError
 from shutil import copy
 import math
-from tqdm.autonotebook import tqdm
 import logging
+import logging.config
+from tqdm.autonotebook import tqdm
 
 from lib import dbutil, buildutil
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('manage-database')
+wm2logconfig = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'formatters': {
+        'default_formatter': {
+            'format': '%(asctime)s %(levelname)s %(message)s',
+            'datefmt': '%d.%m.%Y %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default_formatter',
+            'level': 'INFO'
+        },
+    },
+}
+
+logging.config.dictConfig(wm2logconfig)
+logger = logging.getLogger('wm2')
 
 parser = argparse.ArgumentParser(prog='manage-database',
                                  description='Prune database')
@@ -109,6 +131,9 @@ if cmd == 'prune':
     print('Re-linking features information...')
     buildutil.add_features(sqlcon)
 
+    # FIXME: run vacuum
+    # buildutil.vacuum(sqlcon)
+
     print('Remember to add grams and helper tables!')
 
 if cmd == 'concat':
@@ -173,17 +198,3 @@ if cmd == 'concat':
                 targetcon.rollback()
             # break
         # break
-
-
-# selectsql = "select * from wordfreqs where frequency >= ?"
-
-# src = origcon.cursor()
-# dest = sqlcon.cursor()
-
-# rows = src.execute(selectsql, [args.frequency])
-# for row in tqdm(rows.fetchall()):
-#    num = len(row)
-#    ins = insertpat % ','.join(['?'] * num)
-#    dest.execute(ins, row)
-#    sqlcon.commit()
-#    # break
