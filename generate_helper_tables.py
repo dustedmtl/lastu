@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Convert text data to conllu format."""
 
 # pylint: disable=invalid-name, consider-using-with
@@ -6,20 +5,43 @@
 # import os
 # from os.path import isdir, isfile, exists
 from typing import Dict, List, Iterator, Tuple
-import sys
+# import sys
 import argparse
 import logging
+import logging.config
 import math
 from collections import Counter
-import pandas as pd
 import sqlite3
 from sqlite3 import IntegrityError
+import pandas as pd
 from tqdm.autonotebook import tqdm
 from symspellpy import SymSpell, Verbosity
 from uralicNLP import uralicApi
 from lib import dbutil, buildutil
 
-logging.basicConfig(level=logging.DEBUG)
+wm2logconfig = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'formatters': {
+        'default_formatter': {
+            'format': '%(asctime)s %(levelname)s %(message)s',
+            'datefmt': '%d.%m.%Y %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default_formatter',
+            'level': 'INFO'
+        },
+    },
+}
+
+logging.config.dictConfig(wm2logconfig)
 logger = logging.getLogger('wm2')
 
 # FIXME: if table already has data.. empty?
@@ -467,7 +489,6 @@ if __name__ == '__main__':
             ccursor = sqlconn.cursor()
             sqldata = schemafile.read()
             ccursor.executescript(sqldata)
-
 
     # These two are necessary for the operation of the database
     if args.posx or args.all:
