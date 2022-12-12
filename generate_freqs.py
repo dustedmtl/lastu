@@ -8,12 +8,37 @@
 from os.path import exists
 import sys
 import argparse
+import logging
+import logging.config
 from lib import dbutil
 
-import logging
+# from tqdm.autonotebook import tqdm
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('generate-freqs')
+wm2logconfig = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'formatters': {
+        'default_formatter': {
+            'format': '%(asctime)s %(levelname)s %(message)s',
+            'datefmt': '%d.%m.%Y %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default_formatter',
+            'level': 'INFO'
+        },
+    },
+}
+
+logging.config.dictConfig(wm2logconfig)
+logger = logging.getLogger('wm2')
+
 
 parser = argparse.ArgumentParser(prog='generate-freqs',
                                  description='Generate frequencies')
