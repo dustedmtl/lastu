@@ -19,8 +19,8 @@ from symspellpy import SymSpell, Verbosity
 from uralicNLP import uralicApi
 from lib import dbutil, buildutil
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('generate-helper-tables')
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('wm2')
 
 # FIXME: if table already has data.. empty?
 
@@ -254,7 +254,6 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
         dbutil.adhoc_query(sqlcon, updatestatement)
 
     lemmadf = dbutil.adhoc_query(sqlcon, "select lemma from lemmas where instr(lemma, '#') > 0", todf=True, verbose=True)
-    print(f'Fetched {len(lemmadf)} compound lemmas')
     updatestatement = "update lemmas set comparts = ? where lemma = ?"
     insvalues = []
     for lemma in lemmadf.lemma:
@@ -264,6 +263,7 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
     chunklen = 10000
     total = math.ceil(len(insvalues)/chunklen)
     cursor = sqlcon.cursor()
+    print(f'Updating {len(lemmadf)} compound lemmas')
     for chunk in tqdm(dbutil.chunks(insvalues, chunklen=chunklen), total=total):
         try:
             cursor.executemany(updatestatement, chunk)
@@ -273,7 +273,46 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
             logging.exception(e)
             sqlcon.rollback()
 
-    # FIXME: generate amblemma information
+    print('Generating amblemma percentages...')
+    lffreqsql = "select lf.lemma, lf.pos, sum(lf.frequency) as lfreq, l.lemmafreq, (select sum(lx.frequency) from lemmaforms lx, forms fx where (fx.numforms = 1 OR lx.formpct > 0.99) and lx.form = fx.form and lx.lemma = lf.lemma and lx.pos = lf.pos group by lx.lemma, lx.pos) as numfreq from lemmaforms lf, lemmas l where lf.lemma = l.lemma and lf.pos = l.pos group by lf.lemma, lf.pos order by lfreq desc"
+    lffreqdf = dbutil.adhoc_query(sqlcon, lffreqsql, todf=True, verbose=True)
+    print(f'Fetched {len(lffreqdf)} lemma, pos frequencies')
+
+    l2 = lffreqdf.copy()
+    l2['amblemma'] = (l2.lfreq - l2.numfreq) / l2.lfreq
+    l2.loc[l2.amblemma.isnull(), 'amblemma'] = 1
+    updvalues = l2[['amblemma', 'lemma', 'pos']].values
+
+#    updvalues2 = []
+#    for _idx, row in lffreqdf.iterrows():
+#        lemma = row.lemma
+#        pos = row.pos
+#        tot = row.lemmafreq
+#        uniques = row.numfreq
+#        if math.isnan(uniques):
+#            pct = 1
+#        else:
+#            pct = (tot-uniques)/tot
+#        # print(lemma, pos, tot, uniques, pct)
+#        updvalues2.append([pct, lemma, pos])
+
+    # print(lffreqdf[lffreqdf.lemma == 'ilman'][:10])
+    # print(lffreqdf[lffreqdf.numfreq.isnull()][:10])
+
+    updatestatement = "update lemmas set amblemma = ? where lemma = ? and pos = ?"
+    # chunklen = 1
+    print('Updating amblemma frequencies...')
+    total = math.ceil(len(updvalues)/chunklen)
+    cursor = sqlcon.cursor()
+    for chunk in tqdm(dbutil.chunks(updvalues, chunklen=chunklen), total=total):
+        try:
+            cursor.executemany(updatestatement, chunk)
+            sqlcon.commit()
+        except IntegrityError as e:
+            # this is not ok
+            print(chunk)
+            logging.exception(e)
+            sqlcon.rollback()
 
 
 def add_feature_index(sqlcon: sqlite3.Connection):
@@ -436,7 +475,6 @@ if __name__ == '__main__':
 
     if args.features or args.all:
         buildutil.drop_indexes(sqlconn, "_wordfreqs_featid")
-        # FIXME: re-generate features in full?
         buildutil.add_features(sqlconn)
         add_feature_index(sqlconn)
         buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
@@ -445,11 +483,12 @@ if __name__ == '__main__':
         create_feature_table(sqlconn, 'nouncases', 'nouncase')
 
     # These are optional
-    if args.lemmas or args.all:
-        generate_lemma_aggregates(sqlconn)
-
+    # Forms aggregates need to be present before amblemma is calculated
     if args.forms or args.all:
         generate_form_aggregates(sqlconn)
+
+    if args.lemmas or args.all:
+        generate_lemma_aggregates(sqlconn)
 
     if args.hood or args.all:
         generate_hood(sqlconn)
