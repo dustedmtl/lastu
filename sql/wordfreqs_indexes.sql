@@ -1,8 +1,6 @@
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_wordfreqs_basic on wordfreqs(lemma, form, pos, feats);
 CREATE INDEX IF NOT EXISTS idx_wordfreqs_basic2 on wordfreqs(lemma, form, posx, feats);
---CREATE INDEX IF NOT EXISTS idx_wordfreqs_feats_pos on wordfreqs(feats, pos);
---CREATE INDEX IF NOT EXISTS idx_wordfreqs_feats_posx on wordfreqs(feats, posx);
 --CREATE INDEX IF NOT EXISTS idx_wordfreqs_featid_lemma on wordfreqs(featid, lemma);
 --CREATE INDEX IF NOT EXISTS idx_wordfreqs_featid_form on wordfreqs(featid, form);
 
@@ -32,3 +30,9 @@ CREATE INDEX IF NOT EXISTS idx_wordfreqs_revform_freqx ON wordfreqs(revform, fre
 CREATE INDEX IF NOT EXISTS idx_wordfreqs_form_rev ON wordfreqs(form, revform);
 CREATE INDEX IF NOT EXISTS idx_wordfreqs_rev_form ON wordfreqs(revform, form);
 
+-- Indexes necessary to database building
+CREATE INDEX IF NOT EXISTS idx_wordfreqs_feats_pos on wordfreqs(feats, pos);
+--CREATE INDEX IF NOT EXISTS idx_wordfreqs_featid on wordfreqs(featid);
+--CREATE INDEX IF NOT EXISTS idx_wordfreqs_feats_pos_featid_partial on wordfreqs(feats, pos, featid) where featid = 0;
+--CREATE INDEX IF NOT EXISTS idx_wordfreqs_lemma_posx on wordfreqs(lemma, posx);
+CREATE INDEX IF NOT EXISTS idx_wordfreqs_lemma_posx_freq on wordfreqs(lemma, posx, frequency DESC);
