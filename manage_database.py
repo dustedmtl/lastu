@@ -90,10 +90,15 @@ if cmd == 'prune':
 
     print(f'Using {inputfile} as source database')
     sqlcon = dbutil.get_connection(inputfile)
+    if args.output:
+        print(f'Copy database to {args.output}')
     # Determine how much stuff will be deleted
     total = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
     topurge = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs where frequency <= {args.frequency}")
-    print(f'About to delete {topurge[0][0]} rows of {total[0][0]}')
+    if args.output:
+        print(f'About to delete {topurge[0][0]} rows of {total[0][0]} in a copied database')
+    else:
+        print(f'About to delete {topurge[0][0]} rows of {total[0][0]}')
     if not args.yes:
         ok = input('Ok? y/N: ')
         if not ok.lower().startswith('y'):
@@ -116,7 +121,7 @@ if cmd == 'prune':
     print('Dropping helper tables...')
     buildutil.drop_helper_tables(sqlcon)
     print('Dropping wordfreqs indexes...')
-    buildutil.drop_indexes(sqlcon, 'wordfreqs')
+    buildutil.drop_indexes(sqlcon, 'wordfreqs', exclude='freq_len')
     print('Nullifying computed information...')
     buildutil.nullify_wordfreqs(sqlcon)
 
@@ -134,7 +139,7 @@ if cmd == 'prune':
     # FIXME: run vacuum
     # buildutil.vacuum(sqlcon)
 
-    print('Remember to add grams and helper tables!')
+    print('Remember to run the scripts for adding grams and helper tables!')
 
 if cmd == 'concat':
     if not args.output:
