@@ -10,6 +10,9 @@ trash
 jupyter.*.out
 .ipynb_checkpoints
 
+# Log files
+wm2*.txt
+
 # Downloads
 *.tar.gz
 
