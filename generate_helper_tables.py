@@ -24,7 +24,7 @@ wm2logconfig = {
     'disable_existing_loggers': False,
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': 'DEBUG',
     },
     'formatters': {
         'default_formatter': {
@@ -36,7 +36,7 @@ wm2logconfig = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'default_formatter',
-            'level': 'INFO'
+            'level': 'DEBUG'
         },
     },
 }
@@ -270,7 +270,7 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
         print('Table lemmas already has content, not inserting')
     else:
         print('Inserting aggregates into lemmas table...')
-        lemmasql = "insert into lemmas select lemma, replace(lemma, '#', '') as lemmac, posx as pos, sum(frequency) as lemmafreq, length(lemma) as lemmalen, 0 as amblemma, 0 as comparts from wordfreqs group by lemma, posx order by frequency desc"
+        lemmasql = "insert into lemmas select lemma, replace(lemma, '#', '') as lemmac, posx as pos, sum(frequency) as lemmafreq, length(lemma) as lemmalen, 0 as amblemma, 0 as comparts from wordfreqs group by lemma, posx order by lemmafreq desc"
         dbutil.adhoc_query(sqlcon, lemmasql)
         updatestatement = "update lemmas set lemmalen = length(lemmac)"
         dbutil.adhoc_query(sqlcon, updatestatement)
@@ -335,6 +335,12 @@ def generate_lemma_aggregates(sqlcon: sqlite3.Connection):
             print(chunk)
             logging.exception(e)
             sqlcon.rollback()
+
+
+def add_feat_pos_indexes(sqlcon: sqlite3.Connection):
+    """Add feats/pos indexes for building features tables."""
+    idx_sql = 'CREATE INDEX IF NOT EXISTS idx_wordfreqs_feats_pos_featid_partial on wordfreqs(feats, pos, featid) where featid = 0'
+    dbutil.adhoc_query(sqlcon, idx_sql)
 
 
 def add_feature_index(sqlcon: sqlite3.Connection):
@@ -492,13 +498,17 @@ if __name__ == '__main__':
 
     # These two are necessary for the operation of the database
     if args.posx or args.all:
+        buildutil.drop_indexes(sqlconn, "_freqx")
         record_pos_frequency(sqlconn)
+        buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
 
     if args.features or args.all:
-        buildutil.drop_indexes(sqlconn, "_wordfreqs_featid")
+        # buildutil.drop_indexes(sqlconn, "_wordfreqs_featid")
         buildutil.add_features(sqlconn)
+        add_feat_pos_indexes(sqlconn)
         add_feature_index(sqlconn)
-        buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
+        buildutil.drop_indexes(sqlconn, "featid_partial")
+        # buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
         create_feature_table(sqlconn, 'derivations', 'derivation')
         create_feature_table(sqlconn, 'clitics', 'clitic')
         create_feature_table(sqlconn, 'nouncases', 'nouncase')
