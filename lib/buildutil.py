@@ -51,7 +51,8 @@ def drop_helper_tables(sqlcon: sqlite3.Connection, full: bool = False):
 
 
 def drop_indexes(sqlcon: sqlite3.Connection,
-                 match: str):
+                 match: str,
+                 exclude: str = None):
     """Drop matching indexes."""
     indexes = dbutil.adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
     droplist = []
@@ -62,6 +63,8 @@ def drop_indexes(sqlcon: sqlite3.Connection,
         if 'UNIQUE' in idx[4]:
             print(f'Not dropping unique index: {idxname}')
             continue
+        if exclude and exclude in idxname:
+            print(f'Not dropping matching excluded index: {idxname}')
         if match in idxname:
             droplist.append(idxname)
     for idx in droplist:
