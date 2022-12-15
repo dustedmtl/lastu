@@ -22,7 +22,7 @@ wm2logconfig = {
     'disable_existing_loggers': False,
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': 'DEBUG',
     },
     'formatters': {
         'default_formatter': {
@@ -34,7 +34,7 @@ wm2logconfig = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'default_formatter',
-            'level': 'INFO'
+            'level': 'DEBUG'
         },
     },
 }
@@ -93,12 +93,17 @@ if cmd == 'prune':
     if args.output:
         print(f'Copy database to {args.output}')
     # Determine how much stuff will be deleted
+    print('Determining total word count..')
     total = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
+    print('Determining deletion word count..')
     topurge = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs where frequency <= {args.frequency}")
+    total = total[0][0]
+    topurge = topurge[0][0]
+    toremain = total - topurge
     if args.output:
-        print(f'About to delete {topurge[0][0]} rows of {total[0][0]} in a copied database')
+        print(f'About to delete {topurge} rows of {total}, with {toremain} remaining in a copied database')
     else:
-        print(f'About to delete {topurge[0][0]} rows of {total[0][0]}')
+        print(f'About to delete {topurge} rows of {total}, with {toremain} remaining')
     if not args.yes:
         ok = input('Ok? y/N: ')
         if not ok.lower().startswith('y'):
