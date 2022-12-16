@@ -6,7 +6,7 @@ The database for the program is generated from one data files containing [Univer
 
 ## Features
 
-The wordmill2 database contains various properties for lemmas and forms:
+A wordmill2 database contains various properties for lemmas and forms:
  - surface frequencies (absolute and relative)
  - initial trigram, final trigram and average bigram frequencies (absolute relative)
  - length
@@ -16,6 +16,13 @@ The wordmill2 database contains various properties for lemmas and forms:
  - most important morphological features (see below)
 
 Add properties can be queried and filtered with. Additionally, string properties can be filtered with various wildcard searches.
+
+Each row in a database in unique according to four properties:
+ - lemma
+ - form
+ - word class (part of speech)
+ - morphological feature string
+   - for the "core" Finnish features (see below)
 
 ### Morphological features
 
