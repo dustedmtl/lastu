@@ -4,15 +4,15 @@
 - Clone the repository
   - `git clone`
 - Create a virtual environment for packaging (venv)
-  - `python3 -m venv venv`
+  - `python3 -m venv packenv`
   - See also: https://docs.python.org/3/library/venv.html
 - Activate virtual environment
   - Mac:
-    - `source venv/bin/activate`
+    - `source packenv/bin/activate`
   - Windows:
-    - `venv\Scripts\activate.bat`
+    - `packenv\Scripts\activate.bat`
  - Install requirements to packenv
-   - `pip3 install -r requirements.txt`
+   - `pip3 install -r packaging-requirements.txt`
 
 ## Building a database
 - Activate virtual environment (see above)
