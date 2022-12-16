@@ -19,7 +19,7 @@ wm2logconfig = {
     'disable_existing_loggers': False,
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': 'DEBUG',
     },
     'formatters': {
         'default_formatter': {
@@ -31,7 +31,7 @@ wm2logconfig = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'default_formatter',
-            'level': 'INFO'
+            'level': 'DEBUG'
         },
     },
 }
