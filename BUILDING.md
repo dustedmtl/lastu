@@ -2,17 +2,17 @@
 
 ## Setup
 - Clone the repository
-  - `git clone`
-- Create a virtual environment for packaging (venv)
-  - `python3 -m venv packenv`
+  - `git clone <giturl>`
+- Create a virtual environment for building (venv)
+  - `python3 -m venv venv`
   - See also: https://docs.python.org/3/library/venv.html
 - Activate virtual environment
   - Mac:
-    - `source packenv/bin/activate`
+    - `source venv/bin/activate`
   - Windows:
-    - `packenv\Scripts\activate.bat`
- - Install requirements to packenv
-   - `pip3 install -r packaging-requirements.txt`
+    - `venv\Scripts\activate.bat`
+ - Install requirements to venv
+   - `pip3 install -r requirements.txt`
 
 ## Building a database
 - Activate virtual environment (see above)
@@ -38,9 +38,9 @@ It is necessary to run all of the below scripts to get a functional database.
 
 ### Generate helper tables
  - `python3 generate_helper_tables.py -d data/<dbfile> -a`
- - Arguments
+ - Options
    - `-a`
-     - All of the below
+     - All of the below (except -c)
    - `-p`
      - Generate frequency information for pos/posx
    - `-F`
@@ -52,13 +52,44 @@ It is necessary to run all of the below scripts to get a functional database.
    - `-H`
      - Generate neighbourhood information for forms
    - `-c`
-     - Generate generated aggregate information to the wordfreqs tables
+     - Copy hood and ambform information to the wordfreqs table
+
+In practice, you should first run the script with the argument `-a` and then with argument `-c`.
 
 ## Managing a database
 
+Note that when using the `manage_database.py` script, aggregate information must be regenerated with the `generate_freqs.py`and `generate_helper_tables` scripts.
+
+ - General options
+   - `-c <cmd>`
+     - Run operations `<cmd>`
+   - `-i <file1> [file2, ...]`
+     - Source file (or files)
+   - `-o <outfile`
+     - Output file. The source database will be modified in-place unless this option is present.
+   - `-y`
+     - Do not ask for confirmation when executing a pruning operation.
+     - This option is necessary if the script needs to be run in a batch script.
+
 ### Combining one or more database files
 
-### Rebuilding indexes
+ - `python3 manage_database.py -i <sourcefiles> -o <outfile> -c concat -e`
+
+This is mostly useful when there is a large amount of source data. In this case it makes sense to build the database in parts. 
+
+ - Options
+   - `-e`
+     - Normally the script produces an error if the output database `<outfile>` already exists.
+     - This option suppresses the error and allows the operation.
 
 ### Pruning a database
 
+ - `python3 manage_database.py -i <infile> -o <outfile> -c prune -f <freq>`
+
+Prune the database by mandating a minimum frequency `<freq>`.
+
+ - Options
+   - `-f <freq>`
+     - minium frequency
+
+  
