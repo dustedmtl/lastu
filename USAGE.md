@@ -176,8 +176,4 @@ Allowed operators:
    - for IN, the value may contain comma-separated values
  - numeric: `=` `!=` `<` `>` `<=` `>=`
 
-TBD:
- - Explain AUX/VERB handling
- - lemma queries and compounds
- - Interpreting calculated variables (relative frequencies, hood, ambform, amblemma)
 
