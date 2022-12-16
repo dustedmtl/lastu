@@ -10,7 +10,7 @@ import re
 import gzip
 from contextlib import contextmanager
 from collections import Counter
-import pyconll
+# import pyconll
 # from conllu import parse_incr, TokenList
 from conllu import TokenList
 from conllu.exceptions import ParseException
