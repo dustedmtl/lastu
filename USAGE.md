@@ -105,25 +105,26 @@ Examples:
 #### Opening and closing windows
 
 The user interface consists of one or more windows. Shortcuts for window management:
-  - `C-N` - new window
-  - `C-W` - close currently active window
-  - `C-Q` - quit application
+  - `Ctrl-N` - new window
+  - `Ctrl-W` - close currently active window
+  - `Ctrl-Q` - quit application
 
 #### Input and output
 
 Input and output commands:
-  - `C-I` - query from wordlist
+  - `Ctrl-I` - query from wordlist
     - The first must start with text "# type=`querytype`", where `querytype` is `lemma`, `form` or `unword`
     - See sample input files in the [samples directory](samples/)
-  - `C-S` - export to file (csv/tsv/xlsx)
-  - `C-E` - copy to clipboard
+  - `Ctrl-S` - export to file (csv/tsv/xlsx)
+  - `Ctrl-E` - copy to clipboard
+  - `Ctrl-D` - open new database
 
 #### Hiding and showing columns
 
 The data menu lists the various column hide/show options:
- - `C-1` to `C-3`: showing frequency columns
- - `C-4`: showing columns (morphological features) that can be hiddin
- - `C-5` to `C-8`: showing categories
+ - `Ctrl-1` to `Ctrl-3`: showing frequency columns
+ - `Ctrl-4`: showing columns (morphological features) that can be hiddin
+ - `Ctrl-5` to `Ctrl-8`: showing categories
 
 ### Init file configuration
 
