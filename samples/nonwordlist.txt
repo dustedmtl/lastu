@@ -1,0 +1,6 @@
+# type =unword
+# Only process unwords
+babalapa
+auti
+sautk
+fääfä
