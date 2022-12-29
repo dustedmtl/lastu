@@ -1052,9 +1052,9 @@ def add_relative_frequencies(dbc: DatabaseConnection,
 
 
 def get_wordinput(filename: str) -> Dict[str, List]:
-    """Get word input for lemma, form or unword."""
+    """Get word input for lemma, form or nonword."""
     wordinput = defaultdict(list)
-    cats = ['lemma', 'form', 'unword']
+    cats = ['lemma', 'form', 'nonword']
     got_type = None
 
     with open(filename, 'r', encoding='utf-8') as f:
@@ -1082,10 +1082,10 @@ def get_wordinput(filename: str) -> Dict[str, List]:
 
 def get_unword_bigrams(dbc: DatabaseConnection,
                        data: Dict[str, List]) -> pd.DataFrame:
-    """Get bigram frequencies for unwords."""
+    """Get bigram frequencies for nonwords."""
     formgrams = defaultdict(list)
     fetchbigs = set()
-    for form in data['unword']:
+    for form in data['nonword']:
         grams = [form[i:j] for i, j in zip(range(0, len(form)-1), range(2, len(form)+1))]
         fetchbigs.update(grams)
         formgrams[form] = grams
