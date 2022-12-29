@@ -119,7 +119,6 @@ Input and output commands:
         - querytype` can be `lemma`, `form` or `nonword`
         - The specific category is searched for the strings in the content lines
       - The file may be encoded as UTF-8 or ISO-Latin-1
-        - Due to potential issues with file encoding, it is recommended to have at least one empty (or comment) line before the type identifier line
     - See sample input files in the [samples directory](samples/)
   - `Ctrl-S` - export to file (csv/tsv/xlsx)
   - `Ctrl-E` - copy to clipboard
