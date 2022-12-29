@@ -113,7 +113,13 @@ The user interface consists of one or more windows. Shortcuts for window managem
 
 Input and output commands:
   - `Ctrl-I` - query from wordlist
-    - The first must start with text "# type=`querytype`", where `querytype` is `lemma`, `form` or `nonword`
+    - The input file may contain empty lines, comment lines (starting with `#`) and content lines
+      - Before the first content line, there must be a type identified line
+        - form: "# type=`querytype`"
+        - querytype` can be `lemma`, `form` or `nonword`
+        - The specific category is searched for the strings in the content lines
+      - The file may be encoded as UTF-8 or ISO-Latin-1
+        - Due to potential issues with file encoding, it is recommended to have at least one empty (or comment) line before the type identifier line
     - See sample input files in the [samples directory](samples/)
   - `Ctrl-S` - export to file (csv/tsv/xlsx)
   - `Ctrl-E` - copy to clipboard
