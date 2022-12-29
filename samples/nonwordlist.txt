@@ -1,5 +1,5 @@
-# type =unword
-# Only process unwords
+# type =nonword
+# Only process nonwords
 babalapa
 auti
 sautk

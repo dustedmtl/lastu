@@ -736,7 +736,7 @@ class MainWindow(QMainWindow):
         fileinput.setNameFilter("Text files (*.txt)")
         fileinput.setViewMode(QFileDialog.ViewMode.Detail)
 
-        listtypes = ['lemma', 'form', 'unword']
+        listtypes = ['lemma', 'form', 'nonword']
 
         if fileinput.exec():
             filenames = fileinput.selectedFiles()
@@ -751,7 +751,7 @@ class MainWindow(QMainWindow):
                     raise ValueError(f'No valid data found in file {filename}')
                 if inputkeys[0] not in listtypes:
                     raise ValueError(f'No valid data found in file {filename}')
-                if inputkeys[0] == 'unword':
+                if inputkeys[0] == 'nonword':
                     self.query_desc = ''
                     unworddf = dbutil.get_unword_bigrams(self.dbconnection, wordinput)
                     self.setQueryResult(0, unworddf)
