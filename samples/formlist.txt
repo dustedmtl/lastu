@@ -2,3 +2,4 @@
 # Only process surface forms
 kuusi
 auto
+näätä
