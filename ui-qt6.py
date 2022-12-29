@@ -458,9 +458,16 @@ class MainWindow(QMainWindow):
         # self.setFonts()
         # self.setCopyleftFont()
 
-    def newWindow(self):
-        logger.debug('Opening new window')
-        w2 = MainWindow(self.dbconnection, original=False)
+    def newWindow(self, dbconnection: None) -> QMainWindow:
+
+        dbc = self.dbconnection
+        if dbconnection:
+            logger.info('Opening new window with database %s', dbconnection.dbfile)
+            dbc = dbconnection
+        else:
+            logger.info('Opening new window with existing database')
+
+        w2 = MainWindow(dbc, original=False)
         # w2.originaldata = w2.data
         w2.appconfig = self.appconfig
         w2.config = self.config
@@ -495,6 +502,7 @@ class MainWindow(QMainWindow):
         w2.table.horizontalHeader().sectionClicked.connect(self.sortData)
 
         w2.show()
+        return w2
 
     def closeWindow(self):
         self.close()
@@ -509,8 +517,13 @@ class MainWindow(QMainWindow):
                 if (rowlimit := configfile.getConfigValue('query.fetchrows')) is not None:
                     logger.debug('Setting row limit to %d', rowlimit)
                     dbconn.rowlimit(rowlimit)
-                    self.dbconnection = dbconn
-                    self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
+
+                    if (opendbwithnew := configfile.getConfigValue('general.opendbwithnewwindow')) is True:
+                        neww = self.newWindow(dbconnection=dbconn)
+                        neww.textQuery()
+                    else:
+                        self.dbconnection = dbconn
+                        self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
             except Exception as e:
                 logger.error("Couldn't connect to %s: %s", dbfile, e)
 
