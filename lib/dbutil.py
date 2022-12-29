@@ -1,4 +1,4 @@
-"""Utilities for reading and writing sqlite databases."""
+"""utilities for reading and writing sqlite databases."""
 
 # pylint: disable=invalid-name, line-too-long
 
@@ -1057,27 +1057,43 @@ def get_wordinput(filename: str) -> Dict[str, List]:
     cats = ['lemma', 'form', 'nonword']
     got_type = None
 
-    with open(filename, 'r', encoding='utf-8') as f:
-        for line in f.readlines():
-            try:
-                if len(line.strip()) == 0:
-                    continue
-                if line.startswith('#'):
-                    if not got_type:
-                        # print(line.strip())
-                        # print(re.match('.*type=(\w+)', line.strip(), re.M))
-                        if (matches := re.match('.*type\s*=\s*(\w+)', line.strip())) is not None:
-                            got_type = matches.group(1)
-                            if got_type not in cats:
-                                # print(f'Invalid type: {got_type}')
-                                got_type = None
-                    continue
-                if got_type:
-                    kw = line.strip()
-                    wordinput[got_type].append(kw)
-            except Exception as e:
-                print(f'Error with line: {line}', e)
+    file_contents = get_file_contents(filename)
+    for line in file_contents:
+        # print(line.strip())
+        try:
+            if len(line.strip()) == 0:
+                continue
+            if line.startswith('#'):
+                if not got_type:
+                    # print('b', re.match('.*type\s*=\s*(\w+)', line.strip(), re.M))
+                    if (matches := re.match('.*type\s*=\s*(\w+)', line.strip())) is not None:
+                        got_type = matches.group(1)
+                        if got_type not in cats:
+                            # print(f'Invalid type: {got_type}')
+                            got_type = None
+                continue
+            if got_type:
+                kw = line.strip()
+                wordinput[got_type].append(kw)
+        except Exception as e:
+            print(f'Error with line: {line}', e)
+    # print(wordinput)
     return wordinput
+
+
+def get_file_contents(filename: str) -> List[str]:
+    """Get word input with specific encoding."""
+    encodings = ['utf-8-sig', 'iso-8859-1']
+    for encoding in encodings:
+        try:
+            logger.debug('Opening %s with encoding %s', filename, encoding)
+            with open(filename, 'r', encoding=encoding) as f:
+                lines = f.readlines()
+                return lines
+        except Exception as e:
+            logger.exception(e)
+
+    return []
 
 
 def get_unword_bigrams(dbc: DatabaseConnection,
