@@ -21,7 +21,7 @@ jobs:
         continue-on-error: true
 
       - name: List directory
-        run: ls -l
+        run: ls -l . /tmp .github/workflows
 
       - name: View output log
         run: cat /tmp/output.log
