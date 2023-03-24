@@ -20,6 +20,9 @@ jobs:
         run: pandoc --verbose -s -o /tmp/quickguide.pdf USAGE.md > /tmp/output.log 2>&1
         continue-on-error: true
 
+      - name: List directory
+        run: ls -l
+
       - name: View output log
         run: cat /tmp/output.log
   
