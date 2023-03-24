@@ -17,7 +17,7 @@ jobs:
         run: sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 
       - name: Build PDF documentation
-        run: pandoc --from gfm --verbose -s -o /tmp/quickguide.pdf USAGE.md > /tmp/output.log 2>&1
+        run: pandoc --from gfm --verbose --standalone --embed-resources --variable=colorlinks --variable=urlcolor=blue -o /tmp/quickguide.pdf USAGE.md > /tmp/output.log 2>&1
         continue-on-error: true
 
 #      - name: List directory
