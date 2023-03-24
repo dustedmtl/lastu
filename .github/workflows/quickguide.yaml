@@ -18,8 +18,12 @@ jobs:
 
       - name: Build PDF documentation
         run: |
-          pandoc -o quickguide.pdf ./USAGE.md
+          pandoc -o quickguide.pdf ./USAGE.md > output.log 2>&1
+        continue-on-error: true
 
+      - name: View output log
+        run: cat output.log
+  
       - name: Upload PDF as artifact
         uses: actions/upload-artifact@v2
         with:
