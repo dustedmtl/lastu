@@ -147,9 +147,13 @@ String properties:
  - form
  - lemma
  - pos
+   - word class
  - start
+   - form begins with string
  - middle
+   - form contains string, but does not start or end with it
  - end
+   - form end with string
  - nouncase
  - number
  - nnumber
@@ -160,20 +164,23 @@ String properties:
  - possnum
  - derivation
  - clitic
- - TBD: explain
 
 Numeric properties:
  - len
+   - form length
  - lemmalen
  - freq
+   - form surface frequency
  - lemmafreq
  - hood
+   - orthographic neighbourhood
  - ambform
+   - measure of surface form ambiguity
  - amblemma
+   - measure of lemma ambiguity
  - initgramfreq
  - fingramfreq
  - bigramfreq
- - TBD: explain
 
 Boolean properties:
  - compound
