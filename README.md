@@ -52,7 +52,7 @@ TBD. Highly tuned for Finnish.
 
 # License
 
-Copyright &copy; 2022 University of Turku.
+Copyright &copy; 2022-2023 University of Turku.
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
