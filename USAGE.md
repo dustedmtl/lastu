@@ -36,8 +36,8 @@ A query consists of one or more parts separated by the keyword `and`:
 
 The query parts  generally follow the form `KEY OPERATOR VALUE`.
  - `KEY` is a string to query (`autossa`)
- - `OPERATOR` is a mathematical or string comparison operator (`=`, `IN`,
- - `VALUE`
+ - `OPERATOR` is a mathematical or string comparison or set operator (e.g. `=`, `>`, `IN`)
+ - `VALUE` is the value being searched
 
 Exceptions to these include negative (`NOT`) queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
@@ -50,7 +50,7 @@ For a full list of keys to query, please see [the full list](#list-of-query-keys
 
 String properties include `lemma`, `form`, `pos`, `case`, `clitic` and `derivation`.
 
-For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`).
+For these supported operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
 
 Examples:
  - `form = autossa`
@@ -74,7 +74,7 @@ For advanced queries, please see the [advanced usage](#advanced-queries).
 
 #### Numeric queries
 
-The numeric properties allow operators for equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater or equal (`>=`) and smaller or equal (`<=`).
+The numeric properties allow operators for equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater than or equal (`>=`) and smaller than or equal (`<=`).
 
 Examples:
  - `len > 10`
@@ -152,12 +152,14 @@ String properties:
    - form contains string, but does not start or end with it
  - end
    - form end with string
- - nouncase
- - number
- - nnumber
- - tense
- - person
- - verbform
+ - noun features
+   - nouncase
+   - nnumber
+ - verb features
+   - number
+   - tense
+   - person
+   - verbform
  - posspers
  - possnum
  - derivation
@@ -167,9 +169,11 @@ Numeric properties:
  - len
    - form length
  - lemmalen
+   - lemma length
  - freq
    - form surface frequency
  - lemmafreq
+   - lemma frequency (for the specific part-of-speech, i.e. word class)
  - hood
    - orthographic neighbourhood
  - ambform
