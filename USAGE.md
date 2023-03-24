@@ -38,12 +38,15 @@ A query consists of one or more parts separated by the keyword `and`:
 
 The query parts  generally follow the form `KEY OPERATOR VALUE`.
  - `KEY` is a string to query (`autossa`)
- - `OPERATOR` is an 
+ - `OPERATOR` is a mathematical or string comparison operator (`=`, `IN`,
+ - `VALUE`
 
 Exceptions to these include negative (`NOT`) queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
+
+For a full list of keys to query, please see [the full list](#list-of-query-keys).
 
 #### String queries
 
