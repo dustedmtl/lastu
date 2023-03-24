@@ -8,23 +8,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env: 
+      VERSION: ${{ github.ref_name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Use the version number
+        run: echo "Version number is ${{ env.VERSION }}"
+
       - name: Install Pandoc
         run: sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
-
-      - name: Set version number
-        id: version
-        run: echo "${{ github.ref }}" | sed 's/refs\/tags\///'
-
-      - name: Use the version number
-        run: |
-          echo "Version number is ${{ steps.version.outputs.stdout }}"
-        env:
-          VERSION: ${{ steps.version.outputs.stdout }}
 
       - name: Build PDF documentation
         run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o /tmp/quickguide.pdf USAGE.md > /tmp/output.log 2>&1
