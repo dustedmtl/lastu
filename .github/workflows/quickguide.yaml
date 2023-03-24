@@ -29,5 +29,5 @@ jobs:
       - name: Upload PDF as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: quickquide
-          path: /tmp/quickquide.pdf
+          name: quickguide
+          path: /tmp/quickguide.pdf
