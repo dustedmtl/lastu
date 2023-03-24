@@ -20,6 +20,16 @@ jobs:
         run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o /tmp/quickguide.pdf USAGE.md > /tmp/output.log 2>&1
         continue-on-error: true
 
+      - name: Set version number
+        id: version
+        run: echo "${{ github.ref }}" | sed 's/refs\/tags\///'
+
+      - name: Use the version number
+        run: |
+          echo "Version number is ${{ steps.version.outputs.stdout }}"
+        env:
+          VERSION: ${{ steps.version.outputs.stdout }}
+  
 #      - name: List directory
 #        run: ls -l . /tmp .github/workflows
 
