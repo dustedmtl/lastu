@@ -50,7 +50,7 @@ For a full list of keys to query, please see [the full list](#list-of-query-keys
 
 #### String queries
 
-String properties include `lemma`, `form`, `pos`, `case` `clitic` and `derivation`.
+String properties include `lemma`, `form`, `pos`, `case`, `clitic` and `derivation`.
 
 For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`).
 
