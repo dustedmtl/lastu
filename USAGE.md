@@ -4,12 +4,12 @@ The application needs two files to with an optional init file:
  - The executable / application (`wm2.exe` / `wm2.app`)
    - Alternatively, use the source version with: `python3 ui-qt6.py`
      - See the [building instructions](BUILDING.md) for generating virtualenv for python
- - The database file (SQLite3)
+ - The database (a file in the form of SQLite3)
  - The init file `wm2.ini` (optional)
 
 ## Init file and database file
 
-At this point the main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
+The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
@@ -40,9 +40,9 @@ The query parts  generally follow the form `KEY OPERATOR VALUE`. Exceptions to t
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
 Examples:
- - `form = auto`
- - `lemma = voi and nouncase = Ine`
- - `case != Gen`
+ - `form = autossa`
+ - `lemma = voi and nouncase = ine`
+ - `case != gen`
  - `lemmafreq > 10000 and lemmalen < 5`
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
@@ -54,10 +54,10 @@ String properties include `lemma`, `form`, `pos`, `case` `clitic` and `derivatio
 For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`.
 
 Examples:
- - `form = auto'`
- - `case != Ine`
+ - `form = autossa`
+ - `case != ine`
  - `lemma in voi,voida`
- - `clitic not in Kin,Kaan`
+ - `clitic not in kin,kaan`
 
 The `start`, `middle` and `end` keys allow queries based on the properties of `form`:
  - `start = aut`
@@ -68,16 +68,6 @@ The `start`, `middle` and `end` keys allow queries based on the properties of `f
    - the converse
  - `middle = ta`
    - the word contains the substring `ta` but does not start or end with it
-
-Finally, the `LIKE` can be used if the above functions do not suffice.
-This operators allows the querying of any string property using a wildcard syntax, where the wildcard is `%`.
-
-Examples:
- - `lemma like voi%`
-   - lemma starts with string `voi`
- - `form like %ta%`
-   - form contains the substring `ta`
-   - note the difference to the operator `middle`!
 
 For advanced queries, please see the [advanced usage](#advanced-queries).
 
@@ -181,5 +171,15 @@ Allowed operators:
    - the use of the LIKE operator is generally not recommended
    - for IN, the value may contain comma-separated values
  - numeric: `=` `!=` `<` `>` `<=` `>=`
+
+The `LIKE` can be used if the above functions do not suffice.
+This operators allows the querying of any string property using a wildcard syntax, where the wildcard is `%`.
+
+Examples:
+ - `lemma like voi%`
+   - lemma starts with string `voi`
+ - `form like %ta%`
+   - form contains the substring `ta`
+   - note the difference to the operator `middle`!
 
 
