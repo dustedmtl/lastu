@@ -2,8 +2,6 @@
 
 The application needs two files to with an optional init file:
  - The executable / application (`wm2.exe` / `wm2.app`)
-   - Alternatively, use the source version with: `python3 ui-qt6.py`
-     - See the [building instructions](BUILDING.md) for generating virtualenv for python
  - The database (a file in the form of SQLite3)
  - The init file `wm2.ini` (optional)
 
