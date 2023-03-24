@@ -39,12 +39,6 @@ A query consists of one or more parts separated by the keyword `and`:
 The query parts  generally follow the form `KEY OPERATOR VALUE`. Exceptions to these include negative (`NOT`) queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
-Examples:
- - `form = autossa`
- - `lemma = voi and nouncase = ine`
- - `case != gen`
- - `lemmafreq > 10000 and lemmalen < 5`
-
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
 
 #### String queries
@@ -56,7 +50,9 @@ For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `
 Examples:
  - `form = autossa`
  - `case != ine`
+ - `lemma = voi and nouncase = ine`
  - `lemma in voi,voida`
+ - `lemmafreq > 10000 and lemmalen < 5`
  - `clitic not in kin,kaan`
 
 The `start`, `middle` and `end` keys allow queries based on the properties of `form`:
