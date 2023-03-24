@@ -102,7 +102,7 @@ Input and output commands:
     - The input file may contain empty lines, comment lines (starting with `#`) and content lines
       - Before the first content line, there must be a type identified line
         - form: "# type=`querytype`"
-        - querytype` can be `lemma`, `form` or `nonword`
+        - `querytype` can be `lemma`, `form` or `nonword`
         - The specific category is searched for the strings in the content lines
       - The file may be encoded as UTF-8 or ISO-Latin-1
     - See sample input files in the [samples directory](samples/)
@@ -114,7 +114,7 @@ Input and output commands:
 
 The data menu lists the various column hide/show options:
  - `Ctrl-1` to `Ctrl-3`: showing frequency columns
- - `Ctrl-4`: showing columns (morphological features) that can be hiddin
+ - `Ctrl-4`: showing columns (morphological features) that can be hidden
  - `Ctrl-5` to `Ctrl-8`: showing categories
 
 ### Init file configuration
@@ -164,12 +164,12 @@ Allowed keys:
 Allowed operators:
  - string: `=` `!=` `in` `like`
    - word `NOT` can be prepended to `in` and `like`
-   - the use of the LIKE operator is generally not recommended
    - for IN, the value may contain comma-separated values
  - numeric: `=` `!=` `<` `>` `<=` `>=`
 
-The `LIKE` can be used if the above functions do not suffice.
+The `LIKE` operator can be used if the above functions do not suffice. 
 This operators allows the querying of any string property using a wildcard syntax, where the wildcard is `%`.
+The operator is not generally recommended as it is slower than the alternatives.
 
 Examples:
  - `lemma like voi%`
