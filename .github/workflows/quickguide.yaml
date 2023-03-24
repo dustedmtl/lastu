@@ -21,13 +21,15 @@ jobs:
           echo "New variable value is $NEWVER"
           
       - name: Use the version number
-        run: echo "Version number is ${{ env.VERSION }}"
+        run: |
+          echo "Version number is ${{ env.VERSION }}"
+          echo "New variable value is ${{ NEWVER }}"
 
       - name: Install Pandoc
         run: sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 
       - name: Build PDF documentation
-        run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o /tmp/quickguide-$NEWVER.pdf USAGE.md > /tmp/output.log 2>&1
+        run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o /tmp/quickguide-${{ NEWVER }}.pdf USAGE.md > /tmp/output.log 2>&1
         continue-on-error: true
   
 #      - name: List directory
@@ -40,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: quickguide
-          path: /tmp/quickguide-$NEWVER.pdf
+          path: /tmp/quickguide--${{ NEWVER }}.pdf
