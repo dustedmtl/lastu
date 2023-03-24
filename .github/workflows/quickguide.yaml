@@ -1,0 +1,27 @@
+name: Generate PDF Documentation
+
+on:
+  push:
+    tags:
+      - 'd*' # Matching documentation
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Pandoc
+        run: sudo apt-get install pandoc
+
+      - name: Build PDF documentation
+        run: |
+          pandoc -o quickguide.pdf USAGE.md
+
+      - name: Upload PDF as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: quickquide
+          path: quickquide.pdf
