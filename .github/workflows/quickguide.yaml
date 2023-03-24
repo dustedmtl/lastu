@@ -18,7 +18,7 @@ jobs:
 
       - name: Build PDF documentation
         run: |
-          pandoc -o quickguide.pdf USAGE.md
+          pandoc -o quickguide.pdf ./USAGE.md
 
       - name: Upload PDF as artifact
         uses: actions/upload-artifact@v2
