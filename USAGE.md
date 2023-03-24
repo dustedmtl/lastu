@@ -36,7 +36,11 @@ A query consists of one or more parts separated by the keyword `and`:
  - `PART` and `PART`
  - `PART` and `PART` and `PART` ...
 
-The query parts  generally follow the form `KEY OPERATOR VALUE`. Exceptions to these include negative (`NOT`) queries and boolean queries.
+The query parts  generally follow the form `KEY OPERATOR VALUE`.
+ - `KEY` is a string to query (`autossa`)
+ - `OPERATOR` is an 
+
+Exceptions to these include negative (`NOT`) queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
@@ -45,7 +49,7 @@ The allowed operators vary depending on whether the key queries a string, numeri
 
 String properties include `lemma`, `form`, `pos`, `case` `clitic` and `derivation`.
 
-For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`) and `LIKE`.
+For these supported operators are equality (`=`), inequality (`!=`), `IN` (and `NOT IN`).
 
 Examples:
  - `form = autossa`
@@ -133,6 +137,44 @@ The most important configuration options:
      - the maximum number of rows to show in the UI
  - style
    - fontsize
+  
+### List of query keys
+
+String properties:
+ - form
+ - lemma
+ - pos
+ - start
+ - middle
+ - end
+ - nouncase
+ - number
+ - nnumber
+ - tense
+ - person
+ - verbform
+ - posspers
+ - possnum
+ - derivation
+ - clitic
+ - TBD: explain
+
+Numeric properties:
+ - len
+ - lemmalen
+ - freq
+ - lemmafreq
+ - hood
+ - ambform
+ - amblemma
+ - initgramfreq
+ - fingramfreq
+ - bigramfreq
+ - TBD: explain
+
+Boolean properties:
+ - compound
+   - whether the word form is a compound
 
 ### UD data
 
@@ -164,7 +206,7 @@ Allowed keys:
 Allowed operators:
  - string: `=` `!=` `in` `like`
    - word `NOT` can be prepended to `in` and `like`
-   - for IN, the value may contain comma-separated values
+   - for IN, the `VALUE` may contain comma-separated strings
  - numeric: `=` `!=` `<` `>` `<=` `>=`
 
 The `LIKE` operator can be used if the above functions do not suffice. 
@@ -176,6 +218,7 @@ Examples:
    - lemma starts with string `voi`
  - `form like %ta%`
    - form contains the substring `ta`
-   - note the difference to the operator `middle`!
+   - note the difference to the operator `middle`
+     - this search does not exclude strings that start with `ta`
 
 
