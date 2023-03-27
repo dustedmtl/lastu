@@ -1128,3 +1128,69 @@ def get_unword_bigrams(dbc: DatabaseConnection,
     # resdf['relbigramfreq'] = relbigs[0]
 
     return resdf
+
+
+def filter_dataframe(dbc: DatabaseConnection,
+                     df: pd.DataFrame,
+                     querystring: str) -> pd.DataFrame:
+    """Filter dataframe based on querystring."""
+    resdf = df.copy()
+    relfieldmap = {
+        'rellemmafreq': dbc.lemmafreqs,
+        'relfrequency': dbc.wordfreqs,
+        'relbigramfreq': dbc.bifreqs,
+        'relinitgramfreq': dbc.initfreqs,
+        'relfingramfreq': dbc.finfreqs,
+    }
+    numkeys = ['frequency', 'len',
+               'lemmafreq', 'lemmalen', 'amblemma',
+               'hood', 'ambform',
+               'initrigramfreq', 'fintrigramfreq', 'bigramfreq']
+    strkeys = ['lemma', 'form', 'pos',
+               'nouncase', 'nnumber',
+               'tense', 'person', 'verbform',
+               'posspers', 'possnum',
+               'start', 'middle', 'end',
+               'derivation', 'clitic'  # these my be complex
+               ]
+    formkeys = ['start', 'middle', 'end']
+    boolkeys = ['compound']
+    stroperators = ['=', '!=', 'like', 'in', 'notin']
+    formoperators = ['=', '!=', 'in', 'notin']
+    numoperators = ['=', '!=', '<', '>', '<=', '>=']
+
+    try:
+        logger.debug('Querying dataframe for: %s', querystring)
+        _wherestr, _args, errors, _indexers, _notlikeindexers, _useposx = parse_querystring(querystring, relfieldmap)
+        if len(errors) > 0:
+            errstr = '\n'.join(errors)
+            raise ValueError(errstr)
+        # This produces an error if the query string is invalid
+        qlist2, _errors = parse_query(querystring, relfieldmap)
+        for feat in qlist2:
+            key, op, value = feat
+            keyadd = ""
+            if key == 'lemmac':
+                key = 'lemma'
+            if op == 'notin':
+                op = 'not in'
+            if op in ['not in', 'in']:
+                useval = value.split(',')
+            elif key in numkeys:
+                useval = value
+            else:
+                useval = f"'{value.lower()}'"
+                keyadd = ".str.lower()"
+            format_string = f"{key}{keyadd} {op} {useval}"
+            if op == '=':
+                format_string = f"{key}{keyadd} == {useval}"
+            logger.debug("Using format_string: %s", format_string)
+            len1 = len(resdf)
+            resdf = resdf.query(format_string)
+            len2 = len(resdf)
+            logger.debug("Filtering dataframe with '%s': %d -> %d results",
+                         format_string, len1, len2)
+
+    except Exception as e:
+        raise e
+    return resdf
