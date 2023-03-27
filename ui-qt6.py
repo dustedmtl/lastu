@@ -1,6 +1,6 @@
 """UI for wordmill application."""
 
-# Copyright (C) 2022 University of Turku
+# Copyright (C) 2022-2023 University of Turku
 # License: CC-BY-4.0
 #
 # Starter code based on https://www.pythonguis.com/tutorials/pyqt6-qtableview-modelviews-numpy-pandas/
@@ -234,6 +234,7 @@ class MainWindow(QMainWindow):
         # self.originaldata = df
         self.appversion = uiutil.get_application_version()
         self.data = df
+        self.fulldata = None
         self.hidecolumns = set()
         self.query_ongoing = False
         self.query_desc = ""
@@ -241,6 +242,9 @@ class MainWindow(QMainWindow):
         self.config = ConfigFile(appconfig)
         self._otherwindows = []
         self.layout = QGridLayout()
+        self.mode = "database"
+        self.inputfilename = None
+        self.inputprocessfilename = None
 
         # self.lemmacb = QCheckBox()
         # self.formcb = QCheckBox()
@@ -301,7 +305,7 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.dbnamefield, 4, 0, 1, 1)
         # self.dbnamefield.setAlignment(Qt.AlignmentFlag.AlignRight)
 
-        copylefttext = 'Copyright (c) 2022 University of Turku'
+        copylefttext = 'Copyright (c) 2022-2023 University of Turku'
         # print(f'-{self.appversion}-')
         if self.appversion is not None and len(self.appversion) > 0:
             copylefttext = f'WM2 version {self.appversion}. {copylefttext}'
@@ -326,6 +330,11 @@ class MainWindow(QMainWindow):
         menuaction_new.setStatusTip("New window")
         menuaction_new.setShortcut(QKeySequence("Ctrl+n"))
         menuaction_new.triggered.connect(self.newWindow)
+
+        menuaction_newempty = QAction("&New empty window", self)
+        menuaction_newempty.setStatusTip("New empty window")
+        menuaction_newempty.setShortcut(QKeySequence("Shift+Ctrl+n"))
+        menuaction_newempty.triggered.connect(self.newEmptyWindow)
 
         menuaction_close = QAction("&Close window", self)
         menuaction_close.setStatusTip("Close current window")
@@ -353,6 +362,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(menuaction_clipcopy)
         file_menu.addSeparator()
         file_menu.addAction(menuaction_new)
+        file_menu.addAction(menuaction_newempty)
         file_menu.addAction(menuaction_close)
         file_menu.addSeparator()
         file_menu.addAction(menuaction_opendb)
@@ -475,6 +485,8 @@ class MainWindow(QMainWindow):
         # FIXME: proper way to manage windows?
         self._otherwindows.append(w2)
         w2.hidecolumns = self.hidecolumns
+        if self.fulldata is not None:
+            w2.fulldata = self.fulldata
         w2.setData(self.data)
         # w2.filterColumns()
         widget = self.centralwidget
@@ -501,8 +513,20 @@ class MainWindow(QMainWindow):
         # w2.table.horizontalHeader().sortIndicatorChanged.connect(w2.sortData)
         w2.table.horizontalHeader().sectionClicked.connect(self.sortData)
 
+        w2.mode = self.mode
+        w2.inputfilename = self.inputfilename
+        if w2.mode == 'inputfile':
+            w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
         w2.show()
         return w2
+
+    def newEmptyWindow(self) -> QMainWindow:
+        w2 = self.newWindow(self.dbconnection)
+        w2.mode = "database"
+        w2.fulldata = None
+        w2.setData(None)
+        w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
+        w2.querybox.setText("")
 
     def closeWindow(self):
         self.close()
@@ -520,10 +544,12 @@ class MainWindow(QMainWindow):
 
                     if (opendbwithnew := configfile.getConfigValue('general.opendbwithnewwindow')) is True:
                         neww = self.newWindow(dbconnection=dbconn)
+                        neww.mode = "database"
                         neww.textQuery()
                     else:
                         self.dbconnection = dbconn
                         self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
+                        self.mode = "database"
             except Exception as e:
                 logger.error("Couldn't connect to %s: %s", dbfile, e)
 
@@ -688,9 +714,29 @@ class MainWindow(QMainWindow):
 
     def textQuery(self):
         querytext = self.querybox.text()
-        self.statusfield.setText(f'Executing query: {querytext}')
-        self.query_desc = querytext
-        self.doQuery(querytext)
+        if self.mode == "inputfile":
+            logger.info("Input file mode - filtering existing dataframe")
+            try:
+                if self.fulldata is None:
+                    self.fulldata = self.data
+                # logger.info('Fulldata %d', len(self.fulldata))
+                nudf = dbutil.filter_dataframe(self.dbconnection, self.fulldata, querytext)
+                # logger.info('Data %d', len(self.data))
+                self.setData(nudf)
+                # logger.info('Data %d', len(self.data))
+                # logger.info('Fulldata %d', len(self.fulldata))
+                self.statusfield.setText('')
+            except Exception as e:
+                logging.exception(e)
+                error = str(e)
+                if '\n' in error:
+                    self.statusfield.setText('Issue with query:\n%s' % error)
+                else:
+                    self.statusfield.setText(f'Issue with query: {error}')
+        else:
+            self.statusfield.setText(f'Executing query: {querytext}')
+            self.query_desc = querytext
+            self.doQuery(querytext)
 
     def doQuery(self, queryinput):
         # start = time.perf_counter()
@@ -718,6 +764,10 @@ class MainWindow(QMainWindow):
             self.statusfield.setText(f'Executing query: {self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.setData(df)
             self.table.horizontalHeader().sectionClicked.connect(self.sortData)
+            if self.mode == "inputfileprocess":
+                self.mode = "inputfile"
+                self.inputfilename = self.inputprocessfilename
+                self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
             # self.table.horizontalHeader().sortIndicatorChanged.connect(self.sortData)
             # self.filterColumns()
             # self.resizeWidthToContents()
@@ -754,9 +804,13 @@ class MainWindow(QMainWindow):
                 if inputkeys[0] == 'nonword':
                     self.query_desc = ''
                     unworddf = dbutil.get_unword_bigrams(self.dbconnection, wordinput)
+                    self.inputfilename = filename
                     self.setQueryResult(0, unworddf)
+                    self.mode = "inputfile"
                 else:
                     self.statusfield.setText(f'Executing query from input file {filename}')
+                    self.mode = "inputfileprocess"
+                    self.inputprocessfilename = filename
                     self.doQuery(wordinput)
             except ValueError as ve:
                 self.statusfield.setText(str(ve))
