@@ -3,3 +3,4 @@
 kuusi
 voida
 voi
+autotalli
