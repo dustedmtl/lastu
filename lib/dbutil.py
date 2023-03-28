@@ -764,7 +764,10 @@ def parse_querydict(querydict: Dict) -> Tuple[str, List, List, List, List]:
     for querypart in querydict.keys():
         for queryval in querydict[querypart]:
             indexers.add(querypart)
-            whereparts.append(f'w.{querypart} = ?')
+            if querypart == 'lemma':
+                whereparts.append('l.lemmac = ?')
+            else:
+                whereparts.append(f'w.{querypart} = ?')
             args.append(queryval)
     wherestr = "WHERE (" + " OR ".join(whereparts) + ") "
     return wherestr, args, errors, list(indexers), []
@@ -1184,6 +1187,13 @@ def filter_dataframe(dbc: DatabaseConnection,
             format_string = f"{key}{keyadd} {op} {useval}"
             if op == '=':
                 format_string = f"{key}{keyadd} == {useval}"
+            elif op == 'like':
+                useval = useval.replace('%', '')
+                format_string = f"{key}.str.contains({useval}, case=False)"
+            elif op == 'not like':
+                useval = useval.replace('%', '')
+                format_string = f"~{key}.str.contains({useval}, case=False)"
+
             logger.debug("Using format_string: %s", format_string)
             len1 = len(resdf)
             resdf = resdf.query(format_string)
