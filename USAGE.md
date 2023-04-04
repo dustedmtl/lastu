@@ -135,18 +135,20 @@ The most important configuration options:
  - general
    - autoresize
      - set window width automatically to the width of the columns
- - input
+   - opendbwithnewwindow
+     - When opening new database, open new window
+- input
    - datadir and database
  - output
    - outformat
-     - xlsx, csv
+     - xlsx, csv, tsv
  - query
    - fetchrows
-     - the maximum number of rows to fetch from the database
+     - the maximum number of rows to fetch from the database (10000)
    - showrows
-     - the maximum number of rows to show in the UI
+     - the maximum number of rows to show in the UI (1000)
  - style
-   - fontsize
+   - fontsize (11)
   
 ### List of query keys
 
