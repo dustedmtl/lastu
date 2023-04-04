@@ -103,6 +103,8 @@ Examples:
 
 The user interface consists of one or more windows. Shortcuts for window management:
   - `Ctrl-N` - new window
+    - Copies the query and results from the currently active window
+  - `Shift-Ctrl-N` - new empty window
   - `Ctrl-W` - close currently active window
   - `Ctrl-Q` - quit application
 
