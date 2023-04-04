@@ -122,7 +122,7 @@ Input and output commands:
   - `Ctrl-E` - copy to clipboard
   - `Ctrl-D` - open new database
 
-TODO: add samples here instead of link [samples directory](samples/
+TODO: add samples here instead of link [samples directory](samples/)
 
 #### Hiding and showing columns
 
