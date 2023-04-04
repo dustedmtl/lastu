@@ -1,4 +1,4 @@
-# Quick Guide
+# User Guide
 
 The application needs two files to with an optional init file:
  - The executable / application (`wm2.exe` / `wm2.app`)
@@ -35,14 +35,20 @@ A query consists of one or more parts separated by the keyword `and`:
  - `PART` and `PART` and `PART` ...
 
 The query parts  generally follow the form `KEY OPERATOR VALUE`.
- - `KEY` is a string to query (`autossa`)
- - `OPERATOR` is a mathematical or string comparison or set operator (e.g. `=`, `>`, `IN`)
+ - `KEY` is a string to query (`form`)
+ - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator ('IN', 'NOT IN')
  - `VALUE` is the value being searched
 
 Exceptions to these include negative (`NOT`) queries and boolean queries.
 All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
+
+A set operator allows the user to query for accepted (or not accepted) values:
+ - `KEY` IN `A,B`
+   - The property `KEY` must contain value `A` or `B`
+ - `KEY` NOT IN `A,B`
+   - The complementary set
 
 For a full list of keys to query, please see [the full list](#list-of-query-keys).
 
@@ -110,10 +116,11 @@ Input and output commands:
         - `querytype` can be `lemma`, `form` or `nonword`
         - The specific category is searched for the strings in the content lines
       - The file may be encoded as UTF-8 or ISO-Latin-1
-    - See sample input files in the [samples directory](samples/)
   - `Ctrl-S` - export to file (csv/tsv/xlsx)
   - `Ctrl-E` - copy to clipboard
   - `Ctrl-D` - open new database
+
+TODO: add samples here instead of link [samples directory](samples/
 
 #### Hiding and showing columns
 
@@ -127,10 +134,12 @@ The data menu lists the various column hide/show options:
 The most important configuration options:
  - general
    - autoresize
+     - set window width automatically to the width of the columns
  - input
    - datadir and database
  - output
    - outformat
+     - xlsx, csv
  - query
    - fetchrows
      - the maximum number of rows to fetch from the database
@@ -142,16 +151,18 @@ The most important configuration options:
 ### List of query keys
 
 String properties:
- - form
- - lemma
- - pos
+ - basic features
+   - form
+   - lemma
+   - pos
    - word class
- - start
-   - form begins with string
- - middle
-   - form contains string, but does not start or end with it
- - end
-   - form end with string
+ - wildcard queries for form
+   - start
+     - form begins with string
+   - middle
+     - form contains string, but does not start or end with it
+   - end
+     - form ends with string
  - noun features
    - nouncase
    - nnumber
@@ -160,10 +171,11 @@ String properties:
    - tense
    - person
    - verbform
- - posspers
- - possnum
- - derivation
- - clitic
+ - other morphological features
+   - posspers
+   - possnum
+   - derivation
+   - clitic
 
 Numeric properties:
  - len
