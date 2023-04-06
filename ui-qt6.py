@@ -544,6 +544,7 @@ class MainWindow(QMainWindow):
 
                     if (opendbwithnew := configfile.getConfigValue('general.opendbwithnewwindow')) is True:
                         if self.mode == 'inputfile':
+                            logger.info("Previous had input file mode, opening new empty window")
                             neww = self.newWindow(dbconnection=dbconn)
                             neww.mode = "database"
                             neww.fulldata = None
@@ -558,6 +559,7 @@ class MainWindow(QMainWindow):
                     else:
                         self.dbconnection = dbconn
                         if self.mode == 'inputfile':
+                            logger.info("Previous had input file mode, emptying window")
                             self.querybox.setText("")
                             self.fulldata = None
                             self.setData(None)
@@ -735,10 +737,12 @@ class MainWindow(QMainWindow):
                     self.fulldata = self.data
                 # logger.info('Fulldata %d', len(self.fulldata))
                 if len(querytext.strip()) > 0:
+                    logger.info('Filter: %s', querytext)
                     nudf = dbutil.filter_dataframe(self.dbconnection, self.fulldata, querytext)
                     # logger.info('Data %d', len(self.data))
                     self.setData(nudf)
                 else:
+                    logger.info('No filter, showing full data')
                     self.setData(self.fulldata)
                 # logger.info('Data %d', len(self.data))
                 # logger.info('Fulldata %d', len(self.fulldata))
@@ -825,6 +829,7 @@ class MainWindow(QMainWindow):
                     self.setQueryResult(0, unworddf)
                     self.mode = "inputfile"
                 else:
+                    logger.info('Executing query from input file %s', filename)
                     self.statusfield.setText(f'Executing query from input file {filename}')
                     self.mode = "inputfileprocess"
                     self.inputprocessfilename = filename
