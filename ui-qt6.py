@@ -543,11 +543,25 @@ class MainWindow(QMainWindow):
                     dbconn.rowlimit(rowlimit)
 
                     if (opendbwithnew := configfile.getConfigValue('general.opendbwithnewwindow')) is True:
-                        neww = self.newWindow(dbconnection=dbconn)
-                        neww.mode = "database"
-                        neww.textQuery()
+                        if self.mode == 'inputfile':
+                            neww = self.newWindow(dbconnection=dbconn)
+                            neww.mode = "database"
+                            neww.fulldata = None
+                            neww.setData(None)
+                            neww.dbnamefield.setText(f'Database file: {neww.dbconnection.dbfile}')
+                            neww.querybox.setText("")
+                        else:
+                            neww = self.newWindow(dbconnection=dbconn)
+                            neww.mode = "database"
+                            neww.dbnamefield.setText(f'Database file: {neww.dbconnection.dbfile}')
+                            neww.textQuery()
                     else:
                         self.dbconnection = dbconn
+                        if self.mode == 'inputfile':
+                            self.querybox.setText("")
+                            self.fulldata = None
+                            self.setData(None)
+                            self.statusfield.setText('')
                         self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
                         self.mode = "database"
             except Exception as e:
@@ -720,9 +734,12 @@ class MainWindow(QMainWindow):
                 if self.fulldata is None:
                     self.fulldata = self.data
                 # logger.info('Fulldata %d', len(self.fulldata))
-                nudf = dbutil.filter_dataframe(self.dbconnection, self.fulldata, querytext)
-                # logger.info('Data %d', len(self.data))
-                self.setData(nudf)
+                if len(querytext.strip()) > 0:
+                    nudf = dbutil.filter_dataframe(self.dbconnection, self.fulldata, querytext)
+                    # logger.info('Data %d', len(self.data))
+                    self.setData(nudf)
+                else:
+                    self.setData(self.fulldata)
                 # logger.info('Data %d', len(self.data))
                 # logger.info('Fulldata %d', len(self.fulldata))
                 self.statusfield.setText('')
