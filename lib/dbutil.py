@@ -436,6 +436,7 @@ def parse_query(query: str, relfieldmap: Dict = None) -> Tuple[List[List[str]], 
                'tense', 'person', 'verbform',
                'posspers', 'possnum',
                'start', 'middle', 'end',
+               'top',
                'derivation', 'clitic'  # these my be complex
                ]
     formkeys = ['start', 'middle', 'end']
@@ -589,6 +590,8 @@ def parse_querystring(querystr: str,
     # FIXME: use a queue mechanism for this?
     for andpart in queryparts:
         k, c, v = andpart
+        if k == 'top':
+            continue
         usetable = 'w'
         if k in separatetables:
             if c in ('in', '=') and v == '_':
@@ -1162,6 +1165,8 @@ def filter_dataframe(dbc: DatabaseConnection,
     formoperators = ['=', '!=', 'in', 'notin']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
+    top = -1
+
     try:
         logger.debug('Querying dataframe for: %s', querystring)
         _wherestr, _args, errors, _indexers, _notlikeindexers, _useposx = parse_querystring(querystring, relfieldmap)
@@ -1172,6 +1177,9 @@ def filter_dataframe(dbc: DatabaseConnection,
         qlist2, _errors = parse_query(querystring, relfieldmap)
         for feat in qlist2:
             key, op, value = feat
+            if key == 'top':
+                top = int(value)
+                continue
             keyadd = ""
             if key == 'lemmac':
                 key = 'lemma'
@@ -1203,4 +1211,21 @@ def filter_dataframe(dbc: DatabaseConnection,
 
     except Exception as e:
         raise e
+    if top > 0:
+        forms = resdf.groupby(['form']).aggregate({'form': 'count'})
+        for form, row in forms.iterrows():
+            # print(idx, row)
+            ct = row['form']
+            if ct > top:
+                # print(form, ct)
+                format_string = f"form.str.lower() == '{form}'"
+                # print(format_string)
+                xx = resdf.query(format_string).sort_values('frequency',
+                                                            ascending=False)
+                dropindexes = xx[top:].index
+                # print(xx)
+                logger.debug("Filter: dropping %d least frequent indexes for form %s",
+                             len(dropindexes), form)
+                # print(dropindexes)
+                resdf = resdf.drop(dropindexes)
     return resdf
