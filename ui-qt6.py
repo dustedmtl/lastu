@@ -162,6 +162,67 @@ class TableModel(QAbstractTableModel):
                 return str(self._data.index[section]+1)
         return None
 
+class WMTableView(QTableView):
+
+    def keyPressEvent(self, event):
+        selectWholeRows = True
+        # logger.info('Key pressed: %s, %s', event.key(), event.modifiers())
+        if event.key() == Qt.Key.Key_C and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            # Get the selected cells
+            model = self.model()
+            if model is not None:
+                selection = self.selectionModel().selection()
+                if not selection.isEmpty():
+                    # Build the table data as a string
+                    table = ""
+                    rows = sorted(index.row() for index in selection.indexes())
+                    cols = sorted(index.column() for index in selection.indexes())
+                    indexes = selection.indexes()
+
+                    if selectWholeRows:
+                        for row in range(rows[0], rows[-1]+1):
+                            for col in range(cols[0], cols[-1]+1):
+                                index = model.index(row, col)
+                                if self.isIndexHidden(index):
+                                    # Skip hidden cells
+                                    continue
+                                text = str(index.data())
+                                table += text
+                                # print(row, col, text)
+                                if col != cols[-1]:
+                                    table += "\t"
+                            if row != rows[-1]:
+                                table += "\n"
+                    else:
+                        lastrow = -1
+                        # lastcol = -1
+                        for index in sorted(indexes):
+                            if self.isIndexHidden(index):
+                                # Skip hidden cells
+                                continue
+                            text = str(index.data())
+                            row = index.row()
+                            col = index.column()
+                            if lastrow == -1:
+                                # first element
+                                pass
+                            elif lastrow == row:
+                                # same row
+                                table += "\t"
+                            else:
+                                # change of row
+                                table += "\n"
+
+                            # print(index.row(), index.column(), text)
+                            table += text
+                            lastrow = row
+                            # lastcol = col
+                    # Copy the table data to the clipboard
+                    clipboard = QApplication.clipboard()
+                    clipboard.setText(table)
+        else:
+            # Let the base class handle the event
+            super().keyPressEvent(event)
 
 class Signals(QObject):
     finished = pyqtSignal()
@@ -289,7 +350,7 @@ class MainWindow(QMainWindow):
         # filebutton.clicked.connect(self.inputFileQuery)
         # self.layout.addWidget(filebutton, 2, 1, 1, 1)
 
-        self.table = QTableView()
+        self.table = WMTableView()
         # self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setAlternatingRowColors(True)
         self.table.setSortingEnabled(True)
