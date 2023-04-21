@@ -128,11 +128,6 @@ Not in this file:
 
 # Old stuff
 
-## User interface
-
-There are various function available through keyboard shortcuts and the menu for inputting and outputting files and hiding/showing various fields.
-Please see the [UI functions](#ui-functions) for those.
-
 ### Queries
 
 A query consists of one or more parts separated by the keyword `and`:
