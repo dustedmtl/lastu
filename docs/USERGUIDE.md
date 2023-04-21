@@ -76,7 +76,7 @@ For boolean properties, the only choice is `compound`:
 Different types of properties can also be combined:
  - `start = auto and compound and len > 10`
 
-For a full list of properties to query and the format of query parts, please see the [query formatting](#query-formatting.
+For a full list of properties to query and the format of query parts, please see the [query formatting](#query-formatting).
 
 TBD. See full info below (link?).
 
