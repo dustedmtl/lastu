@@ -12,6 +12,19 @@ There are two components necessary for the software:
 
 You can download the application and database(s) here: TBD.
 
+## Init file and database file
+
+The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
+
+The init file itself is looked for from two locations:
+ - The same directory where the application is located in
+ - The user's home directory
+   - Mac: `/Users/<username>/wm2.ini`
+   - Windows: `C:\Users\<username>\wm2.ini`
+
+If the init file is not found, the database filename will default to `wm2database.db` and
+the application will try to locate it from the `data` subdirectory.
+
 ## User interface
 
 The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which opening a different database, exporting and copying information to clipboard and another file and choosing which columns to show.
@@ -59,19 +72,6 @@ Not in this file:
 ### 
 
 # Old stuff
-
-## Init file and database file
-
-The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
-
-The init file itself is looked for from two locations:
- - The same directory where the application is located in
- - The user's home directory
-   - Mac: `/Users/<username>/wm2.ini`
-   - Windows: `C:\Users\<username>\wm2.ini`
-
-If the init file is not found, the database filename will default to `wm2database.db` and
-the application will try to locate it from the `data` subdirectory.
 
 ## Logging
 
