@@ -1,8 +1,8 @@
-# User Guide
+# WordMill 2 User Guide
 
 ## Background
 
-Background: TBD.
+TBD: Background.
 
 ## Download instructions
 
@@ -10,11 +10,11 @@ There are two components necessary for the software:
  - the application itself (include the optional `wm2.ini` configuration file)
  - a database, which is a file in the form of SQLite3 database
 
-You can download the application and database(s) here: TBD.
+TBD: You can download the application and database(s) here.
 
 ## Init file and database file
 
-The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [Init file configuration](#init-file-configuration).
+The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [init file configuration](#init-file-configuration).
 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
@@ -29,19 +29,17 @@ the application will try to locate it from the `data` subdirectory.
 
 The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which include opening a different database, exporting and copying information to output file or clipboard and choosing which columns to show.
 
+The results are disambiguated based on the lemma, surface form, pos (part-of-speech, i.e. word class) and the set of core features (which, among other things, include case, person, tense, clitics and derivations). This means that there usually are multiple rows for each lemma/form/pos triplet.
+
+TBD: show picture of results. Effect of disambiguation?
+
+The table shows information in four difference categories: lemma information, surface form information, gram frequencies and features. The lemma and surface form fields include both string and numeric fields.
+
+For performance reasons, the application fetches 10000 top results from the database (based on frequency) and shows top 1000 results (based on whatever sorting criteria the user has). These values can be changed in the configuration file, if necessary.
+
 The results table is sortable by all available fields.
 
 The application generates debug logs to the file `wm2log.txt` and logs executed searches to the file `wm2history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
-
-TBD: show picture?
-
-TBD: only 1000 of 10000 top results (based on frequency) are shown.
-
-TBD: results are disambiguated based on lemma, form, pos and core features (which are...)
-
-### Fields / properties
-
-TBD. Explain fields and properties in the UI (?)
 
 ### Basic queries
 
@@ -76,20 +74,20 @@ For boolean properties, the only choice is `compound`:
 Different types of properties can also be combined:
  - `start = auto and compound and len > 10`
 
-For a full list of properties to query and the format of query parts, please see the chapters [query keys](#query-keys) and [query formatting](#query-formatting).
+For a full list of properties to query and the format of query parts, please see [query keys](#query-keys) and [query formatting](#query-formatting).
 
 ### Basic menu functions
 
 The functions below use the Windows platforms keys. For macos, substitute `Cmd` for `Ctrl`.
 
-A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an wordlist file can be done with `Ctrl-I`.
+A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an wordlist file can be done with `Ctrl-I`. A different database can be opened with `Ctrl-D`.
 
 There are three ways to export/copy information:
  1. `Ctrl-S` exports the result to file (csv/tsv/xlsx).
  2. `Ctrl-E` copies the results to the clipboard.
  3. `Ctrl-C` allows the user to individually select rows, columns or cells and copy them to clipboard.
 
-For more information and other shortcuts, please see the chapter [menu functions](#menu-functions).
+For more information and other shortcuts, please see the [menu functions](#menu-functions).
 
 ### Modes: database versus wordlist
 
@@ -97,9 +95,14 @@ The two modes of operation are database mode and wordlist mode. The free filteri
 
 The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown.
 
+The get back to database mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
+
 ## Limitations
 
-TBD: Does this belong here or more below?
+The main limitations of the program relate to performance. Some queries may be slow to execute in the database. The user interface may also be slow to update when fetching data from the database or sorting it, depending on the resources of the computer. To alleviate these issues, the user may consider the following remedies:
+ - Consider using a smaller database.
+ - Choose smaller values for the `fetchrows` and `showrows` configuration variables (see [init file configuration](#init-file-configuration)).
+
 
 ## Advanced information
 
@@ -112,23 +115,107 @@ A query consists of one or more parts separated by the keyword `and`:
 
 The query parts generally follow the form `KEY OPERATOR VALUE`.
  - `KEY` is a string to query (`form`)
- - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator (`IN`, `NOT IN`)
+ - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator `IN`
  - `VALUE` is the value being searched
 
-Exceptions to these include boolean queries and negative (`NOT`) queries for certain string operators. All inputs are lowercase (although the underlying data might not be).
+Exceptions to these are boolean queries and negative (`NOT`) queries for certain string operators.
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
  - String operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
  - Numeric operators are equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater than or equal (`>=`) and smaller than or equal (`<=`).
- - Boolean queries have a special format and there are no operators: the format is either `compound` or `not compound`.
+ - Boolean queries have a special format and there are no operators.
 
-For strings, a set operator allows the user to query for accepted (or not accepted) values:
+For strings, the set operator `IN`allows the user to query for accepted (or not accepted) values:
  - `KEY` IN `A,B`
    - The property `KEY` must contain value `A` or `B`
  - `KEY` NOT IN `A,B`
    - The complementary set
 
+For boolean queries, only `compound` is supported:
+ - `compound` or `not compound`
+
+All inputs (keys, operators, values) are lowercase regardless of the format of the underlying data.
+
+The `LIKE` operator can be used for wildcard searches if the operators `start`, `middle` and `end` do not suffice.
+This operator allows the querying of any string property using a wildcard syntax, where the wildcard is `%`.
+The use of this operator is generally not recommended as it is slower than the alternatives.
+
+Examples:
+ - `lemma like voi%`
+   - lemma starts with string `voi`
+ - `form like %ta%`
+   - form contains the substring `ta`
+   - note the difference to the operator `middle`: this search does not exclude strings that start (or end) with `ta`
+
 ### Query keys
+
+#### String properties
+
+The basic string properties that can be queried are:
+ - `lemma`
+ - `form` (surface form)
+ - `pos` (part-of-speech, i.e. word class)
+
+The wildcard queries that operate on surface form:
+ - `start`
+   - form begins with string
+ - `middle`
+   - form contains string, but does not start or end with it
+ - `end`
+   - form ends with string
+
+Noun morphological features:
+ - `nouncase` (short: `case`)
+ - `nnumber`
+   - noun number
+
+Verb morphological features:
+ - `number`
+ - `tense`
+ - `person`
+ - `verbform`
+
+Other morphological features
+ - `posspers`
+   - possessive suffix person
+ - `possnum`
+   - possessive suffix person number
+ - `derivation`
+   - derivational suffixes
+ - `clitic`
+   - clitics
+
+#### Numeric properties
+
+For lemmas:
+ - `lemmalen`
+   - lemma length
+ - `lemmafreq`
+   - lemma frequency (for the specific part-of-speech, i.e. word class)
+ - `amblemma`
+   - measure of lemma ambiguity
+
+For surface forms:
+ - `len`
+   - form length
+ - `frequency` (short: freq)
+   - form frequency
+ - `hood`
+   - orthographic neighbourhood
+ - `ambform` 
+   - measure of surface form ambiguity
+ - `initgramfreq`
+   - initial trigram frequency
+ - `fingramfreq`
+   - final trigram frequency
+ - `bigramfreq`
+   - bigram frequency
+
+For all frequency fields there is a corresponding relative frequency field (prepended with `rel`, e.g. `rellemmafreq`). The value of this field is frequency per one million tokens, except for `relbigramfreq`, which is frequency per one thousand tokens.
+
+#### Boolean properties:
+ - `compound`
+   - whether the word form is a compound
 
 ### Menu functions
 
@@ -145,7 +232,7 @@ The user interface consists of one or more windows. Shortcuts for window managem
 
 Input and output commands:
   - `Ctrl-I` - query from wordlist
-    - The input file may contain empty lines, comment lines (starting with `#`) and content lines
+    - The wordlist file may contain empty lines, comment lines (starting with `#`) and content lines
       - Before the first content line, there must be a type identified line
         - form: "# type=`querytype`"
         - `querytype` can be `lemma`, `form` or `nonword`
@@ -163,7 +250,7 @@ The data menu lists the various column hide/show options:
  - `Ctrl-4`: showing columns (morphological features) that can be hidden
  - `Ctrl-5` to `Ctrl-8`: showing categories
 
-### Init file
+### Init file configuration
 
 The most important configuration options:
  - general
@@ -183,126 +270,5 @@ The most important configuration options:
      - the maximum number of rows to show in the UI (integer, default 1000)
  - style
    - fontsize (integer, default 11)
-  
-### External links
-
-Not in this file:
- - Samples
- - Technical information
- - License
-
-### 
-
-# Old stuff
-
-### Queries
-
-#### String queries
-
-String properties include `lemma`, `form`, `pos`, `case`, `clitic` and `derivation`.
-
-For these supported operators 
-
-Examples:
- - `form = autossa`
- - `case != ine`
- - `lemma = voi and nouncase = ine`
- - `lemma in voi,voida`
- - `lemmafreq > 10000 and lemmalen < 5`
- - `clitic not in kin,kaan`
-
-The `start`, `middle` and `end` keys allow queries based on the properties of `form`:
- - `start = aut`
-   - word starts with `aut`
- - `end in ssa,ssä`
-   - word ends with `ssa` or `ssä`
- - `end not in ssa,ssä`
-   - the converse
- - `middle = ta`
-   - the word contains the substring `ta` but does not start or end with it
-
-## Advanced usage
-
-### List of query keys
-
-String properties:
- - basic features
-   - form
-   - lemma
-   - pos
-   - word class
- - wildcard queries for form
-   - start
-     - form begins with string
-   - middle
-     - form contains string, but does not start or end with it
-   - end
-     - form ends with string
- - noun features
-   - nouncase
-   - nnumber
- - verb features
-   - number
-   - tense
-   - person
-   - verbform
- - other morphological features
-   - posspers
-   - possnum
-   - derivation
-   - clitic
-
-Numeric properties:
- - len
-   - form length
- - lemmalen
-   - lemma length
- - freq
-   - form surface frequency
- - lemmafreq
-   - lemma frequency (for the specific part-of-speech, i.e. word class)
- - hood
-   - orthographic neighbourhood
- - ambform
-   - measure of surface form ambiguity
- - amblemma
-   - measure of lemma ambiguity
- - initgramfreq
- - fingramfreq
- - bigramfreq
-
-Boolean properties:
- - compound
-   - whether the word form is a compound
-
-### Advanced queries
-
-A query part may relate to a string, numeric or boolean value.
- - string: `KEY` `OPERATOR` `VALUE`
- - numeric: `KEY` `OPERATOR` `VALUE`
- - boolean: `KEY` OR `NOT KEY`
-
-Allowed keys:
- - string: `lemma`, `form`, `pos`, `start`, `middle`, `end`, `case`, `number`, `clitic`, `derivation`, ...
- - numeric: `len`, `lemmafreq`, `freq`, `initgramfreq`, `fingramfreq`, `bigramfreq`, ...
- - boolean: `compound`
-
-Allowed operators:
- - string: `=` `!=` `in` `like`
-   - word `NOT` can be prepended to `in` and `like`
-   - for IN, the `VALUE` may contain comma-separated strings
- - numeric: `=` `!=` `<` `>` `<=` `>=`
-
-The `LIKE` operator can be used if the above functions do not suffice. 
-This operators allows the querying of any string property using a wildcard syntax, where the wildcard is `%`.
-The operator is not generally recommended as it is slower than the alternatives.
-
-Examples:
- - `lemma like voi%`
-   - lemma starts with string `voi`
- - `form like %ta%`
-   - form contains the substring `ta`
-   - note the difference to the operator `middle`
-     - this search does not exclude strings that start with `ta`
 
 

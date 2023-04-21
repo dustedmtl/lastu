@@ -1,4 +1,4 @@
-## Samples
+## Samples for wordlist mode
 
 File type determination:
 - The file type is determined by the first line with the format `# type = <type>`
@@ -8,7 +8,7 @@ File type determination:
  - All other comment lines (that start with the character `#`) are ignored
 
 
-### Surface form input file:
+### Surface form wordlist file:
 ```
 # type=form
 # Only process surface forms
@@ -17,7 +17,7 @@ auto
 näätä
 ```
 
-### Lemma input file:
+### Lemma wordlist file:
 ```
 # type = lemma
 # Only process lemmas
@@ -27,7 +27,7 @@ voi
 autotalli
 ```
 
-### Non-word input file:
+### Non-word wordlist file:
 ```
 # type =nonword
 # Only process nonwords
