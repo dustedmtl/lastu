@@ -7,8 +7,8 @@ TBD.
 ## Download instructions
 
 There are two components necessary for the software:
- - the application itself (and the optional `wm2.ini` file
- - a database file, which is a file in the form of SQLite3 database
+ - the application itself (include the optional `wm2.ini` configuration file)
+ - a database, which is a file in the form of SQLite3 database
 
 You can download the application and database(s) here: TBD.
 
@@ -91,7 +91,7 @@ There are three ways to export/copy information:
  2. `Ctrl-E` copies the results to the clipboard.
  3. `Ctrl-C` allows the user to individually select rows, columns or cells and copy them to clipboard.
 
-TBD: For more information and more shortcuts, please see the info below (link?):
+For more information and more shortcuts, please see the chapter [menu functions](#menu-functions).
 
 ### Modes: database search versus input file mode
 
@@ -128,7 +128,7 @@ For string, a set operator allows the user to query for accepted (or not accepte
  - `KEY` NOT IN `A,B`
    - The complementary set
 
-### Query fields
+### Query keys
 
 ### Menu functions
 
