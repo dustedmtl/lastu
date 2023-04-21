@@ -105,6 +105,29 @@ TBD: Does this belong here or more below?
 
 ### Query formatting
 
+A query consists of one or more parts separated by the keyword `and`:
+ - `PART`
+ - `PART` and `PART`
+ - `PART` and `PART` and `PART` ...
+
+The query parts generally follow the form `KEY OPERATOR VALUE`.
+ - `KEY` is a string to query (`form`)
+ - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator (`IN`, `NOT IN`)
+ - `VALUE` is the value being searched
+
+Exceptions to these include negative (`NOT`) queries and boolean queries. All inputs are lowercase (although the underlying data might not be).
+
+The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
+ - String operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
+ - Numeric operators are equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater than or equal (`>=`) and smaller than or equal (`<=`).
+ - Boolean queries have a special format and there are no operators: either `compound` or `not compound`
+
+For string, a set operator allows the user to query for accepted (or not accepted) values:
+ - `KEY` IN `A,B`
+   - The property `KEY` must contain value `A` or `B`
+ - `KEY` NOT IN `A,B`
+   - The complementary set
+
 ### Query fields
 
 ### Menu functions
@@ -174,34 +197,11 @@ Not in this file:
 
 ### Queries
 
-A query consists of one or more parts separated by the keyword `and`:
- - `PART`
- - `PART` and `PART`
- - `PART` and `PART` and `PART` ...
-
-The query parts  generally follow the form `KEY OPERATOR VALUE`.
- - `KEY` is a string to query (`form`)
- - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator ('IN', 'NOT IN')
- - `VALUE` is the value being searched
-
-Exceptions to these include negative (`NOT`) queries and boolean queries.
-All inputs are lowercase (although the underlying data might not be, please see the section concerning [Universal Dependencies data](#ud-data).
-
-The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
-
-A set operator allows the user to query for accepted (or not accepted) values:
- - `KEY` IN `A,B`
-   - The property `KEY` must contain value `A` or `B`
- - `KEY` NOT IN `A,B`
-   - The complementary set
-
-For a full list of keys to query, please see [the full list](#list-of-query-keys).
-
 #### String queries
 
 String properties include `lemma`, `form`, `pos`, `case`, `clitic` and `derivation`.
 
-For these supported operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
+For these supported operators 
 
 Examples:
  - `form = autossa`
@@ -222,13 +222,6 @@ The `start`, `middle` and `end` keys allow queries based on the properties of `f
    - the word contains the substring `ta` but does not start or end with it
 
 For advanced queries, please see the [advanced usage](#advanced-queries).
-
-#### Numeric queries
-
-The numeric properties allow operators for equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater than or equal (`>=`) and smaller than or equal (`<=`).
-
-Examples:
- - `len > 10`
 
 ## Advanced usage
 
