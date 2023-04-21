@@ -37,7 +37,46 @@ TBD: show picture?
 
 TBD: only 1000 of 10000 top results (based on frequency) are shown.
 
+TBD: results are disambiguated based on lemma, form, pos and core features (which are...)
+
+### Fields / properties
+
+TBD. Explain
+
 ### Basic queries
+
+The queries consist of one or more parts separated by the keyword `and`. The format of the parts depend on the type of property being queried. The three types of properties are: string, numeric and boolean.
+
+Examples for string queries:
+ - `form = autossa`
+   - surface form
+ - `case != ine`
+   - (noun) case is not inessive
+ - `lemma = voi and pos = noun`
+   - surface forms of the noun `voi`
+ - `clitic not in kin,kaan`
+   - the form does not contain the clitics `kin` or `kaan`
+ - `start = aut`
+   - surface form starts with `aut`
+ - `end in ssa,ssä`
+   - surface form ends with `ssa` or `ssä`
+
+Examples of numeric queries:
+ - `len > 10`
+   - surface form is longer than 10 characters
+ - `freq > 100`
+   - the frequency of the item is higher than 100
+
+For boolean properties, the only choice is `compound`:
+ - `start = auto and compound`
+   - compounds that start with `auto`
+ - `start = auto and not compound`
+   - not compound
+
+Different types of properties can also be combined:
+ - `start = auto and compound and len > 10`
+
+For advanced queries, please see the [advanced usage](#advanced-queries).
 
 TBD. See full info below (link?).
 
