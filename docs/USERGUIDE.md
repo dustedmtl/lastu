@@ -118,9 +118,9 @@ Exceptions to these include boolean queries and negative (`NOT`) queries for cer
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
  - String operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
  - Numeric operators are equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater than or equal (`>=`) and smaller than or equal (`<=`).
- - Boolean queries have a special format and there are no operators: either `compound` or `not compound`
+ - Boolean queries have a special format and there are no operators: the format is either `compound` or `not compound`.
 
-For string, a set operator allows the user to query for accepted (or not accepted) values:
+For strings, a set operator allows the user to query for accepted (or not accepted) values:
  - `KEY` IN `A,B`
    - The property `KEY` must contain value `A` or `B`
  - `KEY` NOT IN `A,B`
