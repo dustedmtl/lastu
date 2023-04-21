@@ -127,6 +127,7 @@ The most important configuration options:
 Not in this file:
  - Samples
  - Technical information
+ - License
 
 ### 
 
