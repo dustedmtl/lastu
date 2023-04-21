@@ -82,7 +82,7 @@ For a full list of properties to query and the format of query parts, please see
 
 The functions below use the Windows platforms keys. For macos, substitute `Cmd` for `Ctrl`.
 
-A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an input file list can be done with `Ctrl-I`.
+A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an wordlist file can be done with `Ctrl-I`.
 
 There are three ways to export/copy information:
  1. `Ctrl-S` exports the result to file (csv/tsv/xlsx).
@@ -91,15 +91,17 @@ There are three ways to export/copy information:
 
 For more information and other shortcuts, please see the chapter [menu functions](#menu-functions).
 
-### Modes: database search versus input file mode
+### Modes: database versus wordlist
 
-TBD. Differences in database search vs input file mode. How it shows.
+The two modes of operation are database mode and wordlist mode. The free filtering mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed). In contrast, in the wordlist mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
+
+The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown.
 
 ## Limitations
 
 TBD: Does this belong here or more below?
 
-## Advanced stuff
+## Advanced information
 
 ### Query formatting
 
