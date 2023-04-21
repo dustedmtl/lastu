@@ -43,7 +43,7 @@ TBD. See full info below (link?).
 
 The functions below use the Windows platforms keys. For macos, substitute `Cmd` for `Ctrl`.
 
-A new window can be created with `Ctrl-N` (which copies the query and results from the currently active window) or `Shift-Ctrl-N`, which opens a new empty window. Queries from an input file list can be done with `Ctrl-I`.
+A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an input file list can be done with `Ctrl-I`.
 
 There are three ways to export/copy information: With `Ctrl-S` you can export to file (csv/tsv/xlsx) and `Ctrl-E` copies all of the results to the clipboard. You can also individually select rows, columns or cells and copy them to clipboard with the standard `Ctrl-C` shortcut.
 
