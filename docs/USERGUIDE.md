@@ -1,5 +1,33 @@
 # User Guide
 
+## Background
+
+TBD.
+
+## Download / usage instructions
+
+## Main functions
+
+## Basic queries
+
+## Limitations
+
+## Advanced data
+
+### Query string
+
+### Queried fields
+
+### Links
+
+Not in this file:
+ - Samples
+ - Technical information
+
+### 
+
+# Old stuff
+
 The application needs two files to with an optional init file:
  - The executable / application (`wm2.exe` / `wm2.app`)
  - The database (a file in the form of SQLite3)
