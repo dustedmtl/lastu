@@ -97,6 +97,25 @@ The data menu lists the various column hide/show options:
 
 ### Init file
 
+The most important configuration options:
+ - general
+   - autoresize
+     - set window width automatically to the width of the columns
+   - opendbwithnewwindow
+     - When opening new database, open new window
+- input
+   - datadir and database
+ - output
+   - outformat
+     - xlsx, csv, tsv
+ - query
+   - fetchrows
+     - the maximum number of rows to fetch from the database (10000)
+   - showrows
+     - the maximum number of rows to show in the UI (1000)
+ - style
+   - fontsize (11)
+  
 ### External links
 
 Not in this file:
@@ -190,25 +209,6 @@ Examples:
 
 ### Init file configuration
 
-The most important configuration options:
- - general
-   - autoresize
-     - set window width automatically to the width of the columns
-   - opendbwithnewwindow
-     - When opening new database, open new window
-- input
-   - datadir and database
- - output
-   - outformat
-     - xlsx, csv, tsv
- - query
-   - fetchrows
-     - the maximum number of rows to fetch from the database (10000)
-   - showrows
-     - the maximum number of rows to show in the UI (1000)
- - style
-   - fontsize (11)
-  
 ### List of query keys
 
 String properties:
