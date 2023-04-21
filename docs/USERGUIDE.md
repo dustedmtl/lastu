@@ -8,21 +8,47 @@ TBD.
 
 There are two components necessary for the software:
  - the application itself (and the optional `wm2.ini` file
- - a database, which is a file in the form of SQLite3
+ - a database file, which is a file in the form of SQLite3 database
 
 You can download the application and database(s) here: TBD.
 
-## Main functions
+## User interface
 
-## Basic queries
+The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which opening a different database, exporting and copying information to clipboard and another file and choosing which columns to show.
+
+The results table is sortable by all available fields.
+
+TBD: show picture?
+
+TBD: only 1000 of 10000 top results (based on frequency) are shown.
+
+### Basic queries
+
+TBD. See full info below (link?).
+
+### Basic menu functions
+
+The functions below use the Windows platforms keys. For macos, substitute `Cmd` for `Ctrl`.
+
+A new window can be created with `Ctrl-N` (which copies the query and results from the currently active window) or `Shift-Ctrl-N`, which opens a new empty window. Queries from an input file list can be done with `Ctrl-I`.
+
+There are three ways to export/copy information: With `Ctrl-S` you can export to file (csv/tsv/xlsx) and `Ctrl-E` copies all of the results to the clipboard. You can also individually select rows, columns or cells and copy them to clipboard with the standard `Ctrl-C` shortcut.
+
+TBD: For more information and more shortcuts, please see the info below (link?):
 
 ## Limitations
 
-## Advanced data
+TBD: Does this belong here or more below?
+
+## Advanced stuff
+
+### Menu functions
 
 ### Query string
 
 ### Queried fields
+
+### Init file
 
 ### Links
 
