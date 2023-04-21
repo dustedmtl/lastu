@@ -115,7 +115,7 @@ The query parts generally follow the form `KEY OPERATOR VALUE`.
  - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator (`IN`, `NOT IN`)
  - `VALUE` is the value being searched
 
-Exceptions to these include negative (`NOT`) queries and boolean queries. All inputs are lowercase (although the underlying data might not be).
+Exceptions to these include boolean queries and negative (`NOT`) queries for certain string operators. All inputs are lowercase (although the underlying data might not be).
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
  - String operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
