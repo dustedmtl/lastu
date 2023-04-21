@@ -51,7 +51,7 @@ jobs:
       - name: Upload to OSF
         env:
           OSF_TOKEN: ${{ secrets.OSF_TOKEN }}
-          OSF_PROJECT_ID: {{ env.OSF_PROJECT_ID }}
+          OSF_PROJECT_ID: ${{ env.OSF_PROJECT_ID }}
         run: |
           osf -p "${OSF_PROJECT_ID}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/userguide-${{ env.NEWVER }}.pdf"
           
