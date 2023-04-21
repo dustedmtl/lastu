@@ -25,6 +25,7 @@ jobs:
         run: |
           echo "Version number is ${{ env.VERSION }}"
           echo "New variable value is ${{ env.NEWVER }}"
+          echo "Project id is ${{ env.OSF_PROJECT_ID }}"
 
       - name: Install Pandoc
         run: sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra python3-pip
