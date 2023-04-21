@@ -54,7 +54,7 @@ jobs:
         env:
           OSF_TOKEN: ${{ secrets.OSF_TOKEN }}
         run: |
-          osf -p "${{ env.OSF_PROJECT_ID }}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/userguide-${{ env.NEWVER }}.pdf"
+          osf -p "${{ vars.OSF_PROJECT_ID }}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/userguide-${{ env.NEWVER }}.pdf"
           
 #      - name: Upload artifact to OSF
 #        uses: abmv/osf-upload@v1.2.1
