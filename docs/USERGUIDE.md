@@ -27,7 +27,7 @@ the application will try to locate it from the `data` subdirectory.
 
 ## User interface
 
-The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which opening a different database, exporting and copying information to clipboard and another file and choosing which columns to show.
+The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which include opening a different database, exporting and copying information to output file or clipboard and choosing which columns to show.
 
 The results table is sortable by all available fields.
 
