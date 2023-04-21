@@ -168,21 +168,21 @@ The data menu lists the various column hide/show options:
 The most important configuration options:
  - general
    - autoresize
-     - set window width automatically to the width of the columns
+     - set window width automatically to the width of the columns (True/False)
    - opendbwithnewwindow
-     - When opening new database, open new window
+     - When opening new database, open new window (True/False)
 - input
-   - datadir and database
+   - datadir and database (paths to files/directories)
  - output
    - outformat
      - xlsx, csv, tsv
  - query
    - fetchrows
-     - the maximum number of rows to fetch from the database (10000)
+     - the maximum number of rows to fetch from the database (integer, default 10000)
    - showrows
-     - the maximum number of rows to show in the UI (1000)
+     - the maximum number of rows to show in the UI (integer, default 1000)
  - style
-   - fontsize (11)
+   - fontsize (integer, default 11)
   
 ### External links
 
