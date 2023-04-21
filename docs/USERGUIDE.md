@@ -54,6 +54,10 @@ There are three ways to export/copy information:
 
 TBD: For more information and more shortcuts, please see the info below (link?):
 
+### Modes: database search versus input file mode
+
+TBD. Differences. How it shows.
+
 ## Limitations
 
 TBD: Does this belong here or more below?
