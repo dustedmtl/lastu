@@ -45,10 +45,10 @@ jobs:
           name: quickguide
           path: "/tmp/userguide-${{ env.NEWVER }}.pdf"
 
-      - name: Upload artifact to OSF
-        uses: abmv/osf-upload@v1.2.1
-        with:
-          osf-token: ${{ secrets.OSF_TOKEN }}
-          osf-target: "https://osf.io/${{ env.OSF_PROJECT_ID }}/"
-          osf-source: "/tmp/userguide-${{ env.NEWVER }}.pdf"
-          osf-target-component: "software/documentation"
+#      - name: Upload artifact to OSF
+#        uses: abmv/osf-upload@v1.2.1
+#        with:
+#          osf-token: ${{ secrets.OSF_TOKEN }}
+#          osf-target: "https://osf.io/${{ env.OSF_PROJECT_ID }}/"
+#          osf-source: "/tmp/userguide-${{ env.NEWVER }}.pdf"
+#          osf-target-component: "software/documentation"
