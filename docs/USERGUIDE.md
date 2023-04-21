@@ -62,9 +62,40 @@ TBD: Does this belong here or more below?
 
 ### Queried fields
 
-### Init file
-
 ### Menu functions
+
+#### Opening and closing windows
+
+The user interface consists of one or more windows. Shortcuts for window management:
+  - `Ctrl-N` - new window
+    - Copies the query and results from the currently active window
+  - `Shift-Ctrl-N` - new empty window
+  - `Ctrl-W` - close currently active window
+  - `Ctrl-Q` - quit application
+
+#### Input and output
+
+Input and output commands:
+  - `Ctrl-I` - query from wordlist
+    - The input file may contain empty lines, comment lines (starting with `#`) and content lines
+      - Before the first content line, there must be a type identified line
+        - form: "# type=`querytype`"
+        - `querytype` can be `lemma`, `form` or `nonword`
+        - The specific category is searched for the strings in the content lines
+      - The file may be encoded as UTF-8 or ISO-Latin-1
+  - `Ctrl-S` - export to file (csv/tsv/xlsx)
+  - `Ctrl-E` - copy to clipboard (all results)
+  - `Ctrl-C` - copy to clipboard (selected cells/rows/columns)
+  - `Ctrl-D` - open new database
+
+#### Hiding and showing columns
+
+The data menu lists the various column hide/show options:
+ - `Ctrl-1` to `Ctrl-3`: showing frequency columns
+ - `Ctrl-4`: showing columns (morphological features) that can be hidden
+ - `Ctrl-5` to `Ctrl-8`: showing categories
+
+### Init file
 
 ### External links
 
@@ -156,36 +187,6 @@ Examples:
 ## Advanced usage
 
 ###  UI functions
-
-#### Opening and closing windows
-
-The user interface consists of one or more windows. Shortcuts for window management:
-  - `Ctrl-N` - new window
-    - Copies the query and results from the currently active window
-  - `Shift-Ctrl-N` - new empty window
-  - `Ctrl-W` - close currently active window
-  - `Ctrl-Q` - quit application
-
-#### Input and output
-
-Input and output commands:
-  - `Ctrl-I` - query from wordlist
-    - The input file may contain empty lines, comment lines (starting with `#`) and content lines
-      - Before the first content line, there must be a type identified line
-        - form: "# type=`querytype`"
-        - `querytype` can be `lemma`, `form` or `nonword`
-        - The specific category is searched for the strings in the content lines
-      - The file may be encoded as UTF-8 or ISO-Latin-1
-  - `Ctrl-S` - export to file (csv/tsv/xlsx)
-  - `Ctrl-E` - copy to clipboard
-  - `Ctrl-D` - open new database
-
-#### Hiding and showing columns
-
-The data menu lists the various column hide/show options:
- - `Ctrl-1` to `Ctrl-3`: showing frequency columns
- - `Ctrl-4`: showing columns (morphological features) that can be hidden
- - `Ctrl-5` to `Ctrl-8`: showing categories
 
 ### Init file configuration
 
