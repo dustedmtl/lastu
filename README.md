@@ -41,14 +41,19 @@ Supported output formats are CSV, TSV and Excel (xlsx). The data can also be cop
 
 ## Documentation
 
- - Quick guide for using the application: [USAGE](USAGE.md)
- - Building databases for the application: [BUILDING](BUILDING.md)
- - Packaging the application into an executable: [PACKAGING](PACKAGING.md)
- - Technical information: [TECHINFO](TECHINFO.md)
+ - Quick guide for using the application: [USERGUIDE](docs/USERGUIDE.md)
+ - Building databases for the application: [BUILDING](docs/BUILDING.md)
+ - Packaging the application into an executable: [PACKAGING](docs/PACKAGING.md)
+ - Technical information: [TECHINFO](docs/TECHINFO.md)
 
 ## Limitations
 
 TBD. Highly tuned for Finnish.
+
+## Citing
+
+Article in progress. TBD
+
 
 # License
 
