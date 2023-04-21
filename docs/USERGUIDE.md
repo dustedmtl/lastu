@@ -41,7 +41,7 @@ TBD: results are disambiguated based on lemma, form, pos and core features (whic
 
 ### Fields / properties
 
-TBD. Explain fields are properties in the UI (?)
+TBD. Explain fields and properties in the UI (?)
 
 ### Basic queries
 
