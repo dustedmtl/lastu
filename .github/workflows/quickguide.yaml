@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       VERSION: ${{ github.ref_name }}
-      PID: ${{ secrets.OSF_PROJECT_ID }}
+      PID: ${{ vars.OSF_PROJECT_ID }}
 
     steps:
       - name: Checkout code
