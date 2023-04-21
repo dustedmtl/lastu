@@ -203,10 +203,6 @@ Examples:
 
 ## Advanced usage
 
-###  UI functions
-
-### Init file configuration
-
 ### List of query keys
 
 String properties:
