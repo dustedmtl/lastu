@@ -1,5 +1,7 @@
 # License
 
+TBD: different license for documentation vs software?
+
 Copyright &copy; 2022-2023 University of Turku.
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
