@@ -70,8 +70,8 @@ Examples of numeric queries:
 For boolean properties, the only choice is `compound`:
  - `start = auto and compound`
    - compounds that start with `auto`
- - `start = auto and not compound`
-   - not compound
+ - `pos = adj and not compound`
+   - non-compound adjective
 
 Different types of properties can also be combined:
  - `start = auto and compound and len > 10`
