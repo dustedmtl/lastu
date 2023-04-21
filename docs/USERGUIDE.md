@@ -230,16 +230,6 @@ The numeric properties allow operators for equality (`=`), inequality (`!=`), gr
 Examples:
  - `len > 10`
 
-#### Boolean queries
-
-The only supported boolean query is `compound`.
-
-Examples:
- - `pos = noun and compound`
-   - compound noun
- - `pos = adj and not compound`
-   - non-compound adjective
-
 ## Advanced usage
 
 ### List of query keys
