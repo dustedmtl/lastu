@@ -42,15 +42,15 @@ TBD: Does this belong here or more below?
 
 ## Advanced stuff
 
-### Menu functions
-
 ### Query string
 
 ### Queried fields
 
 ### Init file
 
-### Links
+### Menu functions
+
+### External links
 
 Not in this file:
  - Samples
