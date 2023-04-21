@@ -30,7 +30,7 @@ jobs:
         run: sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 
       - name: Build PDF documentation
-        run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o "/tmp/quickguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
+        run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o "/tmp/userguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
         continue-on-error: true
   
 #      - name: List directory
@@ -43,4 +43,12 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: quickguide
-          path: "/tmp/quickguide-${{ env.NEWVER }}.pdf"
+          path: "/tmp/userguide-${{ env.NEWVER }}.pdf"
+
+      - name: Upload artifact to OSF
+        uses: abmv/osf-upload@v1.2.1
+        with:
+          osf-token: ${{ secrets.OSF_TOKEN }}
+          osf-target: "https://osf.io/${{ env.OSF_PROJECT_ID }}/"
+          osf-source: "/tmp/userguide-${{ env.NEWVER }}.pdf"
+          osf-target-component: "software/documentation"
