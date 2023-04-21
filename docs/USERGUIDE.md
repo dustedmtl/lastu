@@ -89,7 +89,7 @@ There are three ways to export/copy information:
  2. `Ctrl-E` copies the results to the clipboard.
  3. `Ctrl-C` allows the user to individually select rows, columns or cells and copy them to clipboard.
 
-For more information and more shortcuts, please see the chapter [menu functions](#menu-functions).
+For more information and other shortcuts, please see the chapter [menu functions](#menu-functions).
 
 ### Modes: database search versus input file mode
 
