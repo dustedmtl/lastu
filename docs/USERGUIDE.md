@@ -221,8 +221,6 @@ The `start`, `middle` and `end` keys allow queries based on the properties of `f
  - `middle = ta`
    - the word contains the substring `ta` but does not start or end with it
 
-For advanced queries, please see the [advanced usage](#advanced-queries).
-
 ## Advanced usage
 
 ### List of query keys
