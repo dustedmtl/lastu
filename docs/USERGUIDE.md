@@ -93,7 +93,7 @@ For more information and more shortcuts, please see the chapter [menu functions]
 
 ### Modes: database search versus input file mode
 
-TBD. Differences. How it shows.
+TBD. Differences in database search vs input file mode. How it shows.
 
 ## Limitations
 
