@@ -45,6 +45,7 @@ Supported output formats are CSV, TSV and Excel (xlsx). The data can also be cop
  - Building databases for the application: [BUILDING](docs/BUILDING.md)
  - Packaging the application into an executable: [PACKAGING](docs/PACKAGING.md)
  - Technical information: [TECHINFO](docs/TECHINFO.md)
+ - Input file samples: [SAMPLES](docs/SAMPLES.md)
 
 ## Limitations
 
