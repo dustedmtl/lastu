@@ -55,7 +55,7 @@ Examples for string queries:
  - `lemma = voi and pos = noun`
    - surface forms of the noun `voi`
  - `clitic not in kin,kaan`
-   - the form does not contain the clitics `kin` or `kaan`
+   - the surface form does not contain the clitics `kin` or `kaan`
  - `start = aut`
    - surface form starts with `aut`
  - `end in ssa,ssä`
