@@ -4,7 +4,13 @@
 
 TBD.
 
-## Download / usage instructions
+## Download instructions
+
+There are two components necessary for the software:
+ - the application itself (and the optional `wm2.ini` file
+ - a database, which is a file in the form of SQLite3
+
+You can download the application and database(s) here: TBD.
 
 ## Main functions
 
@@ -27,11 +33,6 @@ Not in this file:
 ### 
 
 # Old stuff
-
-The application needs two files to with an optional init file:
- - The executable / application (`wm2.exe` / `wm2.app`)
- - The database (a file in the form of SQLite3)
- - The init file `wm2.ini` (optional)
 
 ## Init file and database file
 
