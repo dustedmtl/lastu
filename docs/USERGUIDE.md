@@ -31,6 +31,8 @@ The UI consists of one or more windows, with a query field, results table and va
 
 The results table is sortable by all available fields.
 
+The application generates debug logs to the file `wm2log.txt` and logs executed searches to the file `wm2history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
+
 TBD: show picture?
 
 TBD: only 1000 of 10000 top results (based on frequency) are shown.
@@ -125,10 +127,6 @@ Not in this file:
 ### 
 
 # Old stuff
-
-## Logging
-
-The application generates debug logs to the file `wm2log.txt` and logs executed searches to the file `wm2history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
 
 ## User interface
 
