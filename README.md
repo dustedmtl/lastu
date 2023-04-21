@@ -35,7 +35,7 @@ The morphological feature set is tailored for the most important features for Fi
 
 ## Input and output
 
-Properties can be queried for lemmas, form or 'unwords' (i.e. words that are not proper Finnish).
+Properties can be queried for lemmas, form or 'non-words' (i.e. words that are not proper Finnish).
 
 Supported output formats are CSV, TSV and Excel (xlsx). The data can also be copied to clipboard.
 
