@@ -261,21 +261,6 @@ Boolean properties:
  - compound
    - whether the word form is a compound
 
-### UD data
-
-The underlying data comes from [universal dependencies](https://universaldependencies.org/fi/) tagged data.
-
-Note about the specific properties:
- - all word classes are uppercase
-   - NOUN, VERB, ADJ, ADV, PRON, PROPN, ...
- - morphological features are in Titlecase (Ine)
-   - noun cases: Abe, Abl, Acc, Ade, All, Com, Ela, Ess, Gen, Ill, Ine, Ins, Nom, Par, Tra
-   - clitics: Han, Ka, Kaan, Kin, Ko, Pa, S
-   - derivations: Inen, Ja, Lainen, Llinen, Minen, Sti, Tar, Ton, Ttain, U, Vs
- - word forms and lemmas are lowercase
-
-Note that the list of derivations and clitics may be incomplete.
-
 ### Advanced queries
 
 A query part may relate to a string, numeric or boolean value.
