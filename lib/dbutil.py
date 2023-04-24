@@ -318,6 +318,7 @@ class DatabaseConnection:
         """Initialize database connection class."""
         # super().__init__(args)
         self.limit = 10000
+        filename = filename.replace("\\", "/")
         self.dbfile = filename
         self.connection = get_connection(filename)
         # self.tables = ['wordfreqs', 'features', 'forms', 'lemmaforms', 'lemmas']
