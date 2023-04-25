@@ -21,9 +21,12 @@
     - `pyinstaller --windowed ui-qt6.py`
     - OR `pyinstaller ui-qt6.spec`
   - Windows:
-    - Update version file 
-      - edit file `win-version.yaml`
+    - Update version number and version file 
+      - `set VER=0.0.X.0`
+      - `python win-version.py`
+        - generates file `win-version.yaml` based on `win-version-tpl.yaml`
       - `create-version-file win-version.yaml --outfile win-version.txt`
+        - generates version file that is usable in Windows
     - Preferred: `pyinstaller ui-qt6-win.spec`
       - OR `pyinstaller --onefile ui-qt6.py`
   - See also : https://pyinstaller.org/en/stable/usage.html
