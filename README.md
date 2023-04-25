@@ -8,7 +8,7 @@ The database for the program is generated from one data files containing [Univer
 
 A wordmill2 database contains various properties for lemmas and forms:
  - surface frequencies (absolute and relative)
- - initial trigram, final trigram and average bigram frequencies (absolute relative)
+ - initial trigram, final trigram and average bigram frequencies (absolute and relative)
  - length
  - part of speech
  - orthographic neighbourhood (with [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance) 1)
