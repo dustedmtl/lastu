@@ -1,6 +1,7 @@
 """Write Windows version number to file."""
 
 import os
+import sys
 import re
 
 # Get the value of the VER environment variable
@@ -8,7 +9,7 @@ ver = os.environ.get('VER')
 
 if ver is None:
     print("No version number recorded to environment variable VER; exiting")
-    exit()
+    sys.exit()
 
 # Read the contents of the file
 with open('win-version-tpl.yaml', 'r') as file:
