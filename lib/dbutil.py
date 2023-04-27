@@ -1168,6 +1168,16 @@ def filter_dataframe(dbc: DatabaseConnection,
 
     top = -1
 
+    # Reverse shortcuts
+    shortcuts = {
+        # 'freq': 'frequency',
+        # 'relfreq': 'relfrequency',
+        'case': 'nouncase',
+        'number': 'nnumber',
+        # 'lemma': 'lemmac',
+    }
+    revs = dict((v, k) for k, v in shortcuts.items())
+
     try:
         logger.debug('Querying dataframe for: %s', querystring)
         _wherestr, _args, errors, _indexers, _notlikeindexers, _useposx = parse_querystring(querystring, relfieldmap)
@@ -1176,14 +1186,14 @@ def filter_dataframe(dbc: DatabaseConnection,
             raise ValueError(errstr)
         # This produces an error if the query string is invalid
         qlist2, _errors = parse_query(querystring, relfieldmap)
+        resdf['lemmac'] = resdf.lemma.str.replace('#', '')
         for feat in qlist2:
             key, op, value = feat
+            key = revs.get(key, key)
             if key == 'top':
                 top = int(value)
                 continue
             keyadd = ""
-            if key == 'lemmac':
-                key = 'lemma'
             if op == 'notin':
                 op = 'not in'
             if op in ['not in', 'in']:
@@ -1212,6 +1222,7 @@ def filter_dataframe(dbc: DatabaseConnection,
 
     except Exception as e:
         raise e
+    resdf = resdf.drop('lemmac', axis=1)
     if top > 0:
         forms = resdf.groupby(['form']).aggregate({'form': 'count'})
         for form, row in forms.iterrows():
