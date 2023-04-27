@@ -8,7 +8,7 @@ The database for the program is generated from one data files containing [Univer
 
 A wordmill2 database contains various properties for lemmas and forms:
  - surface frequencies (absolute and relative)
- - initial trigram, final trigram and average bigram frequencies (absolute relative)
+ - initial trigram, final trigram and average bigram frequencies (absolute and relative)
  - length
  - part of speech
  - orthographic neighbourhood (with [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance) 1)
@@ -41,7 +41,7 @@ Supported output formats are CSV, TSV and Excel (xlsx). The data can also be cop
 
 ## Documentation
 
- - Quick guide for using the application: [USERGUIDE](docs/USERGUIDE.md)
+ - User guide for using the application: [USERGUIDE](docs/USERGUIDE.md)
  - Building databases for the application: [BUILDING](docs/BUILDING.md)
  - Packaging the application into an executable: [PACKAGING](docs/PACKAGING.md)
  - Technical information: [TECHINFO](docs/TECHINFO.md)
@@ -49,7 +49,9 @@ Supported output formats are CSV, TSV and Excel (xlsx). The data can also be cop
 
 ## Limitations
 
-Highly tuned for Finnish. TBD.
+The database and software are tuned for Finnish.
+ - The data in the database is disambiguated based on the so-called "core" morphological features for Finnish.
+ - The software also currently only supports those features that are relevant for Finnish.
 
 ## Citing
 
