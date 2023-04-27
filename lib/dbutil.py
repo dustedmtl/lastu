@@ -1188,6 +1188,7 @@ def filter_dataframe(dbc: DatabaseConnection,
         qlist2, _errors = parse_query(querystring, relfieldmap)
         resdf['lemmac'] = resdf.lemma.str.replace('#', '')
         for feat in qlist2:
+            format_string = None
             key, op, value = feat
             key = revs.get(key, key)
             if key == 'top':
@@ -1200,18 +1201,43 @@ def filter_dataframe(dbc: DatabaseConnection,
                 useval = value.split(',')
             elif key in numkeys:
                 useval = value
+            elif key in formkeys:
+                useval = [value]
             else:
                 useval = f"'{value.lower()}'"
                 keyadd = ".str.lower()"
-            format_string = f"{key}{keyadd} {op} {useval}"
-            if op == '=':
-                format_string = f"{key}{keyadd} == {useval}"
-            elif op == 'like':
-                useval = useval.replace('%', '')
-                format_string = f"{key}.str.contains({useval}, case=False)"
-            elif op == 'not like':
-                useval = useval.replace('%', '')
-                format_string = f"~{key}.str.contains({useval}, case=False)"
+            if key in formkeys:
+                if op in ('=', 'in'):
+                    if key == 'start':
+                        format_string = " | ".join([f"form.str.startswith('{c}')" for c in useval])
+                    elif key == 'end':
+                        format_string = " | ".join([f"form.str.endswith('{c}')" for c in useval])
+                    else:
+                        strings = []
+                        for c in useval:
+                            str1 = f"form.str.contains('{c}')"
+                            str2 = f"~form.str.startswith('{c}')"
+                            str3 = f"~form.str.endswith('{c}')"
+                            str_comb = f"({str1} & {str2} & {str3})"
+                            strings.append(str_comb)
+                        format_string = '|'.join(strings)
+                else:
+                    if key == 'start':
+                        format_string = " & ".join([f"~form.str.startswith('{c}')" for c in useval])
+                    elif key == 'end':
+                        format_string = " & ".join([f"~form.str.endswith('{c}')" for c in useval])
+                    else:
+                        format_string = " & ".join([f"~form.str.contains('{c}')" for c in useval])
+            else:
+                format_string = f"{key}{keyadd} {op} {useval}"
+                if op == '=':
+                    format_string = f"{key}{keyadd} == {useval}"
+                elif op == 'like':
+                    useval = useval.replace('%', '')
+                    format_string = f"{key}.str.contains({useval}, case=False)"
+                elif op == 'not like':
+                    useval = useval.replace('%', '')
+                    format_string = f"~{key}.str.contains({useval}, case=False)"
 
             logger.debug("Using format_string: %s", format_string)
             len1 = len(resdf)
