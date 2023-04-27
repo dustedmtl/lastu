@@ -58,7 +58,7 @@ In practice, you should first run the script with the argument `-a` and then wit
 
 ## Managing a database
 
-Note that when using the `manage_database.py` script, aggregate information must be regenerated with the `generate_freqs.py`and `generate_helper_tables` scripts.
+Note that when using the `manage_database.py` script, aggregate information must be regenerated afterwards with the `generate_freqs.py`and `generate_helper_tables` scripts.
 
  - General options
    - `-c <cmd>`
