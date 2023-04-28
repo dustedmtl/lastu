@@ -35,7 +35,7 @@ jobs:
         run: pip install osfclient
 
       - name: Build PDF documentation
-        run: pandoc --from gfm --verbose --standalone --variable=colorlinks --variable=urlcolor=blue -o "/tmp/userguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
+        run: pandoc --from gfm --verbose --standalone --number-sections -H numbering.tex --variable=colorlinks --variable=urlcolor=blue -o "/tmp/userguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
         continue-on-error: true
   
 #      - name: List directory
