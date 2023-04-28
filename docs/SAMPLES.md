@@ -19,7 +19,7 @@ näätä
 
 ### Lemma wordlist file:
 ```
-# type = lemma
+# type=lemma
 # Only process lemmas
 kuusi
 voida
@@ -29,7 +29,7 @@ autotalli
 
 ### Non-word wordlist file:
 ```
-# type =nonword
+# type=nonword
 # Only process nonwords
 babalapa
 auti
