@@ -1,34 +1,6 @@
-\documentclass{article}
-\usepackage{fontspec}
 \usepackage{titlesec}
-\usepackage{xcolor}
-\usepackage{hyperref}
-
-\definecolor{linkblue}{HTML}{0000ff}
-
 \titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{1em}{}
 \titleformat{\subsection}{\normalfont\large\bfseries}{\thesection.\arabic{subsection}.}{1em}{}
 \titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesection.\arabic{subsection}.\arabic{subsubsection}.}{1em}{}
 
 \setcounter{secnumdepth}{3}
-\setcounter{tocdepth}{3}
-
-% Set hyperlink colors
-\hypersetup{
-  colorlinks=true,
-  linkcolor=blue,
-  filecolor=magenta,
-  urlcolor=blue,
-}
-
-% Set document margins
-\usepackage[margin=1in]{geometry}
-
-% Set document language
-\usepackage[english]{babel}
-
-\begin{document}
-
-$body$
-
-\end{document}
