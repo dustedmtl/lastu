@@ -1,16 +1,12 @@
 \usepackage{titlesec}
-\makeatletter
-\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}
-    {1.25ex \@plus1ex \@minus.2ex}
-    {-1em}
-    {\normalfont\normalsize\bfseries}}
-\makeatother
+
+\renewcommand{\theparagraph}{\arabic{subsection}.\arabic{subsubsection}.\arabic{paragraph}}
+\titleformat{\paragraph}{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}{0pt}{*3.25}{*1.5}
 
 \setcounter{secnumdepth}{5}
-\let\oldparagraph\paragraph
-\renewcommand\paragraph{\oldparagraph{}~\arabic{paragraph}.}
 
 \titleformat{\section}{\normalfont\Large\bfseries}{}{0em}{}
-\titleformat{\subsection}{\normalfont\large\bfseries}{\arabic{subsection}:}{1em}{}
-\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\arabic{subsection}.\arabic{subsubsection}:}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\arabic{subsection}}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\arabic{subsection}.\arabic{subsubsection}}{1em}{}
 
