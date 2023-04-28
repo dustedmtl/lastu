@@ -1,5 +1,3 @@
-<style>
-
 body {
   counter-reset: section;
 }
@@ -26,5 +24,3 @@ h4::before {
   counter-increment: subsubsection;
   content: counter(section) "." counter(subsection) "." counter(subsubsection) ". ";
 }
-
-</style>
