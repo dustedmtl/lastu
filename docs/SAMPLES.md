@@ -8,7 +8,7 @@ File type determination:
  - All other comment lines (that start with the character `#`) are ignored
 
 
-### Surface form wordlist file:
+### Surface form wordlist file
 ```
 # type=form
 # Only process surface forms
@@ -17,7 +17,7 @@ auto
 näätä
 ```
 
-### Lemma wordlist file:
+### Lemma wordlist file
 ```
 # type=lemma
 # Only process lemmas
@@ -27,7 +27,7 @@ voi
 autotalli
 ```
 
-### Non-word wordlist file:
+### Non-word wordlist file
 ```
 # type=nonword
 # Only process nonwords
