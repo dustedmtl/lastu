@@ -1,5 +1,15 @@
 # Building a database
 
+The database building involves four phases
+ - Adding the initial schema (_wordfreqs_ and _features_ tables)
+ - Importing the data
+ - Generating aggregate information (gram frequencies, ambiguity information, orthographic neighbourhood)
+ - Adding indexes to the schema
+
+The indexes complicate the building process. On one hand, they are necessary for generating aggregate information.
+On the other hand, having an index on a table may reduce performance when adding rows to the table or deleting rows from it.
+During the building process, indexes are therefore automatically added or deleted as necesssary.
+
 ## Setup
 - Clone the repository
   - `git clone <giturl>`
@@ -15,6 +25,7 @@
    - `pip3 install -r requirements.txt`
 
 ## Building a database
+
 - Activate virtual environment (see above)
 - `python3 build_database.py -n -i <input> -d data/<dbfile>`
   - builds a new database file `<dbfile>`
@@ -92,4 +103,5 @@ Prune the database by mandating a minimum frequency `<freq>`.
    - `-f <freq>`
      - minium frequency
 
-  
+TBD: what is actually done when combining a database and pruning it.
+
