@@ -1153,18 +1153,7 @@ def filter_dataframe(dbc: DatabaseConnection,
                'lemmafreq', 'lemmalen', 'amblemma',
                'hood', 'ambform',
                'initrigramfreq', 'fintrigramfreq', 'bigramfreq']
-    strkeys = ['lemma', 'form', 'pos',
-               'nouncase', 'nnumber',
-               'tense', 'person', 'verbform',
-               'posspers', 'possnum',
-               'start', 'middle', 'end',
-               'derivation', 'clitic'  # these my be complex
-               ]
     formkeys = ['start', 'middle', 'end']
-    boolkeys = ['compound']
-    stroperators = ['=', '!=', 'like', 'in', 'notin']
-    formoperators = ['=', '!=', 'in', 'notin']
-    numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
     top = -1
 
