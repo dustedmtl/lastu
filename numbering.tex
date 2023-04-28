@@ -1,6 +1,16 @@
 \usepackage{titlesec}
-\titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{1em}{}
-\titleformat{\subsection}{\normalfont\large\bfseries}{\thesection.\arabic{subsection}.}{1em}{}
-\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesection.\arabic{subsection}.\arabic{subsubsection}.}{1em}{}
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}
+    {1.25ex \@plus1ex \@minus.2ex}
+    {-1em}
+    {\normalfont\normalsize\bfseries}}
+\makeatother
 
-\setcounter{secnumdepth}{3}
+\setcounter{secnumdepth}{5}
+\let\oldparagraph\paragraph
+\renewcommand\paragraph{\oldparagraph{}~\arabic{paragraph}.}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\arabic{subsection}:}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\arabic{subsection}.\arabic{subsubsection}:}{1em}{}
+
