@@ -51,7 +51,7 @@ Examples for string queries:
  - `case != ine`
    - (noun) case is not inessive
  - `lemma = voi and pos = noun`
-   - surface forms of the noun `voi`
+   - results for the noun `voi`
  - `clitic not in kin,kaan`
    - the surface form does not contain the clitics `kin` or `kaan`
  - `start = aut`
@@ -78,7 +78,7 @@ For a full list of properties to query and the format of query parts, please see
 
 ### Basic menu functions
 
-The functions below use the Windows platforms keys. For macos, substitute `Cmd` for `Ctrl`.
+The functions below use the Windows platforms keys. For macOS, substitute `Cmd` for `Ctrl`.
 
 A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an wordlist file can be done with `Ctrl-I`. A different database can be opened with `Ctrl-D`.
 
@@ -91,11 +91,11 @@ For more information and other shortcuts, please see the [menu functions](#menu-
 
 ### Modes: database versus wordlist
 
-The two modes of operation are database mode and wordlist mode. The free filtering mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed). In contrast, in the wordlist mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
+The two modes of operation are free search mode and wordlist mode. The free search mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed). In contrast, in the wordlist mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
 
 The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown.
 
-The get back to database mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
+The get back to free search mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
 
 ## Limitations
 
