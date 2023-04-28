@@ -35,7 +35,7 @@ TBD: show picture of results. Effect of disambiguation?
 
 The table shows information in four difference categories: lemma information, surface form information, gram frequencies and features. The lemma and surface form fields include both string and numeric fields.
 
-For performance reasons, the application fetches 10000 top results from the database (based on frequency) and shows top 1000 results (based on whatever sorting criteria the user has). These values can be changed in the configuration file, if necessary.
+For performance reasons, the application fetches 10000 top results from the database (based on frequency) and shows top 1000 results (based on whatever sorting criteria the user has). These values can be changed in the [configuration file](#init-file-configuration), if necessary. The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
 
 The results table is sortable by all available fields.
 
