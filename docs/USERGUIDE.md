@@ -87,6 +87,8 @@ There are three ways to export/copy information:
  2. `Ctrl-E` copies the results to the clipboard.
  3. `Ctrl-C` allows the user to individually select rows, columns or cells and copy them to clipboard.
 
+With `Ctrl-C`, only cells that have been selected will be copied (i.e. hidden cells are excluded). With `Ctrl-E`, all results are copied, including rows and columns that are hidden from the result window.
+
 For more information and other shortcuts, please see the [menu functions](#menu-functions).
 
 ### Modes: database versus wordlist
@@ -95,7 +97,7 @@ The two modes of operation are free search mode and wordlist mode. The free sear
 
 The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown.
 
-The get back to free search mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
+To get back to the free search mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
 
 ## Limitations
 
@@ -131,8 +133,11 @@ For strings, the set operator `IN`allows the user to query for accepted (or not 
  - `KEY` NOT IN `A,B`
    - The complementary set
 
-For boolean queries, only `compound` is supported:
- - `compound` or `not compound`
+The only supported boolean property is `compound`:
+ - `compound`
+   - search for compound lemmas
+ - `not compound`
+   - searching for lemmas that are not compounds
 
 All inputs (keys, operators, values) are lowercase regardless of the format of the underlying data.
 
