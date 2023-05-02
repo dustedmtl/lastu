@@ -525,6 +525,7 @@ class MainWindow(QMainWindow):
             self.table.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.DescendingOrder)
             if (fontsize := self.config.getConfigValue('style.fontsize')) is not None:
                 self.setFonts(fontsize)
+            self.table.horizontalHeader().sectionClicked.connect(self.sortData)
         # print(widget.font().pointSize(), self.table.verticalHeader().font().pointSize())
         # self.setFonts()
         # self.setCopyleftFont()
@@ -572,7 +573,7 @@ class MainWindow(QMainWindow):
         sortorder = self.table.horizontalHeader().sortIndicatorOrder()
         w2.table.horizontalHeader().setSortIndicator(sortcol, sortorder)
         # w2.table.horizontalHeader().sortIndicatorChanged.connect(w2.sortData)
-        w2.table.horizontalHeader().sectionClicked.connect(self.sortData)
+        w2.table.horizontalHeader().sectionClicked.connect(w2.sortData)
 
         w2.mode = self.mode
         w2.inputfilename = self.inputfilename
@@ -845,7 +846,7 @@ class MainWindow(QMainWindow):
             df = dbutil.add_relative_frequencies(self.dbconnection, querydf)
             self.statusfield.setText(f'Executing query: {self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.setData(df)
-            self.table.horizontalHeader().sectionClicked.connect(self.sortData)
+            # self.table.horizontalHeader().sectionClicked.connect(self.sortData)
             if self.mode == "inputfileprocess":
                 self.mode = "inputfile"
                 self.inputfilename = self.inputprocessfilename
@@ -1001,6 +1002,8 @@ class MainWindow(QMainWindow):
                 rowheader.hideSection(rowidx)
 
     def setSortedData(self):
+        # for f in inspect.stack():
+        #     logger.debug(inspect.getframeinfo(f[0]))
         if self.data is not None:
             col = None
             colidx = self.table.horizontalHeader().sortIndicatorSection()
