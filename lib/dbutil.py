@@ -822,7 +822,14 @@ def get_querystring(query: Union[str, Dict] = None,
 
     if useposx:
         orderby = orderby.replace('w.frequency', 'w.frequencyx')
-    logger.info('Wherestring, arguments: %s, %s', wherestr, args)
+    argshow = args
+    whereshow = wherestr
+    if len(args) > 20:
+        argshow = argshow[:20]
+        argshow.append('...')
+    if len(whereshow) > 300:
+        whereshow = whereshow[:300] + ' ...'
+    logger.info('Wherestring, arguments: %s, %s', whereshow, argshow)
     # print(wherestr, args)
     windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers, orderby, useposx)
     return wherestr, args, errors, windexedby, useposx
@@ -953,8 +960,16 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
 
     userowlimit = int(dbconnection.rowlimit() * 1.5) if useposx else dbconnection.rowlimit()
     sqlstr = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {userowlimit}'
-    logger.debug('SQL: %s', sqlstr)
-    logger.debug('Arguments: %s', args)
+    whereshow = wherestr
+    if len(wherestr) > 300:
+        whereshow = wherestr[:300] + ' ... [WHERE string arguments cut]'
+    sqlshow = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {whereshow} {groupby} ORDER BY {orderstring} LIMIT {userowlimit}'
+    logger.debug('SQL: %s', sqlshow)
+    argshow = args
+    if len(args) > 20:
+        argshow = args[:20]
+        argshow.append('...')
+    logger.debug('Arguments: %s', argshow)
     # print(sqlstr)
     # print(args)
 
@@ -965,7 +980,12 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         explainer = pd.read_sql_query('explain query plan ' + sqlstr,
                                       connection,
                                       params=args)
-        logger.debug('Query plan:\n%s', tabulate(explainer, headers=explainer.columns))
+        if len(explainer) > 20:
+            showex = explainer[:20].copy()
+            showex.loc[len(showex)] = [len(explainer), '-1', 0, '[Rest of output cut]']
+            logger.debug('Query plan:\n%s', tabulate(showex, headers=explainer.columns))
+        else:
+            logger.debug('Query plan:\n%s', tabulate(explainer, headers=explainer.columns))
 
         starttime = time.perf_counter()
         sql_query = pd.read_sql_query(sqlstr,
