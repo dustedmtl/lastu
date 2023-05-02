@@ -766,13 +766,19 @@ def parse_querydict(querydict: Dict) -> Tuple[str, List, List, List, List]:
 
     # FIXME: validate: can only have lemma/form (?)
     for querypart in querydict.keys():
+        indexers.add(querypart)
+        qs = []
         for queryval in querydict[querypart]:
-            indexers.add(querypart)
-            if querypart == 'lemma':
-                whereparts.append('l.lemmac = ?')
-            else:
-                whereparts.append(f'w.{querypart} = ?')
+            # if querypart == 'lemma':
+            #    whereparts.append('l.lemmac = ?')
+            # else:
+            #     whereparts.append(f'w.{querypart} = ?')
             args.append(queryval)
+            qs.append('?')
+        if querypart == 'lemma':
+            whereparts.append(f"l.lemmac IN ({ ','.join(qs) })")
+        else:
+            whereparts.append(f"w.{querypart} IN ({ ','.join(qs) })")
     wherestr = "WHERE (" + " OR ".join(whereparts) + ") "
     return wherestr, args, errors, list(indexers), []
 
@@ -961,8 +967,8 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     userowlimit = int(dbconnection.rowlimit() * 1.5) if useposx else dbconnection.rowlimit()
     sqlstr = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {wherestr} {groupby} ORDER BY {orderstring} LIMIT {userowlimit}'
     whereshow = wherestr
-    if len(wherestr) > 300:
-        whereshow = wherestr[:300] + ' ... [WHERE string arguments cut]'
+    if len(wherestr) > 200:
+        whereshow = wherestr[:200] + ' ... [WHERE string arguments cut]'
     sqlshow = f'SELECT {", ".join(selects)} FROM {fromtable} {addfrom} {addjoins} {whereshow} {groupby} ORDER BY {orderstring} LIMIT {userowlimit}'
     logger.debug('SQL: %s', sqlshow)
     argshow = args
