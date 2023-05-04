@@ -20,6 +20,7 @@ import numpy as np
 from tqdm.autonotebook import tqdm
 from tabulate import tabulate
 from .mytypes import Freqs
+from .features import allfeatures
 
 logger = logging.getLogger('wm2')
 # logger.setLevel(logging.DEBUG)
@@ -84,115 +85,6 @@ def chunks(dataset: Union[List, pd.DataFrame], chunklen=1000) -> Iterator:
     for i in range(0, len(dataset), chunklen):
         slc = dataset[i:i+chunklen]
         yield slc
-
-
-def write_freqs_to_db(connection: sqlite3.Connection,
-                      freqs: Freqs):
-    """Write frequencies to SQLite database."""
-    cursor = connection.cursor()
-    # cursor.execute('PRAGMA journal_mode=wal')
-    # print('Cursor mode:', cursor.fetchall())
-
-    # FIXME: try to do an upsert? (update/insert)
-    template = "INSERT INTO %s (%s) values (%s)"
-    itemplate = "INSERT OR IGNORE INTO %s (%s) values (%s)"
-
-    # FIXME: get the feature map from elsewhere. Database connection class?
-    featmap = {
-        'Number': 'nnumber',
-        'Case': 'nouncase',
-        'Derivation': 'derivation',
-        'Tense': 'tense',
-        'Person': 'person',
-        'VerbForm': 'verbform',
-        'Person[psor]': 'posspers',
-        'Number[psor]': 'possnum',
-        'Clitic': 'clitic'
-    }
-
-    wordfields = ['lemma', 'form', 'pos', 'posx', 'frequency', 'len',
-                  'revform',
-                  'feats', 'featid',
-                  'hood']
-    featfields = ['feats', 'pos']
-
-    for feat in sorted(featmap.keys()):
-        featfields.append(featmap[feat])
-
-    insert_tpl = ', '.join(list(wordfields))
-    values_tpl = ', '.join(['?' for _ in wordfields])
-
-    insert_template = template % ('wordfreqs', insert_tpl, values_tpl)
-    print(insert_template)
-
-    wordvalues = []
-    featvalues = []
-
-    uqfeats = set()
-
-    for key, freq in freqs[0].items():
-        lemma, word, pos, feats = key
-        posx = 'VERB' if pos == 'AUX' else pos
-        revword = word[::-1]
-        wordvals = [lemma, word, pos, posx, freq, len(word), revword, feats, 0, 0]
-        featvals = [feats, pos]
-        featdict = freqs[1][key]
-        for feat in sorted(featmap.keys()):
-            featval = '_'
-            # print(key, freq, featdict)
-            if isinstance(featdict, dict) and feat in featdict:
-                # print(feat, featdict[feat])
-                featval = featdict[feat]
-            # print(key, freq, featdict, featval)
-            # print(recvals)
-            featvals.append(featval)
-        # print(recvals)
-        wordvalues.append(wordvals)
-        if (pos, feats) in uqfeats:
-            ...
-        else:
-            uqfeats.add((pos, feats))
-            featvalues.append(featvals)
-
-    print(wordvalues[0])
-    print(featvalues[0])
-
-    chunklen = 100000
-    totwordchunks = math.ceil(len(wordvalues)/chunklen)
-
-    print(f'Inserting {len(wordvalues)} rows in {totwordchunks} chunks...')
-    print(insert_template)
-
-    for chunk in tqdm(chunks(wordvalues, chunklen=chunklen),
-                      total=totwordchunks):
-        try:
-            cursor.executemany(insert_template, chunk)
-            connection.commit()
-        except IntegrityError as e:
-            # this is not ok
-            logging.exception(e)
-            connection.rollback()
-            break
-
-    insert_tpl = ', '.join(list(featfields))
-    values_tpl = ', '.join(['?' for _ in featfields])
-
-    insert_template = itemplate % ('features', insert_tpl, values_tpl)
-
-    totfeatchunks = math.ceil(len(featvalues)/chunklen)
-
-    print(f'Inserting {len(featvalues)} rows in {totfeatchunks} chunks...')
-    print(insert_template)
-
-    for chunk in tqdm(chunks(featvalues, chunklen=chunklen),
-                      total=totfeatchunks):
-        try:
-            cursor.executemany(insert_template, chunk)
-            connection.commit()
-        except IntegrityError as e:
-            # this is not ok
-            logging.exception(e)
-            connection.rollback()
 
 
 # FIXME: move gram freq functions to buildutil
@@ -314,7 +206,9 @@ def insert_bigram_freqs(connection: sqlite3.Connection,
 class DatabaseConnection:
     """Encapsulation of database connection."""
 
-    def __init__(self, filename: str):
+    def __init__(self,
+                 filename: str,
+                 aggregates: bool = True):
         """Initialize database connection class."""
         # super().__init__(args)
         self.limit = 10000
@@ -325,19 +219,29 @@ class DatabaseConnection:
         self.tables = ['wordfreqs', 'features', 'lemmas']
         self.columns = defaultdict(list)  # type: ignore
         self.record_columns()
-        self.fetch_aggregate_frequencies()
+        if aggregates:
+            self.fetch_aggregate_frequencies()
+        self.record_features()
 
-        self._featmap = {
-            'Number': 'nnumber',
-            'Case': 'nouncase',
-            'Derivation': 'derivation',
-            'Tense': 'tense',
-            'Person': 'person',
-            'VerbForm': 'verbform',
-            'Person[psor]': 'posspers',
-            'Number[psor]': 'possnum',
-            'Clitic': 'clitic'
-        }
+    def record_features(self):
+        """Get actual features from the database."""
+
+        actualfeatures = adhoc_query(self.connection,
+                                     'PRAGMA table_info(features)',
+                                     verbose=True)
+        # All supported features
+        # print(allfeatures)
+        # Actual features
+        # print(actualfeatures)
+        featcols = [t[1] for t in actualfeatures]
+        # print(featcols)
+        featmap = {}
+        for udfeat, sqlfeat in allfeatures.items():
+            # print(udfeat, sqlfeat)
+            if sqlfeat in featcols:
+                featmap[udfeat] = sqlfeat
+
+        self._featmap = featmap
 
     def new_connection(self):
         """Get new (transient) database connection."""
@@ -376,7 +280,7 @@ class DatabaseConnection:
         """Check if posx is in column list."""
         return 'posx' in self.columns['wordfreqs']
 
-    def featmap(self, reverse: bool) -> Dict:
+    def featmap(self, reverse: bool = False) -> Dict:
         """Return feature map."""
         if reverse:
             fmap = {v: k for k, v in self._featmap.items()}
@@ -418,6 +322,104 @@ class DatabaseConnection:
             cols.append(usecol)
         # print(table, cols)
         return cols
+
+
+def write_freqs_to_db(dbc: DatabaseConnection,
+                      freqs: Freqs):
+    """Write frequencies to SQLite database."""
+    connection = dbc.get_connection()
+    cursor = connection.cursor()
+    # cursor.execute('PRAGMA journal_mode=wal')
+    # print('Cursor mode:', cursor.fetchall())
+
+    # FIXME: try to do an upsert? (update/insert)
+    template = "INSERT INTO %s (%s) values (%s)"
+    itemplate = "INSERT OR IGNORE INTO %s (%s) values (%s)"
+
+    featmap = dbc.featmap()
+    wordfields = ['lemma', 'form', 'pos', 'posx', 'frequency', 'len',
+                  'revform',
+                  'feats', 'featid',
+                  'hood']
+    featfields = ['feats', 'pos']
+
+    for feat in sorted(featmap.keys()):
+        featfields.append(featmap[feat])
+
+    insert_tpl = ', '.join(list(wordfields))
+    values_tpl = ', '.join(['?' for _ in wordfields])
+
+    insert_template = template % ('wordfreqs', insert_tpl, values_tpl)
+    print(insert_template)
+
+    wordvalues = []
+    featvalues = []
+
+    uqfeats = set()
+
+    for key, freq in freqs[0].items():
+        lemma, word, pos, feats = key
+        posx = 'VERB' if pos == 'AUX' else pos
+        revword = word[::-1]
+        wordvals = [lemma, word, pos, posx, freq, len(word), revword, feats, 0, 0]
+        featvals = [feats, pos]
+        featdict = freqs[1][key]
+        for feat in sorted(featmap.keys()):
+            featval = '_'
+            # print(key, freq, featdict)
+            if isinstance(featdict, dict) and feat in featdict:
+                # print(feat, featdict[feat])
+                featval = featdict[feat]
+            # print(key, freq, featdict, featval)
+            # print(recvals)
+            featvals.append(featval)
+        # print(recvals)
+        wordvalues.append(wordvals)
+        if (pos, feats) in uqfeats:
+            ...
+        else:
+            uqfeats.add((pos, feats))
+            featvalues.append(featvals)
+
+    print(wordvalues[0])
+    print(featvalues[0])
+
+    chunklen = 100000
+    totwordchunks = math.ceil(len(wordvalues)/chunklen)
+
+    print(f'Inserting {len(wordvalues)} rows in {totwordchunks} chunks...')
+    print(insert_template)
+
+    for chunk in tqdm(chunks(wordvalues, chunklen=chunklen),
+                      total=totwordchunks):
+        try:
+            cursor.executemany(insert_template, chunk)
+            connection.commit()
+        except IntegrityError as e:
+            # this is not ok
+            logging.exception(e)
+            connection.rollback()
+            break
+
+    insert_tpl = ', '.join(list(featfields))
+    values_tpl = ', '.join(['?' for _ in featfields])
+
+    insert_template = itemplate % ('features', insert_tpl, values_tpl)
+
+    totfeatchunks = math.ceil(len(featvalues)/chunklen)
+
+    print(f'Inserting {len(featvalues)} rows in {totfeatchunks} chunks...')
+    print(insert_template)
+
+    for chunk in tqdm(chunks(featvalues, chunklen=chunklen),
+                      total=totfeatchunks):
+        try:
+            cursor.executemany(insert_template, chunk)
+            connection.commit()
+        except IntegrityError as e:
+            # this is not ok
+            logging.exception(e)
+            connection.rollback()
 
 
 # FIXME: make this a query class
@@ -833,8 +835,8 @@ def get_querystring(query: Union[str, Dict] = None,
     if len(args) > 20:
         argshow = argshow[:20]
         argshow.append('...')
-    if len(whereshow) > 300:
-        whereshow = whereshow[:300] + ' ...'
+    if len(whereshow) > 200:
+        whereshow = whereshow[:200] + ' ...'
     logger.info('Wherestring, arguments: %s, %s', whereshow, argshow)
     # print(wherestr, args)
     windexedby = "" if defaultindex else get_indexer(indexers, notlikeindexers, orderby, useposx)

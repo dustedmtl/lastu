@@ -1,4 +1,4 @@
-"""File reader module."""
+"""UD file reader module."""
 
 # pylint: disable=invalid-name, line-too-long
 # too-many-locals, too-many-arguments
@@ -233,6 +233,7 @@ def serialize_feats(feats: Dict) -> str:
 
 
 def conllu_freq_reader(path: str,
+                       featmap: Dict,
                        origcase: Optional[bool] = False,
                        sentencecount: Optional[int] = None,
                        trashfile: Optional[TextIO] = None,
@@ -247,17 +248,6 @@ def conllu_freq_reader(path: str,
     wordcounter = freqs[0]
     wordfeats = freqs[1]
     # featcounter = freqs[2]
-
-    # FIXME: move map to another file? data class?
-    featmap = {
-        'Number': 'nnumber',
-        'Case': 'nouncase',
-        'Derivation': 'derivation',
-        'Tense': 'tense',
-        'Person': 'person',
-        'VerbForm': 'verbform',
-        'Clitic': 'clitic'
-    }
 
     for _idx, sentence in tqdm(conllu_file_reader(path,
                                                   sentencecount=sentencecount),
@@ -321,6 +311,7 @@ def conllu_freq_reader(path: str,
 
 
 def conllu_reader(path: str,
+                  featmap: Dict,
                   verbose: bool = False,
                   origcase: Optional[bool] = False,
                   sentencecount: Optional[int] = None,
@@ -334,6 +325,7 @@ def conllu_reader(path: str,
             print(f"Reading {sentencecount} sentences")
 
         freqs = conllu_freq_reader(path,
+                                   featmap,
                                    origcase=origcase,
                                    sentencecount=sentencecount,
                                    trashfile=trashfile,

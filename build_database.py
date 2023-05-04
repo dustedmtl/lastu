@@ -69,7 +69,7 @@ if not exists(args.dbfile):
     if args.newfile:
         creationscripts = ['wordfreqs2.sql', 'features.sql']
         print(f'Creating database at {args.dbfile}')
-        dbc = dbutil.DatabaseConnection(args.dbfile)
+        dbc = dbutil.DatabaseConnection(args.dbfile, aggregates=False)
         sqlcon = dbc.get_connection()
         cursor = sqlcon.cursor()
         for sqlfile in creationscripts:
@@ -77,6 +77,7 @@ if not exists(args.dbfile):
                 sqldata = schemafile.read()
                 cursor.executescript(sqldata)
                 sqlcon.commit()
+        dbc.record_features()
     else:
         logger.warning('No such file: %s', args.dbfile)
         sys.exit()
@@ -84,15 +85,19 @@ if not exists(args.dbfile):
 # FIXME: check that dbfile is a SQLite database?
 
 if not dbc:
-    dbc = dbutil.DatabaseConnection(args.dbfile)
+    dbc = dbutil.DatabaseConnection(args.dbfile, aggregates=False)
 
 trashfh = None
+
+featmap = dbc.featmap()
+logger.info('Features in the database %s: %s', args.dbfile, featmap)
 
 if args.trashfile:
     print(f'Storing discarded strings to file {args.trashfile}')
     trashfh = open(args.trashfile, 'w', encoding='utf-8')
 
 data = corpus.conllu_reader(args.input,
+                            featmap=featmap,
                             verbose=args.verbose,
                             origcase=args.origcase,
                             sentencecount=args.sentencecount,
@@ -102,7 +107,7 @@ if trashfh:
     trashfh.close()
 
 print(f'Storing {len(data[0])} unigram frequencies to database {args.dbfile}')
-dbutil.write_freqs_to_db(dbc.get_connection(), data)
+dbutil.write_freqs_to_db(dbc, data)
 
 if not args.noindex:
     print('Adding indexes..')
