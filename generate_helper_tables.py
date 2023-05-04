@@ -469,8 +469,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # dbc = dbutil.DatabaseConnection(args.dbfile)
-    sqlconn = dbutil.get_connection(args.dbfile)
+    dbc = dbutil.DatabaseConnection(args.dbfile, aggregates=False)
+    sqlconn = dbc.get_connection()
 
     print(f'Generating helper table info to {args.dbfile}')
     buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
@@ -504,7 +504,7 @@ if __name__ == '__main__':
 
     if args.features or args.all:
         # buildutil.drop_indexes(sqlconn, "_wordfreqs_featid")
-        buildutil.add_features(sqlconn)
+        buildutil.add_features(dbc)
         add_feat_pos_indexes(sqlconn)
         add_feature_index(sqlconn)
         buildutil.drop_indexes(sqlconn, "featid_partial")

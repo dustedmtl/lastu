@@ -119,19 +119,10 @@ def create_database(dbfile: str):
         add_schema(sqlcon, sqlfile)
 
 
-def add_features(sqlcon: sqlite3.Connection):
+def add_features(dbc: dbutil.DatabaseConnection):
     """Add features to features table."""
-    featmap = {
-        'Number': 'nnumber',
-        'Case': 'nouncase',
-        'Derivation': 'derivation',
-        'Tense': 'tense',
-        'Person': 'person',
-        'VerbForm': 'verbform',
-        'Person[psor]': 'posspers',
-        'Number[psor]': 'possnum',
-        'Clitic': 'clitic'
-    }
+    featmap = dbc.featmap()
+    sqlcon = dbc.get_connection()
     havefeats = dbutil.adhoc_query(sqlcon, "SELECT distinct pos, feats FROM wordfreqs", todf=True)
     # print(havefeats)
     # template = "INSERT INTO %s (%s) values (%s)"
