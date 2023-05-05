@@ -139,9 +139,16 @@ class TableModel(QAbstractTableModel):
             # return str(self._data.iloc[index.row()][index.column()])
             if isinstance(value, float):
                 return "%.3f" % value
-            if isinstance(value, str) and len(value) > 50:
-                value = value[:50] + "..."
+            if isinstance(value, str) and len(value) > 60:
+                value = value[:60] + "..."
             return str(value)
+
+        elif role == Qt.ItemDataRole.ToolTipRole:
+            value = self._data.iloc[index.row()][index.column()]
+            # return str(self._data.iloc[index.row()][index.column()])
+            if isinstance(value, str) and len(value) > 60:
+                return value
+            return None
 
         return None
 
