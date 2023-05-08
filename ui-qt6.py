@@ -862,7 +862,7 @@ class MainWindow(QMainWindow):
             # self.filterColumns()
             # self.resizeWidthToContents()
         else:
-            self.statusfield.setText(f'Executing query{self.query_desc} .. done: no results in {exectime:.1f} seconds')
+            self.statusfield.setText(f'Executing query {self.query_desc} .. done: no results in {exectime:.1f} seconds')
 
     def setQueryError(self, _text: str, error: str):
         if '\n' in error:
