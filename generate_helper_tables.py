@@ -397,10 +397,16 @@ def add_feature_index(sqlcon: sqlite3.Connection):
 #        sqlcon.commit()
 
 
-def create_feature_table(sqlcon: sqlite3.Connection, table: str, feat: str):
+def create_feature_table(dbc: dbutil.DatabaseConnection,
+                         table: str, feat: str):
     """Populate a separate feature table from features."""
+    featmap = dbc.featmap(reverse=True)
     inserttpl = 'INSERT INTO %s (featid, %s) values (?, ?)'
+    if feat not in featmap.keys():
+        print(f'Feature {feat} not in the database: ignoring')
+        return
     print(f'Checking table {table}...')
+    sqlcon = dbc.get_connection()
     haveit = dbutil.adhoc_query(sqlcon, f'select * from {table} limit 1')
     if len(haveit) > 0:
         print(f'Table {table} already has content, not inserting')
@@ -509,9 +515,9 @@ if __name__ == '__main__':
         add_feature_index(sqlconn)
         buildutil.drop_indexes(sqlconn, "featid_partial")
         # buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
-        create_feature_table(sqlconn, 'derivations', 'derivation')
-        create_feature_table(sqlconn, 'clitics', 'clitic')
-        create_feature_table(sqlconn, 'nouncases', 'nouncase')
+        create_feature_table(dbc, 'derivations', 'derivation')
+        create_feature_table(dbc, 'clitics', 'clitic')
+        create_feature_table(dbc, 'nouncases', 'nouncase')
 
     # These are optional
     # Forms aggregates need to be present before amblemma is calculated
