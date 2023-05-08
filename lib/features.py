@@ -17,6 +17,7 @@ allfeatures = {
     'Degree': 'degree',
     'Person[psor]': 'posspers',
     'Number[psor]': 'possnum',
+    'Poss': 'poss',
     'Clitic': 'clitic',
     'Derivation': 'derivation',
     'Style': 'style',
