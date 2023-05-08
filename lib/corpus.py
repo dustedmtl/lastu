@@ -22,23 +22,26 @@ from tqdm.autonotebook import tqdm
 from .mytypes import Freqs
 
 initchars = '^'
-alpha = '.*?[abcdefghijklmnopqrstuvwxyzåäöéü].*?'
-alphanum = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9]'
-alphanumplus = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9\-\.\']'
-midchars = r'[\'\.\:\-\_\#abcdefghijklmnopqrstuvwxyzåäöéü0-9]*'
+alpha = 'abcdefghijklmnopqrstuvwxyzåäöüáéíóú'
+# alphanum = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9]'
+alphanum = r'.*?[' + alpha + '0-9].*?'
+# alphanumplus = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9\-\.\']'
+alphanumplus = '[' + alpha + r'0-9' + r'\-\.\']'
+# midchars = r'[\'\.\:\-\_\#abcdefghijklmnopqrstuvwxyzåäöéü0-9]*'
+midchars = r'[\'\.\:\-\_\#' + alpha + '0-9' + ']*'
 endchars = '$'
-hasalpha = re.compile(alpha)
+hasalpha = re.compile(''.join(['.*?[', alpha, '].*?']))
 validregex = re.compile(''.join([initchars, alphanum, midchars, alphanumplus, endchars]))
-alphanumregex = re.compile(''.join([initchars, alphanumplus, '+', endchars]))
+# alphanumregex = re.compile(''.join([initchars, alphanumplus, '+', endchars]))
 
 
-def semi_word(word: str) -> bool:
-    """Check if word is semi-valid."""
-    if not valid_word(word):
-        return False
-    if re.match(alphanumregex, word):
-        return False
-    return True
+# def semi_word(word: str) -> bool:
+#     """Check if word is semi-valid."""
+#     if not valid_word(word):
+#         return False
+#     if re.match(alphanumregex, word):
+#        return False
+#     return True
 
 
 def valid_word(word: str) -> bool:
