@@ -1,12 +1,12 @@
 """List of supported features."""
 
 # pylint: disable=invalid-name, line-too-long
-# too-many-locals, too-many-arguments
 
 allfeatures = {
-    'Number': 'nnumber',
-    'Case': 'nouncase',
+    'Number': 'nnumber',  # 'number' is a reserved word in SQL, so 'nnumber'.
+    'Case': 'nouncase',  # 'case' is a reserved word in SQL.
     'Gender': 'gender',
+    'Definite': 'definite',
     'Mood': 'mood',
     'Tense': 'tense',
     'Aspect': 'aspect',
@@ -18,5 +18,7 @@ allfeatures = {
     'Person[psor]': 'posspers',
     'Number[psor]': 'possnum',
     'Clitic': 'clitic',
-    'Derivation': 'derivation'
+    'Derivation': 'derivation',
+    'Style': 'style',
+    'Typo': 'typo',
 }
