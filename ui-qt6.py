@@ -998,8 +998,8 @@ class MainWindow(QMainWindow):
         df = self.data
         showrows = self.config.getConfigValue('query.showrows', 1000)
         if len(df) > showrows:
-            for f in inspect.stack():
-                logger.debug(inspect.getframeinfo(f[0]))
+            # for f in inspect.stack():
+            #    logger.debug(inspect.getframeinfo(f[0]))
             logger.info('Showing maximum %d rows of %d', showrows, len(df))
             # self.model = TableModel(df[:showrows])
             rowheader = self.table.verticalHeader()
