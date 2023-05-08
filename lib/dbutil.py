@@ -424,7 +424,9 @@ def write_freqs_to_db(dbc: DatabaseConnection,
 
 # FIXME: make this a query class
 # FIXME: get supported features from database connection?
-def parse_query(query: str, relfieldmap: Dict = None) -> Tuple[List[List[str]], List]:
+def parse_query(query: str,
+                revfeatmap: Dict = None,
+                relfieldmap: Dict = None) -> Tuple[List[List[str]], List]:
     """Parse query to SQL key-values."""
     parts = query.lower().split('and')
     kvparts = []
@@ -435,13 +437,15 @@ def parse_query(query: str, relfieldmap: Dict = None) -> Tuple[List[List[str]], 
                'hood', 'ambform',
                'initrigramfreq', 'fintrigramfreq', 'bigramfreq']
     strkeys = ['lemma', 'lemmac', 'form', 'pos',
-               'nouncase', 'nnumber',
-               'tense', 'person', 'verbform',
-               'posspers', 'possnum',
+               # 'nouncase', 'nnumber',
+               # 'tense', 'person', 'verbform',
+               # 'posspers', 'possnum',
                'start', 'middle', 'end',
                'top',
-               'derivation', 'clitic'  # these my be complex
+               # 'derivation', 'clitic'  # these my be complex
                ]
+    strkeys.extend(revfeatmap.keys())
+    # logger.debug('Supported morphological features: %s', list(revfeatmap.keys()))
     formkeys = ['start', 'middle', 'end']
     boolkeys = ['compound']
     stroperators = ['=', '!=', 'like', 'in', 'notin']
@@ -565,9 +569,10 @@ indexfields = {
 
 
 def parse_querystring(querystr: str,
+                      revfeatmap: Dict = None,
                       relfieldmap: Dict = None) -> Tuple[str, List, List, List, List, bool]:
     """Parse the query string."""
-    queryparts, errors = parse_query(querystr, relfieldmap)
+    queryparts, errors = parse_query(querystr, revfeatmap, relfieldmap)
     # print(queryparts)
 
     whereparts = []
@@ -578,12 +583,12 @@ def parse_querystring(querystr: str,
     indexers = []
     notlikeindexers = []
 
-    # FIXME: get supported features from database connection?
-    features = ['nouncase', 'nnumber',
-                'tense', 'person', 'verbform',
-                'posspers', 'possnum',
-                'derivation', 'clitic'
-                ]
+    features = revfeatmap.keys()
+#    features = ['nouncase', 'nnumber',
+#                'tense', 'person', 'verbform',
+#                'posspers', 'possnum',
+#                'derivation', 'clitic'
+#                ]
     lemmas = ['lemmac', 'lemmalen', 'lemmafreq', 'amblemma', 'comparts']
     # lemmaforms = ['ambform']
     # forms = ['len', 'hood', 'start', 'middle', 'end']
@@ -815,6 +820,7 @@ def get_indexer(indexers: List,
 
 
 def get_querystring(query: Union[str, Dict] = None,
+                    revfeatmap: Dict = None,
                     orderby: str = 'w.frequency',
                     relfieldmap: Dict = None,
                     defaultindex: bool = False) -> Tuple[str, List[str], List[str], str, bool]:
@@ -822,7 +828,7 @@ def get_querystring(query: Union[str, Dict] = None,
     useposx = True
     if isinstance(query, str):
         logger.info('Query: %s', query)
-        wherestr, args, errors, indexers, notlikeindexers, useposx = parse_querystring(query, relfieldmap)
+        wherestr, args, errors, indexers, notlikeindexers, useposx = parse_querystring(query, revfeatmap, relfieldmap)
         # print(errors)
     elif isinstance(query, dict):
         defaultindex = True
@@ -885,7 +891,9 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         'relfingramfreq': dbconnection.finfreqs,
     }
 
-    wherestr, args, errors, windexedby, useposx = get_querystring(query, orderstring, relfieldmap, defaultindex)
+    revfeats = dbconnection.featmap(reverse=True)
+    wherestr, args, errors, windexedby, useposx = get_querystring(query, revfeats,
+                                                                  orderstring, relfieldmap, defaultindex)
 
     if errors:
         raise ValueError('\n'.join(errors))
