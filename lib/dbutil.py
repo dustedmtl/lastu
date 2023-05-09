@@ -225,7 +225,6 @@ class DatabaseConnection:
 
     def record_features(self):
         """Get actual features from the database."""
-
         actualfeatures = adhoc_query(self.connection,
                                      'PRAGMA table_info(features)',
                                      verbose=True)

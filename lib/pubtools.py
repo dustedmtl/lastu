@@ -26,7 +26,7 @@ def add_hlines(latex: str, hlines: Optional[List[int]] = None) -> str:
         if lineno > 2 and 'tabular' in line:
             lines.append('\hline')
         lines.append(line)
-        if lineno in [1,2]:
+        if lineno in [1, 2]:
             lines.append('\hline')
         elif hlines and lineno in hlines:
             lines.append('\hline')
