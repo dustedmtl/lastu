@@ -1212,6 +1212,7 @@ def filter_dataframe(dbc: DatabaseConnection,
         qlist2, _errors = parse_query(querystring, revfeats, relfieldmap)
         resdf['lemmac'] = resdf.lemma.str.replace('#', '')
         for feat in qlist2:
+            useval: Union[List[str], str] = ''
             format_string = None
             key, op, value = feat
             key = revs.get(key, key)
