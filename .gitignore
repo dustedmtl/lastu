@@ -22,3 +22,6 @@ __pycache__
 *.pyc
 build
 *.egg-info
+
+# Publication
+paper
