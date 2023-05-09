@@ -49,6 +49,13 @@ conllu
 # windows information
 pypiwin32; sys_platform == 'win32'
 
+# security auditing
+pip-audit
+
+# testing
+pytest
+pytest-check
+
 # scientific
 # scipy/sklearn: comment if not on M1 Mac, or use conda
 # scipy/sklearn install magic for M1:

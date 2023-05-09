@@ -60,6 +60,7 @@ module = [
        # local files
        ".corpus",
        ".dbutil",
+       ".features",
        ".mytypes"
 ]
 ignore_missing_imports = true
