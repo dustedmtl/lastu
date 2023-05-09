@@ -14,7 +14,7 @@ from sqlite3 import IntegrityError
 # from pathlib import Path
 # from shutil import copy
 from tqdm.autonotebook import tqdm
-from . import dbutil
+from .dbutil import adhoc_query, get_connection, chunks, DatabaseConnection
 
 
 logger = logging.getLogger('wm2')
@@ -24,7 +24,7 @@ logger = logging.getLogger('wm2')
 def drop_table(sqlcon: sqlite3.Connection, table: str):
     """Drop table from database."""
     try:
-        dbutil.adhoc_query(sqlcon, f"DROP TABLE {table}", raiseerror=True)
+        adhoc_query(sqlcon, f"DROP TABLE {table}", raiseerror=True)
     except sqlite3.OperationalError as se:
         if "no such table" in str(se):
             ...
@@ -54,7 +54,7 @@ def drop_indexes(sqlcon: sqlite3.Connection,
                  match: str,
                  exclude: str = None):
     """Drop matching indexes."""
-    indexes = dbutil.adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
+    indexes = adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
     droplist = []
     for idx in indexes:
         idxname = idx[1]
@@ -70,7 +70,7 @@ def drop_indexes(sqlcon: sqlite3.Connection,
     for idx in droplist:
         print(f'Dropping index {idx}...')
         sqlstr = f'DROP INDEX {idx}'
-        dbutil.adhoc_query(sqlcon, sqlstr)
+        adhoc_query(sqlcon, sqlstr)
 
 
 def nullify_wordfreqs(sqlcon: sqlite3.Connection, full: bool = False):
@@ -79,20 +79,20 @@ def nullify_wordfreqs(sqlcon: sqlite3.Connection, full: bool = False):
         updatestr = "UPDATE wordfreqs SET hood = 0, ambform = 0, featid = 0"
     else:
         updatestr = "UPDATE wordfreqs SET hood = 0, ambform = 0"
-    dbutil.adhoc_query(sqlcon, updatestr)
+    adhoc_query(sqlcon, updatestr)
 
 
 def delete_rows(sqlcon: sqlite3.Connection,
                 frequency: int):
     """Delete rows where frequency is equal or lower than this value."""
     deletestr = f"DELETE FROM wordfreqs where frequency <= {frequency}"
-    dbutil.adhoc_query(sqlcon, deletestr)
+    adhoc_query(sqlcon, deletestr)
 
 
 def vacuum(sqlcon: sqlite3.Connection):
     """Vacuum a sqlite database."""
     print('Vacuuming the database...')
-    dbutil.adhoc_query(sqlcon, "VACUUM;")
+    adhoc_query(sqlcon, "VACUUM;")
 
 
 def add_schema(sqlcon: sqlite3.Connection,
@@ -113,17 +113,17 @@ def create_database(dbfile: str):
 
     creationscripts = ['wordfreqs2.sql', 'features.sql']
     print(f'Creating database at {dbfile}')
-    sqlcon = dbutil.get_connection(dbfile)
+    sqlcon = get_connection(dbfile)
     # cursor = sqlcon.cursor()
     for sqlfile in creationscripts:
         add_schema(sqlcon, sqlfile)
 
 
-def add_features(dbc: dbutil.DatabaseConnection):
+def add_features(dbc: DatabaseConnection):
     """Add features to features table."""
     featmap = dbc.featmap()
     sqlcon = dbc.get_connection()
-    havefeats = dbutil.adhoc_query(sqlcon, "SELECT distinct pos, feats FROM wordfreqs", todf=True)
+    havefeats = adhoc_query(sqlcon, "SELECT distinct pos, feats FROM wordfreqs", todf=True)
     # print(havefeats)
     # template = "INSERT INTO %s (%s) values (%s)"
     itemplate = "INSERT OR IGNORE INTO %s (%s) values (%s)"
@@ -175,7 +175,7 @@ def add_features(dbc: dbutil.DatabaseConnection):
     print(f'Inserting {len(featinserts)} rows in {totfeatchunks} chunks...')
     print(insert_template)
 
-    for chunk in tqdm(dbutil.chunks(featinserts, chunklen=chunklen),
+    for chunk in tqdm(chunks(featinserts, chunklen=chunklen),
                       total=totfeatchunks):
         try:
             cursor.executemany(insert_template, chunk)
