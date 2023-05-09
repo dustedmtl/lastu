@@ -505,14 +505,13 @@ def parse_query(query: str,
                     if comparator in numoperators:
                         # print(f'Num ok: {key} {comparator}')
                         try:
-                            v = float(value)
-                            value = v
+                            fv = float(value)
                             try:
                                 if key.startswith('rel'):
                                     total = relfieldmap[key][0][0]
                                     scale = 1000 if key == 'relbigramfreq' else 1e6
-                                    # print(value, total, scale)
-                                    value = value / scale * total
+                                    # print(value, fv, total, scale)
+                                    value = fv / scale * total
                                     key = key[3:]
                                 isok = True
                             except Exception as e:
@@ -1184,6 +1183,7 @@ def filter_dataframe(dbc: DatabaseConnection,
         'relinitgramfreq': dbc.initfreqs,
         'relfingramfreq': dbc.finfreqs,
     }
+    revfeats = dbc.featmap(reverse=True)
     numkeys = ['frequency', 'len',
                'lemmafreq', 'lemmalen', 'amblemma',
                'hood', 'ambform',
@@ -1204,12 +1204,12 @@ def filter_dataframe(dbc: DatabaseConnection,
 
     try:
         logger.debug('Querying dataframe for: %s', querystring)
-        _wherestr, _args, errors, _indexers, _notlikeindexers, _useposx = parse_querystring(querystring, relfieldmap)
+        _wherestr, _args, errors, _indexers, _notlikeindexers, _useposx = parse_querystring(querystring, revfeats, relfieldmap)
         if len(errors) > 0:
             errstr = '\n'.join(errors)
             raise ValueError(errstr)
         # This produces an error if the query string is invalid
-        qlist2, _errors = parse_query(querystring, relfieldmap)
+        qlist2, _errors = parse_query(querystring, revfeats, relfieldmap)
         resdf['lemmac'] = resdf.lemma.str.replace('#', '')
         for feat in qlist2:
             format_string = None
