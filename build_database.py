@@ -9,7 +9,7 @@ from os.path import exists
 import sys
 import argparse
 import logging
-from lib import corpus, dbutil
+from lib import corpus, dbutil, buildutil
 
 
 logging.basicConfig(level=logging.INFO)
@@ -56,6 +56,11 @@ parser.add_argument('-o', '--origcase',
                     action='store_true',
                     help='Original case')
 
+parser.add_argument('-l', '--language',
+                    type=str,
+                    required=False,
+                    help='Language code')
+
 args = parser.parse_args()
 
 
@@ -67,17 +72,19 @@ dbc = None
 
 if not exists(args.dbfile):
     if args.newfile:
-        creationscripts = ['wordfreqs2.sql', 'features.sql']
-        print(f'Creating database at {args.dbfile}')
-        dbc = dbutil.DatabaseConnection(args.dbfile, aggregates=False)
-        sqlcon = dbc.get_connection()
-        cursor = sqlcon.cursor()
-        for sqlfile in creationscripts:
-            with open(f'sql/{sqlfile}', 'r', encoding='utf8') as schemafile:
-                sqldata = schemafile.read()
-                cursor.executescript(sqldata)
-                sqlcon.commit()
-        dbc.record_features()
+        dbc = buildutil.create_database(args.dbfile,
+                                        language=args.language)
+#        creationscripts = ['wordfreqs2.sql', 'features.sql']
+#        print(f'Creating database at {args.dbfile}')
+#        dbc = dbutil.DatabaseConnection(args.dbfile, aggregates=False)
+#        sqlcon = dbc.get_connection()
+#        cursor = sqlcon.cursor()
+#        for sqlfile in creationscripts:
+#            with open(f'sql/{sqlfile}', 'r', encoding='utf8') as schemafile:
+#                sqldata = schemafile.read()
+#                cursor.executescript(sqldata)
+#                sqlcon.commit()
+#        dbc.record_features()
     else:
         logger.warning('No such file: %s', args.dbfile)
         sys.exit()
