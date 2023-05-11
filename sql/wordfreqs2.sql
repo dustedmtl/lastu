@@ -17,3 +17,8 @@ CREATE TABLE IF NOT EXISTS wordfreqs (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_wordfreqs_basic on wordfreqs(lemma, form, pos, feats);
 
+CREATE TABLE IF NOT EXISTS metadata (
+       key VARCHAR(16) NOT NULL,
+       value VARCHAR(16) NOT NULL,
+       PRIMARY KEY (key)
+);

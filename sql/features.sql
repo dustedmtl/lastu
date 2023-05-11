@@ -67,3 +67,5 @@ CREATE TABLE IF NOT EXISTS nouncases (
 
 CREATE INDEX IF NOT EXISTS nouncase ON nouncases(nouncase);
 
+INSERT OR IGNORE INTO metadata VALUES ('language', 'Finnish');
+INSERT OR IGNORE INTO metadata VALUES ('langcode', 'fi');
