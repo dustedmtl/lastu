@@ -3,6 +3,7 @@
 # pylint: disable=invalid-name, consider-using-with
 
 # import os
+from os.path import exists
 # from os.path import isdir, isfile, exists
 from typing import Dict, List, Iterator, Tuple
 # import sys
@@ -482,25 +483,34 @@ if __name__ == '__main__':
     buildutil.add_schema(sqlconn, "wordfreqs_indexes.sql")
 
     if args.forms or args.all:
-        print('Adding forms.sql...')
-        with open('sql/forms.sql', 'r', encoding='utf8') as schemafile:
-            ccursor = sqlconn.cursor()
-            sqldata = schemafile.read()
-            ccursor.executescript(sqldata)
+        buildutil.add_schema(sqlconn, 'forms.sql')
+#        print('Adding forms.sql...')
+#        with open('sql/forms.sql', 'r', encoding='utf8') as schemafile:
+#            ccursor = sqlconn.cursor()
+#            sqldata = schemafile.read()
+#            ccursor.executescript(sqldata)
 
     if args.lemmas or args.all:
-        print('Adding lemmas.sql...')
-        with open('sql/lemmas.sql', 'r', encoding='utf8') as schemafile:
-            ccursor = sqlconn.cursor()
-            sqldata = schemafile.read()
-            ccursor.executescript(sqldata)
+        buildutil.add_schema(sqlconn, 'lemmas.sql')
+#        print('Adding lemmas.sql...')
+#        with open('sql/lemmas.sql', 'r', encoding='utf8') as schemafile:
+#            ccursor = sqlconn.cursor()
+#            sqldata = schemafile.read()
+#            ccursor.executescript(sqldata)
 
     if args.features or args.all:
-        print('Adding features.sql...')
-        with open('sql/features.sql', 'r', encoding='utf8') as schemafile:
-            ccursor = sqlconn.cursor()
-            sqldata = schemafile.read()
-            ccursor.executescript(sqldata)
+        metadata = buildutil.get_database_metadata(dbc)
+        print(f'Got metadata from database: {metadata}')
+        langcode = metadata.get('langcode', 'fi').lower()
+        featfile = 'features.sql'
+        tryfile = f"languages/features_{langcode}.sql"
+        if exists(f'sql/{tryfile}'):
+            featfile = tryfile
+        buildutil.add_schema(sqlconn, featfile)
+#        with open(featfile, 'r', encoding='utf8') as schemafile:
+#            ccursor = sqlconn.cursor()
+#            sqldata = schemafile.read()
+#            ccursor.executescript(sqldata)
 
     # These two are necessary for the operation of the database
     if args.posx or args.all:
