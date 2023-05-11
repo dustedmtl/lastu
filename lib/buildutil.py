@@ -2,6 +2,7 @@
 
 # pylint: disable=invalid-name, line-too-long
 
+from typing import Optional, Dict
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
 # from typing import Optional, Tuple, Dict
 # import sys
@@ -52,7 +53,7 @@ def drop_helper_tables(sqlcon: sqlite3.Connection, full: bool = False):
 
 def drop_indexes(sqlcon: sqlite3.Connection,
                  match: str,
-                 exclude: str = None):
+                 exclude: Optional[str] = None):
     """Drop matching indexes."""
     indexes = adhoc_query(sqlcon, "SELECT * FROM sqlite_master WHERE type = 'index'")
     droplist = []
@@ -95,6 +96,13 @@ def vacuum(sqlcon: sqlite3.Connection):
     adhoc_query(sqlcon, "VACUUM;")
 
 
+def get_database_metadata(dbc: DatabaseConnection) -> Dict:
+    """Get metadata from the database."""
+    sqlcon = dbc.get_connection()
+    data = adhoc_query(sqlcon, "select * from metadata;")
+    return dict(data)
+
+
 def add_schema(sqlcon: sqlite3.Connection,
                sqlfile: str):
     """Add schema from a SQL file."""
@@ -106,17 +114,30 @@ def add_schema(sqlcon: sqlite3.Connection,
         sqlcon.commit()
 
 
-def create_database(dbfile: str):
+def create_database(dbfile: str,
+                    language: Optional[str] = None) -> DatabaseConnection:
     """Create new database."""
     if exists(dbfile):
         raise FileExistsError(dbfile)
 
-    creationscripts = ['wordfreqs2.sql', 'features.sql']
     print(f'Creating database at {dbfile}')
-    sqlcon = get_connection(dbfile)
-    # cursor = sqlcon.cursor()
+    dbc = DatabaseConnection(dbfile, aggregates=False)
+    sqlcon = dbc.get_connection()
+
+    creationscripts = ['wordfreqs2.sql']
+
+    if language is not None:
+        tryscript = f'languages/features_{language}.sql'
+    else:
+        tryscript = 'features.sql'
+
+    creationscripts.append(tryscript)
+
     for sqlfile in creationscripts:
         add_schema(sqlcon, sqlfile)
+
+    dbc.record_features()
+    return dbc
 
 
 def add_features(dbc: DatabaseConnection):
