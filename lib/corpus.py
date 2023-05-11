@@ -22,9 +22,9 @@ from tqdm.autonotebook import tqdm
 from .mytypes import Freqs
 
 initchars = '^'
-alpha = 'abcdefghijklmnopqrstuvwxyzåäöüáéíóú'
+alpha = 'abcdefghijklmnopqrstuvwxyzåäöüáàãâéèêíìïóòôõúñç'
 # alphanum = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9]'
-alphanum = r'.*?[' + alpha + '0-9].*?'
+alphanum = r'[' + alpha + '0-9]+'
 # alphanumplus = r'[abcdefghijklmnopqrstuvwxyzåäöéü0-9\-\.\']'
 alphanumplus = '[' + alpha + r'0-9' + r'\-\.\']'
 # midchars = r'[\'\.\:\-\_\#abcdefghijklmnopqrstuvwxyzåäöéü0-9]*'
@@ -358,6 +358,7 @@ def conllu_reader(path: str,
                     # print("Reading file: %s" % fn, end='\r')
                 idx += 1
                 freqs = conllu_freq_reader(fnpath,
+                                           featmap,
                                            origcase=origcase,
                                            sentencecount=sentencecount,
                                            trashfile=trashfile,
