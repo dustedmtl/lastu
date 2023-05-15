@@ -17,7 +17,7 @@ During the building process, indexes are therefore automatically added or delete
   - `python3 -m venv venv`
   - See also: https://docs.python.org/3/library/venv.html
 - Activate virtual environment
-  - Mac:
+  - macOS:
     - `source venv/bin/activate`
   - Windows:
     - `venv\Scripts\activate.bat`
@@ -109,3 +109,14 @@ Prune the database by mandating a minimum frequency `<freq>`.
 
 TBD: what is actually done when combining a database and pruning it.
 
+## Building for languages other than Finnish.
+
+The building can take any UD-formatted file as input.
+
+The feature set for the language is defined in SQL schema, specifically the _features_ table. To support non-default morphological features, there are two options:
+1. modify the schema file _sql/features.sql_
+2. add or modify the schema file for the language in the _sql/languages/_ (recommended)
+
+For the second option, the command line option `--language` or (`-l`) must be used for the initial database builder script.
+
+The most common typological features are listed _lib/features.py_.

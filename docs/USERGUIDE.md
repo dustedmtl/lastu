@@ -19,7 +19,7 @@ The main function of the init file is to tell the application what the database 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
  - The user's home directory
-   - Mac: `/Users/<username>/wm2.ini`
+   - macOS: `/Users/<username>/wm2.ini`
    - Windows: `C:\Users\<username>\wm2.ini`
 
 If the init file is not found, the database filename will default to `wm2database.db` and
