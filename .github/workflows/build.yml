@@ -26,7 +26,7 @@ jobs:
       - name: Retrieve version
         id: get_version
         run: |
-          $version = ${{ github.event.inputs.version }}
+          $version = "${{ github.event.inputs.version }}"
           if (-not $version) {
             $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
           }
