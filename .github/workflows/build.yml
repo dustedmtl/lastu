@@ -94,7 +94,8 @@ jobs:
           Copy-Item -Path dist/wm2.exe -Destination $folder -Force
           Copy-Item -Path wm2.ini -Destination $folder -Force
           Compress-Archive -Path $folder -DestinationPath "wm2-$version.zip"
-          echo "::set-output name=package::wm2-$version.zip"
+          echo "PKGFILE=wm2-$version.zip" >> $env:GITHUB_ENV
+          # echo "::set-output name=package::wm2-$version.zip"
 
       - name: Build executable for macOS
         if: runner.os == 'macOS'
@@ -106,10 +107,11 @@ jobs:
           cp -a dist/wm2.app $folder
           cp wm2.ini $folder
           hdiutil create -format UDZO -srcfolder $folder "wm2-$version.dmg"
-          echo "::set-output name=package::wm2-$version.dmg"
+          echo "PKGFILE=wm2-$version.dmg" >> $env:GITHUB_ENV
+          # echo "::set-output name=package::wm2-$version.dmg"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: Executable Package
-          path: ${{ steps.package.outputs.package }}
+          path: ${{ ${{ env.PKGFILE }} }}
