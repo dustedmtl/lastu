@@ -57,7 +57,7 @@ jobs:
         run: |
 
           if (${{ matrix.os }} == 'windows-latest') {
-            $version = ${{ env.VERSION }}
+            $version = "${{ env.VERSION }}"
             set VER="$version"
             python win-version.py
             create-version-file win-version.yaml --outfile win-version.txt
