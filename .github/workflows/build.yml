@@ -32,12 +32,19 @@ jobs:
             version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
           fi
           echo "$version" > version.txt
+          echo "$version" | awk -F. '{print $1 "." $2 $3}' > shortversion.txt
 
       - name: Save version number to file
         uses: actions/upload-artifact@v1
         with:
           name: version_number
           path: version.txt
+
+      - name: Save short version number to file
+        uses: actions/upload-artifact@v1
+        with:
+          name: short_version_number
+          path: shortversion.txt
 
   build:
     needs: version
@@ -55,19 +62,30 @@ jobs:
         with:
           name: version_number
 
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: short_version_number
+
       - name: get version Windows
         if: runner.os == 'Windows'
         run: |
           $version = (Get-Content -Path version.txt).Trim()
           echo "Version number is $version"
           echo "VERSION=$version" >> $env:GITHUB_ENV
+          $sversion = (Get-Content -Path shortversion.txt).Trim()
+          echo "Short version number is $sversion"
+          echo "SVERSION=$shortversion" >> $env:GITHUB_ENV
 
       - name: get version mac
         if: runner.os == 'macOS'
         run: |
           version=`cat version.txt`
-          echo "New variable value is $version"
+          echo "Version number is $version"
           echo "VERSION=$version" >> $GITHUB_ENV
+          sversion=`cat shortversion.txt`
+          echo "Short version number is $sversion"
+          echo "SVERSION=$sversion" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -86,29 +104,30 @@ jobs:
           # $version = (Get-Content -Path version.txt).Trim()
           $version = "${{ env.VERSION }}"
           $env:VER = $version
+          $sversion = "${{ env.SVERSION }}"
           python win-version.py
           create-version-file win-version.yaml --outfile win-version.txt
           pyinstaller ui-qt6-win.spec
-          $folder = "wm2-$version"
+          $folder = "wm2-$sversion"
           New-Item -Path $folder -ItemType Directory
           Copy-Item -Path dist/wm2.exe -Destination $folder -Force
           Copy-Item -Path wm2.ini -Destination $folder -Force
-          Compress-Archive -Path $folder -DestinationPath "wm2-$version.zip"
-          echo "PKGFILE=wm2-$version.zip" >> $env:GITHUB_ENV
-          # echo "::set-output name=package::wm2-$version.zip"
+          Compress-Archive -Path $folder -DestinationPath "wm2-$sversion.zip"
+          echo "PKGFILE=wm2-$sversion.zip" >> $env:GITHUB_ENV
+          # echo "::set-output name=package::wm2-$sversion.zip"
 
       - name: Build executable for macOS
         if: runner.os == 'macOS'
         run: |
-          version="${{ env.VERSION }}"
-          folder="wm2-$version"
+          sversion="${{ env.SVERSION }}"
+          folder="wm2-$sversion"
           mkdir $folder
           pyinstaller ui-qt6.spec
           cp -a dist/wm2.app $folder
           cp wm2.ini $folder
-          hdiutil create -format UDZO -srcfolder $folder "wm2-$version.dmg"
-          echo "PKGFILE=wm2-$version.dmg" >> $GITHUB_ENV
-          # echo "::set-output name=package::wm2-$version.dmg"
+          hdiutil create -format UDZO -srcfolder $folder "wm2-$sversion.dmg"
+          echo "PKGFILE=wm2-$sversion.dmg" >> $GITHUB_ENV
+          # echo "::set-output name=package::wm2-$sversion.dmg"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
