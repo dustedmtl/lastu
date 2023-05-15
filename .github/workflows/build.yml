@@ -56,9 +56,11 @@ jobs:
           name: version_number
 
       - name: get version
+        if: runner.os == 'Windows'
         run: |
           $version = (Get-Content -Path version.txt).Trim()
           echo "Version number is $version"
+          echo "VERSION=$version" >> $env:GITHUB_ENV
           
       - name: Checkout code
         uses: actions/checkout@v2
@@ -74,7 +76,8 @@ jobs:
       - name: Build executable for Windows
         if: runner.os == 'Windows'
         run: |
-          $version = (Get-Content -Path version.txt).Trim()
+          # $version = (Get-Content -Path version.txt).Trim()
+          $version = "${{ env.VERSION }}"
           set VER="$version"
           python win-version.py
           create-version-file win-version.yaml --outfile win-version.txt
