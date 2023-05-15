@@ -26,9 +26,9 @@ jobs:
       - name: Generate Version
         id: get_version
         run: |
-          $version="${{ github.event.inputs.version }}"
-          if [[ -n "${{ github.event.inputs.version }}" ]]; then
-            $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+          version="${{ github.event.inputs.version }}"
+          if [[ -z "$version" ]]; then
+            version="${{ github.ref }}" | sed 's#refs/tags/v##')"
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
 
