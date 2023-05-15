@@ -1,5 +1,7 @@
 # wm2
 
+![Platform](https://img.shields.io/badge/platform-windows%20|%20MacOS-orange.svg)
+
 Wordmill2 is a program for generating stimulus words for psycholinguistic research.
 
 The database for the program is generated from one data files containing [Universal Dependencies](https://universaldependencies.org/fi/) parsed data.
