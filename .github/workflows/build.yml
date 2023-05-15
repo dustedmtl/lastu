@@ -30,7 +30,8 @@ jobs:
           if (-not $version) {
             $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
           }
-          "$version" | Add-Content -Path $env:GITHUB_ENV
+          echo "::set-output name=version::$version"
+          # Add-Content -Path $env:GITHUB_ENV "$version"
     
       - name: Install dependencies
         run: pip3 install -r packaging-requirements.txt
