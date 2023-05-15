@@ -75,7 +75,7 @@ jobs:
           echo "VERSION=$version" >> $env:GITHUB_ENV
           $sversion = (Get-Content -Path shortversion.txt).Trim()
           echo "Short version number is $sversion"
-          echo "SVERSION=$shortversion" >> $env:GITHUB_ENV
+          echo "SVERSION=$sversion" >> $env:GITHUB_ENV
 
       - name: get version mac
         if: runner.os == 'macOS'
@@ -134,3 +134,10 @@ jobs:
         with:
           name: Executable Package
           path: ${{ env.PKGFILE }}
+
+      - name: Upload to OSF
+        env:
+          OSF_TOKEN: ${{ secrets.OSF_TOKEN }}
+        run: |
+          osf -p "${{ vars.OSF_PROJECT_ID }}" upload "${{ env.PKGFILE }}" "software/${{ env.PKGFILE }}"
+          
