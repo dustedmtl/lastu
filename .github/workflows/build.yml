@@ -58,7 +58,9 @@ jobs:
           name: version_number
 
       - name: get version
-        run: echo "Version number is ${{ env.VERSION }}"
+        run: |
+          $version = (Get-Content -Path version.txt).Trim()
+          echo "Version number is $version"
           
       - name: Checkout code
         uses: actions/checkout@v2
