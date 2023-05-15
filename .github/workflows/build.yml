@@ -11,8 +11,8 @@ on:
       - 'v*' # Matching documentation
 
 jobs:
-  build:
-    runs-on: windows-latest
+  version:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -23,32 +23,65 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Retrieve version
+      - name: Generate Version
         id: get_version
         run: |
           $version = "${{ github.event.inputs.version }}"
-          if (-not $version) {
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
             $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
-          }
-          echo "::set-output name=version::$version"
-          # Add-Content -Path $env:GITHUB_ENV "$version"
+          fi
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+jobs:
+  build:
+    needs: version
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
     
       - name: Install dependencies
         run: pip3 install -r packaging-requirements.txt
-
+          
       - name: Build executable
         run: |
-          $version = ${{ steps.get_version.outputs.version }}
-          set VER="$version"
-          python win-version.py
-          create-version-file win-version.yaml --outfile win-version.txt
-          pyinstaller ui-qt6-win.spec
- 
-      - name: Create zip file
-        run: |
-          $version = ${{ steps.get_version.outputs.version }}
-          $folder = "software-$version"
-          New-Item -Path $folder -ItemType Directory
-          Copy-Item -Path dist/wm2.exe -Destination $folder -Force
-          Copy-Item -Path wm2.ini -Destination $folder -Force
-          Compress-Archive -Path $folder -DestinationPath software-$version.zip
+          $version = ${{ env.VERSION }}
+
+          if (${{ matrix.os }} == 'windows-latest') {
+            set VER="$version"
+            python win-version.py
+            create-version-file win-version.yaml --outfile win-version.txt
+            pyinstaller ui-qt6-win.spec
+            $folder = "wm2-$version"
+            New-Item -Path $folder -ItemType Directory
+            Copy-Item -Path dist/wm2.exe -Destination $folder -Force
+            Copy-Item -Path wm2.ini -Destination $folder -Force
+            Compress-Archive -Path $folder -DestinationPath "wm2-$version.zip"
+            echo "::set-output name=package::wm2-$version.zip"
+          }
+
+          if (${{ matrix.os }} == 'macos-latest') {
+            $folder = "wm2-$version"
+            mkdir $folder
+            pyinstaller ui-qt6.spec
+            cp -a dist/wm2.app $folder
+            cp wm2.ini $folder
+            hdiutil create -format UDZO -srcfolder $folder "wm2-$version.dmg"
+            echo "::set-output name=package::wm2-$version.dmg"
+          }
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Executable Package
+          path: ${{ steps.package.outputs.package }}
