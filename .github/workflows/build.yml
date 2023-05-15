@@ -44,7 +44,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      matrix:
+      matrix: 
 #          os: [windows-latest, macos-latest]
 #          os: [macos-latest]
           os: [windows-latest]
@@ -71,33 +71,32 @@ jobs:
       - name: Install dependencies
         run: pip3 install -r packaging-requirements.txt
 
-      - name: Build executable
+      - name: Build executable for Windows
+        if: runner.os == 'Windows'
         run: |
-          if ("${{ matrix.os }}" == 'windows-latest') {
-            $version = (Get-Content -Path version.txt).Trim()
-            # $version = "${{ env.VERSION }}"
-            set VER="$version"
-            python win-version.py
-            create-version-file win-version.yaml --outfile win-version.txt
-            pyinstaller ui-qt6-win.spec
-            $folder = "wm2-$version"
-            New-Item -Path $folder -ItemType Directory
-            Copy-Item -Path dist/wm2.exe -Destination $folder -Force
-            Copy-Item -Path wm2.ini -Destination $folder -Force
-            Compress-Archive -Path $folder -DestinationPath "wm2-$version.zip"
-            echo "::set-output name=package::wm2-$version.zip"
-          }
+          $version = (Get-Content -Path version.txt).Trim()
+          set VER="$version"
+          python win-version.py
+          create-version-file win-version.yaml --outfile win-version.txt
+          pyinstaller ui-qt6-win.spec
+          $folder = "wm2-$version"
+          New-Item -Path $folder -ItemType Directory
+          Copy-Item -Path dist/wm2.exe -Destination $folder -Force
+          Copy-Item -Path wm2.ini -Destination $folder -Force
+          Compress-Archive -Path $folder -DestinationPath "wm2-$version.zip"
+          echo "::set-output name=package::wm2-$version.zip"
 
-          if ("${{ matrix.os }}" == 'macos-latest') {
-            version=`cat version.txt`"
-            $folder = "wm2-$version"
-            mkdir $folder
-            pyinstaller ui-qt6.spec
-            cp -a dist/wm2.app $folder
-            cp wm2.ini $folder
-            hdiutil create -format UDZO -srcfolder $folder "wm2-$version.dmg"
-            echo "::set-output name=package::wm2-$version.dmg"
-          }
+      - name: Build executable for macOS
+        if: runner.os == 'macOS'
+        run: |
+          version=`cat version.txt`"
+          $folder = "wm2-$version"
+          mkdir $folder
+          pyinstaller ui-qt6.spec
+          cp -a dist/wm2.app $folder
+          cp wm2.ini $folder
+          hdiutil create -format UDZO -srcfolder $folder "wm2-$version.dmg"
+          echo "::set-output name=package::wm2-$version.dmg"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
