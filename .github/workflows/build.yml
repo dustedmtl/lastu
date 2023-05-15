@@ -73,7 +73,7 @@ jobs:
 
       - name: Build executable
         run: |
-          if (${{ runner.os }} == 'windows-latest') {
+          if ("${{ matrix.os }}" == 'windows-latest') {
             $version = (Get-Content -Path version.txt).Trim()
             # $version = "${{ env.VERSION }}"
             set VER="$version"
@@ -88,7 +88,7 @@ jobs:
             echo "::set-output name=package::wm2-$version.zip"
           }
 
-          if (${{ runner.os }} == 'macos-latest') {
+          if ("${{ matrix.os }}" == 'macos-latest') {
             version=`cat version.txt`"
             $folder = "wm2-$version"
             mkdir $folder
