@@ -100,8 +100,8 @@ jobs:
       - name: Build executable for macOS
         if: runner.os == 'macOS'
         run: |
-          $version="${{ env.VERSION }}"
-          $folder="wm2-$version"
+          version="${{ env.VERSION }}"
+          folder="wm2-$version"
           mkdir $folder
           pyinstaller ui-qt6.spec
           cp -a dist/wm2.app $folder
