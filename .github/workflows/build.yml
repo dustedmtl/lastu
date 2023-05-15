@@ -32,7 +32,6 @@ jobs:
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
 
-jobs:
   build:
     needs: version
     runs-on: ${{ matrix.os }}
