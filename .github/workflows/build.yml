@@ -1,0 +1,48 @@
+name: Build software version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: false
+  push:
+    tags:
+      - 'v*' # Matching documentation
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: pip3 install -r packaging-requirements.txt
+
+      - name: Build executable
+        run: pyinstaller ui-qt6-win.spec
+
+      - name: Retrieve version
+        id: get_version
+        run: |
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            echo "::set-output name=version::${{ github.event.inputs.version }}"
+          else
+            echo "::set-output name=version::${{ github.ref#refs/tags/v }}"
+          fi
+
+      - name: Create zip file
+        run: |
+          $version = ${{ steps.get_version.outputs.version }}
+          $folder = "software-$version"
+          New-Item -Path $folder -ItemType Directory
+          Copy-Item -Path dist/wm2.exe -Destination $folder -Force
+          Copy-Item -Path wm2.ini -Destination $folder -Force
+          Compress-Archive -Path $folder -DestinationPath software-$version.zip
