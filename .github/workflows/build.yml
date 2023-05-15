@@ -55,9 +55,9 @@ jobs:
           
       - name: Build executable
         run: |
-          $version = ${{ env.VERSION }}
 
           if (${{ matrix.os }} == 'windows-latest') {
+            $version = ${{ env.VERSION }}
             set VER="$version"
             python win-version.py
             create-version-file win-version.yaml --outfile win-version.txt
@@ -71,6 +71,7 @@ jobs:
           }
 
           if (${{ matrix.os }} == 'macos-latest') {
+            version="${{ env.VERSION }}"
             $folder = "wm2-$version"
             mkdir $folder
             pyinstaller ui-qt6.spec
