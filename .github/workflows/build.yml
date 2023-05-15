@@ -107,11 +107,11 @@ jobs:
           cp -a dist/wm2.app $folder
           cp wm2.ini $folder
           hdiutil create -format UDZO -srcfolder $folder "wm2-$version.dmg"
-          echo "PKGFILE=wm2-$version.dmg" >> $env:GITHUB_ENV
+          echo "PKGFILE=wm2-$version.dmg" >> $GITHUB_ENV
           # echo "::set-output name=package::wm2-$version.dmg"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: Executable Package
-          path: ${{ ${{ env.PKGFILE }} }}
+          path: ${{ env.PKGFILE }}
