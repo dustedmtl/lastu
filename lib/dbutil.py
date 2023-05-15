@@ -509,7 +509,7 @@ def parse_query(query: str,
                             try:
                                 if key.startswith('rel'):
                                     total = relfieldmap[key][0][0]
-                                    scale = 1000 if key == 'relbigramfreq' else 1e6
+                                    scale = 1000000 if key == 'relbigramfreq' else 1e6
                                     # print(value, fv, total, scale)
                                     value = fv / scale * total
                                     key = key[3:]
@@ -1077,7 +1077,7 @@ def add_relative_frequencies(dbc: DatabaseConnection,
             # print(k, kidx, v)
             # print(df[k], v, scale)
             if k == 'bigramfreq':
-                scale = 1000
+                scale = 1000000
             newcol = np.array(df[k]) / v * scale
             # print(df[k], v, scale, newcol[0])
             # print(f'Inserting column rel{k} in position {kidx + 1 + addidx}')
