@@ -4,7 +4,27 @@ Notable changes in the program will be documented here.
 
 The format of this file is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.0.7] - 2023-05-XX
+## [0.0.8] - 2023-05-15
+
+### Added
+
+- database metadata table
+- basic test framework
+- initial support for Spanish, Portuguese and Swedish
+- github workflow for building application for macOS and Windows
+
+### Changed
+
+- no hard-coded morphological features, other than those defined in SQL schema
+- scaling factor for bigram frequencies from one thousand to one million
+
+### Fixed
+
+- generate_helper_tables: do not crash if feature (e.g. derivation) is not available for the language
+- word cleanup regex fixes
+- styling fixes for flake8 and mypy
+
+## [0.0.7] - 2023-05-02
 
 ### Added
 
