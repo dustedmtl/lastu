@@ -31,11 +31,9 @@ jobs:
           if [[ -z "$version" ]]; then
             version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
           fi
+          echo "$version" > version.txt
 
-      - name: Update version file
-        run: echo "$version" > version.txt
-
-      - name: Save Release URL File for publish
+      - name: Save version number to file
         uses: actions/upload-artifact@v1
         with:
           name: version_number
