@@ -35,7 +35,7 @@ jobs:
           if [[ -n "${{ github.event.inputs.version }}" ]]; then
             echo "::set-output name=version::${{ github.event.inputs.version }}"
           else
-            echo "::set-output name=version::${{ github.ref#refs/tags/v }}"
+            echo "::set-output name=version::${{ github.ref }}"
           fi
 
       - name: Create zip file
