@@ -2,17 +2,23 @@
 
 ## Background
 
-TBD: Background.
+WordMill 2 is a program for generating stimulus words for psycholinguistic research. It has mainly been developed for Finnish, but databases can be created for other languages as well.
 
-## Download instructions
+## Download and installation instructions
 
-There are two components necessary for the software:
+The software has two necessary components:
  - the application itself (include the optional `wm2.ini` configuration file)
  - a database, which is a file in the form of SQLite3 database
 
-TBD: You can download the application and database(s) here.
+You can download the application on OSF at https://osf.io/j8v6b/:
+ - Under `software`, download the appropriate package (`.zip` for Windows, `.dmg` for macOS).
+ - Open the package and drag the application (`.exe` for Windows, `.app` for macOS) to your desired location.
+   - If this is your first time using the software, also drag the `wm2.ini` file to the same location.
+   - Otherwise you can keep using the old configuration file.
 
-## Init file and database file
+Database file(s) for Finnish can also be downloaded at the same location, under `databases`.
+
+### Init file and database file
 
 The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [init file configuration](#init-file-configuration).
 
@@ -23,15 +29,14 @@ The init file itself is looked for from two locations:
    - Windows: `C:\Users\<username>\wm2.ini`
 
 If the init file is not found, the database filename will default to `wm2database.db` and
-the application will try to locate it from the `data` subdirectory.
+the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user
+
 
 ## User interface
 
 The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which include opening a different database, exporting and copying information to output file or clipboard and choosing which columns to show.
 
 The results are disambiguated based on the lemma, surface form, pos (part-of-speech, i.e. word class) and the set of core features (which, among other things, include case, person, tense, clitics and derivations). This means that there usually are multiple rows for each lemma/form/pos triplet.
-
-TBD: show picture of results. Effect of disambiguation?
 
 The table shows information in four difference categories: lemma information, surface form information, gram frequencies and features. The lemma and surface form fields include both string and numeric fields.
 
