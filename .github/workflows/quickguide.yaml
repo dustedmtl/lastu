@@ -1,6 +1,11 @@
 name: Generate PDF Documentation
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Documentation version number'
+        required: false
   push:
     tags:
       - 'd*' # Matching documentation
@@ -16,16 +21,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set new env variable
+      - name: Set new version number to env variable
         run: |
-          NEWVER=$(echo "${{ env.VERSION }}" | cut -c 2-)
-          echo "New variable value is $NEWVER"
-          echo "NEWVER=$NEWVER" >> $GITHUB_ENV
+          version="${{ github.event.inputs.version }}"
+          if [[ -z "$version" ]]; then
+            version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
+          fi
+          # NEWVER=$(echo "${{ env.VERSION }}" | cut -c 2-)
+          echo "New version number value is $version"
+          echo "NEWVER=$version" >> $GITHUB_ENV
 
       - name: Use the version number
         run: |
-          echo "Version number is ${{ env.VERSION }}"
-          echo "New variable value is ${{ env.NEWVER }}"
+          echo "Original version number is ${{ env.VERSION }}"
+          echo "New version number value is ${{ env.NEWVER }}"
           echo "Project id is ${{ env.PID }}"
 
       - name: Install Pandoc
@@ -50,16 +59,9 @@ jobs:
           name: userguide
           path: "/tmp/userguide-${{ env.NEWVER }}.pdf"
 
-      - name: Upload to OSF
-        env:
-          OSF_TOKEN: ${{ secrets.OSF_TOKEN }}
-        run: |
-          osf -p "${{ vars.OSF_PROJECT_ID }}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/userguide-${{ env.NEWVER }}.pdf"
+#      - name: Upload to OSF
+#        env:
+#          OSF_TOKEN: ${{ secrets.OSF_TOKEN }}
+#        run: |
+#          osf -p "${{ vars.OSF_PROJECT_ID }}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/userguide-${{ env.NEWVER }}.pdf"
           
-#      - name: Upload artifact to OSF
-#        uses: abmv/osf-upload@v1.2.1
-#        with:
-#          osf-token: ${{ secrets.OSF_TOKEN }}
-#          osf-target: "https://osf.io/${{ env.OSF_PROJECT_ID }}/"
-#          osf-source: "/tmp/userguide-${{ env.NEWVER }}.pdf"
-#          osf-target-component: "software/documentation"
