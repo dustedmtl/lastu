@@ -38,7 +38,9 @@ jobs:
           echo "Project id is ${{ env.PID }}"
 
       - name: Install Pandoc
-        run: sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra python3-pip
+        run: |
+          sudo apt-get update
+          sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra python3-pip
 
       - name: Install osfclient
         run: pip install osfclient
