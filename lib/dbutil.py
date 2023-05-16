@@ -331,7 +331,6 @@ def write_freqs_to_db(dbc: DatabaseConnection,
     # cursor.execute('PRAGMA journal_mode=wal')
     # print('Cursor mode:', cursor.fetchall())
 
-    # FIXME: try to do an upsert? (update/insert)
     template = "INSERT INTO %s (%s) values (%s)"
     itemplate = "INSERT OR IGNORE INTO %s (%s) values (%s)"
 
@@ -422,7 +421,6 @@ def write_freqs_to_db(dbc: DatabaseConnection,
 
 
 # FIXME: make this a query class
-# FIXME: get supported features from database connection?
 def parse_query(query: str,
                 revfeatmap: Dict = None,
                 relfieldmap: Dict = None) -> Tuple[List[List[str]], List]:
@@ -677,7 +675,6 @@ def parse_querystring(querystr: str,
                 if c == 'notin':
                     c = 'not in'
 
-                # FIXME: IN query, NOT IN query middle
                 if k in ['start', 'end']:
                     whereor = []
                     usecol = 'form'

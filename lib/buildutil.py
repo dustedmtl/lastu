@@ -15,7 +15,7 @@ from sqlite3 import IntegrityError
 # from pathlib import Path
 # from shutil import copy
 from tqdm.autonotebook import tqdm
-from .dbutil import adhoc_query, get_connection, chunks, DatabaseConnection
+from .dbutil import adhoc_query, chunks, DatabaseConnection
 
 
 logger = logging.getLogger('wm2')
