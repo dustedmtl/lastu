@@ -31,7 +31,7 @@ The init file itself is looked for from two locations:
    - Windows: `C:\Users\<username>\wm2.ini`
 
 If the init file is not found, the database filename will default to `wm2database.db` and
-the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user
+the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user to locate a file to open.
 
 
 ## User interface
