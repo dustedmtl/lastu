@@ -25,9 +25,9 @@ jobs:
         run: |
           version="${{ github.event.inputs.version }}"
           if [[ -z "$version" ]]; then
-            version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
+            version=$(echo "${{ env.VERSION }}" | cut -c 2-)
+            # version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
           fi
-          # NEWVER=$(echo "${{ env.VERSION }}" | cut -c 2-)
           echo "New version number value is $version"
           echo "NEWVER=$version" >> $GITHUB_ENV
 
