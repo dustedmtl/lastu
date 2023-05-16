@@ -10,13 +10,15 @@ The software has two necessary components:
  - the application itself (include the optional `wm2.ini` configuration file)
  - a database, which is a file in the form of SQLite3 database
 
-You can download the application on OSF at https://osf.io/j8v6b/:
+The software and databases are located at OSF https://osf.io/j8v6b/.
+
+You can download the application on OSF at https://osf.io/j8v6b/files/osfstorage:
  - Under `software`, download the appropriate package (`.zip` for Windows, `.dmg` for macOS).
  - Open the package and drag the application (`.exe` for Windows, `.app` for macOS) to your desired location.
    - If this is your first time using the software, also drag the `wm2.ini` file to the same location.
    - Otherwise you can keep using the old configuration file.
 
-Database file(s) for Finnish can also be downloaded at the same location, under `databases`.
+For databases, go to https://osf.io/7hrbv/files/osfstorage.
 
 ### Init file and database file
 
