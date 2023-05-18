@@ -33,7 +33,7 @@ The morphological feature set is tailored for the most important features for Fi
  - person, number and plural/single
  - derivatives and clitics
  - possessive suffix
- - verb tense and finiteness
+ - verb mood, tense and finiteness
 
 ## Input and output
 
@@ -51,9 +51,10 @@ Supported output formats are CSV, TSV and Excel (xlsx). The data can also be cop
 
 ## Limitations
 
-The database and software are tuned for Finnish.
+The database and software are tailored for Finnish.
  - The data in the database is disambiguated based on the so-called "core" morphological features for Finnish.
- - The software also currently only supports those features that are relevant for Finnish.
+   - For other languages, most UD features are directly supported.
+ - The software has no support for features that are not relevant for Finnish, such as information regarding pronunciation.
 
 ## Citing
 
