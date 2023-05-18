@@ -1,5 +1,6 @@
 # wm2
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform](https://img.shields.io/badge/platform-windows%20|%20MacOS-orange.svg)
 
 Wordmill2 is a program for generating stimulus words for psycholinguistic research.
@@ -63,11 +64,15 @@ Article in progress. TBD
 
 # License
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Copyright &copy; 2022-2023 University of Turku.
 
+
+## Documentation license
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
-This work is licensed under a
+Documentation is licensed under a
 [Creative Commons Attribution 4.0 International License][cc-by].
 
 [![CC BY 4.0][cc-by-image]][cc-by]
