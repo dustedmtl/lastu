@@ -134,7 +134,7 @@ jobs:
           mkdir $folder
           export VER="$appversion"
           python write-version.py
-          pyinstaller ui-qt6.spec.new
+          pyinstaller ui-qt6.new.spec
           cp -a dist/wm2.app $folder
           cp wm2.ini $folder
           cp -a README.md LICENSE docs $folder
