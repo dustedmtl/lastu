@@ -57,12 +57,12 @@ jobs:
 #          os: [windows-latest]
 
     steps:
-      - name: Download Artifact
+      - name: Download Artifact: Long Version Number
         uses: actions/download-artifact@v2
         with:
           name: version_number
 
-      - name: Download Artifact
+      - name: Download Artifact: Short Version Number
         uses: actions/download-artifact@v2
         with:
           name: short_version_number
@@ -86,6 +86,9 @@ jobs:
           sversion=`cat shortversion.txt`
           echo "Short version number is $sversion"
           echo "SVERSION=$sversion" >> $GITHUB_ENV
+          appversion = `echo "$VERSION" | awk -F. '{print $1 "." $2 "." $3}'`
+          echo "App version number is $appversion"
+          echo "APPVERSION=$appversion" >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -126,9 +129,10 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           sversion="${{ env.SVERSION }}"
+          appversion="${{ env.APPVERSION }}"
           folder="wm2-$sversion"
           mkdir $folder
-          export VER="$version"
+          export VER="$appversion"
           python write-version.py
           pyinstaller ui-qt6.spec.new
           cp -a dist/wm2.app $folder
