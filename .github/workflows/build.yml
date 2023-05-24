@@ -86,7 +86,7 @@ jobs:
           sversion=`cat shortversion.txt`
           echo "Short version number is $sversion"
           echo "SVERSION=$sversion" >> $GITHUB_ENV
-          appversion = `echo "$VERSION" | awk -F. '{print $1 "." $2 "." $3}'`
+          appversion=`echo "$VERSION" | awk -F. '{print $1 "." $2 "." $3}'`
           echo "App version number is $appversion"
           echo "APPVERSION=$appversion" >> $GITHUB_ENV
 
