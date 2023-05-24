@@ -20,8 +20,8 @@
   - Mac:
     - export VER=0.0.X.0
     - `python write-version.py`
-      - generates file `ui-qt6.spec.new` based on `ui-qt6.spec`
-    - Preferred: `pyinstaller ui-qt6.spec.new`
+      - generates file `ui-qt6.new.spec` based on `ui-qt6.spec`
+    - Preferred: `pyinstaller ui-qt6.new.spec`
       - OR `pyinstaller --windowed ui-qt6.py`
   - Windows:
     - Update version number and version file 
