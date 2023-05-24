@@ -57,12 +57,12 @@ jobs:
 #          os: [windows-latest]
 
     steps:
-      - name: Download Artifact: Long Version Number
+      - name: Download Long Version Number
         uses: actions/download-artifact@v2
         with:
           name: version_number
 
-      - name: Download Artifact: Short Version Number
+      - name: Download Short Version Number
         uses: actions/download-artifact@v2
         with:
           name: short_version_number
