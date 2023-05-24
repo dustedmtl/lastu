@@ -14,6 +14,9 @@ from pathlib import Path
 if sys.platform.startswith('win32'):
     from win32com.client import *
 
+if sys.platform.startswith('darwin'):
+    from Foundation import NSBundle
+
 logger = logging.getLogger('wm2')
 # logger.setLevel(logging.DEBUG)
 
@@ -69,6 +72,7 @@ def get_config(filename: str) -> Tuple[Optional[configparser.ConfigParser], Opti
 
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
         logger.debug('Running in a PyInstaller bundle')
+        logger.debug('System platform is %s', sys.platform)
     else:
         logger.debug('Running in a normal Python process')
 
@@ -127,13 +131,21 @@ def get_configvar(cfg: configparser.ConfigParser,
 
 
 def get_application_version():
-    """Get application version in Windows."""
+    """Get application version in Windows/macos."""
     appfile = sys.argv[0]
     if sys.platform.startswith('win32'):
         try:
             information_parser = Dispatch("Scripting.FileSystemObject")
             version = information_parser.GetFileVersion(appfile)
             return version
+        except Exception as e:
+            logging.exception('Got exception with getting executable file info: %s', str(e))
+    elif sys.platform.startswith('darwin'):
+        try:
+            bundle = NSBundle.mainBundle()
+            info = bundle.infoDictionary()
+            version_number = info['CFBundleShortVersionString']
+            return version_number
         except Exception as e:
             logging.exception('Got exception with getting executable file info: %s', str(e))
     else:
