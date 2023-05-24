@@ -18,14 +18,17 @@
 - Activate virtual environment (see above)
 - Build
   - Mac:
-    - `pyinstaller --windowed ui-qt6.py`
-    - OR `pyinstaller ui-qt6.spec`
+    - export VER=0.0.X.0
+    - `python write-version.py`
+      - generates file `ui-qt6.spec.new` based on `ui-qt6.spec`
+    - Preferred: `pyinstaller ui-qt6.spec.new`
+      - OR `pyinstaller --windowed ui-qt6.py`
   - Windows:
     - Update version number and version file 
       - `set VER=0.0.X.0`
-      - `python win-version.py`
+      - `python write-version.py`
         - generates file `win-version.yaml` based on `win-version-tpl.yaml`
-      - `create-version-file win-version.yaml --outfile win-version.txt`
+     - `create-version-file win-version.yaml --outfile win-version.txt`
         - generates version file that is usable in Windows
     - Preferred: `pyinstaller ui-qt6-win.spec`
       - OR `pyinstaller --onefile ui-qt6.py`
