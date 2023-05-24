@@ -34,5 +34,5 @@ elif sys.platform.startswith('darwin'):
 
     newcontents.append('\n')
     # Write the modified contents back to the file
-    with open('ui-qt6.spec.new', 'w') as file:
+    with open('ui-qt6.new.spec', 'w') as file:
         file.write('\n'.join(newcontents))
