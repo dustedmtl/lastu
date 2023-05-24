@@ -108,11 +108,14 @@ jobs:
           $version = "${{ env.VERSION }}"
           $env:VER = $version
           $sversion = "${{ env.SVERSION }}"
-          python win-version.py
+          python write-version.py
           create-version-file win-version.yaml --outfile win-version.txt
           pyinstaller ui-qt6-win.spec
           $folder = "wm2-$sversion"
           New-Item -Path $folder -ItemType Directory
+          Copy-Item -Path README.md -Destination $folder -Force
+          Copy-Item -Path LICENSE -Destination $folder -Force
+          Copy-Item -Path "docs" -Destination $folder -Recurse -Force
           Copy-Item -Path dist/wm2.exe -Destination $folder -Force
           Copy-Item -Path wm2.ini -Destination $folder -Force
           Compress-Archive -Path $folder -DestinationPath "wm2-$sversion.zip"
@@ -125,9 +128,12 @@ jobs:
           sversion="${{ env.SVERSION }}"
           folder="wm2-$sversion"
           mkdir $folder
-          pyinstaller ui-qt6.spec
+          export VER="$version"
+          python write-version.py
+          pyinstaller ui-qt6.spec.new
           cp -a dist/wm2.app $folder
           cp wm2.ini $folder
+          cp -a README.md LICENSE docs $folder
           hdiutil create -format UDZO -srcfolder $folder "wm2-$sversion.dmg"
           echo "PKGFILE=wm2-$sversion.dmg" >> $GITHUB_ENV
           # echo "::set-output name=package::wm2-$sversion.dmg"
