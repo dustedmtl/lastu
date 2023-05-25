@@ -42,6 +42,11 @@ Properties can be queried for lemmas, form or 'non-words' (i.e. words that are n
 
 Supported output formats are CSV, TSV and Excel (xlsx). The data can also be copied to the clipboard.
 
+## Running the program
+
+Running the source version:
+ - `python3 ui-qt6.py`
+
 ## Documentation
 
  - User guide for using the application: [USERGUIDE](docs/USERGUIDE.md)
