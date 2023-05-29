@@ -64,11 +64,15 @@ parser.add_argument('-c', '--cmd',
 parser.add_argument('-f', '--frequency',
                     type=int,
                     default=1,
-                    help='Frequency filter for pruning')
+                    help='Minimum frequency for pruning')
 
 parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help='Verbose')
+
+parser.add_argument('-p', '--pos',
+                    type=str,
+                    help='Parts-of-speech to remove')
 
 parser.add_argument('-e', '--allowempty',
                     action='store_true',
@@ -81,6 +85,11 @@ parser.add_argument('-y', '--yes',
 args = parser.parse_args()
 cmd = args.cmd
 
+prunepos = []
+# print(args.pos)
+if args.pos is not None:
+    prunepos.extend(args.pos.split(','))
+
 if cmd == 'prune':
     # only take the first input into account
     inputfile = args.input[0]
@@ -89,14 +98,23 @@ if cmd == 'prune':
         sys.exit()
 
     print(f'Using {inputfile} as source database')
-    sqlcon = dbutil.get_connection(inputfile)
+    dbconn = dbutil.DatabaseConnection(inputfile)
+    sqlcon = dbconn.get_connection()
     if args.output:
         print(f'Copy database to {args.output}')
     # Determine how much stuff will be deleted
     print('Determining total word count..')
     total = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
     print('Determining deletion word count..')
-    topurge = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs where frequency <= {args.frequency}")
+    if args.pos is not None:
+        pp = ["'" + p + "'" for p in prunepos]
+        pp2 = ','.join(pp)
+        # print(pp2)
+        sqlquery = f"select count(*) from wordfreqs where pos in ({pp2})"
+        # print(sqlquery)
+        topurge = dbutil.adhoc_query(sqlcon, sqlquery)
+    else:
+        topurge = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs where frequency < {args.frequency}")
     total = total[0][0]
     topurge = topurge[0][0]
     toremain = total - topurge
@@ -126,20 +144,24 @@ if cmd == 'prune':
     print('Dropping helper tables...')
     buildutil.drop_helper_tables(sqlcon)
     print('Dropping wordfreqs indexes...')
-    buildutil.drop_indexes(sqlcon, 'wordfreqs', exclude='freq_len')
+    if args.pos is None:
+        buildutil.drop_indexes(sqlcon, 'wordfreqs', exclude='freq_len')
     print('Nullifying computed information...')
     buildutil.nullify_wordfreqs(sqlcon)
 
-    # Deletion
     print('Dropping matching rows...')
-    buildutil.delete_rows(sqlcon, args.frequency)
+    # Deletion
+    if args.pos is not None:
+        buildutil.delete_pos_rows(sqlcon, prunepos)
+    else:
+        buildutil.delete_rows(sqlcon, args.frequency)
 
     # Rebuild
     print('Re-adding indexes and tables...')
     buildutil.add_schema(sqlcon, 'wordfreqs_indexes.sql')
     buildutil.add_schema(sqlcon, 'features.sql')
     print('Re-linking features information...')
-    buildutil.add_features(sqlcon)
+    buildutil.add_features(dbconn)
 
     # FIXME: run vacuum
     # buildutil.vacuum(sqlcon)
@@ -161,6 +183,7 @@ if cmd == 'concat':
         sys.exit()
 
     # New database
+    # FIXME: get database metadata from first input file to determine language
     if args.output:
         if exists(args.output):
             if args.allowempty:
