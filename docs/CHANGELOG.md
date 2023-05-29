@@ -4,6 +4,15 @@ Notable changes in the program will be documented here.
 
 The format of this file is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.0.9] - 2023-05-XX
+
+### Added
+
+- default query to init file
+- macos version number
+- packaging: copy documentation to distributable package
+- building a database: remove extra word classes such as X,PUNCT,SYM; max length filter
+
 ## [0.0.8] - 2023-05-15
 
 ### Added

@@ -14,7 +14,7 @@ During the building process, indexes are therefore automatically added or delete
 - Clone the repository
   - `git clone <giturl>`
 - Create a virtual environment for building (venv)
-  - `python3 -m venv venv`
+  - `python -m venv venv`
   - See also: https://docs.python.org/3/library/venv.html
 - Activate virtual environment
   - macOS:
@@ -22,12 +22,12 @@ During the building process, indexes are therefore automatically added or delete
   - Windows:
     - `venv\Scripts\activate.bat`
  - Install requirements to venv
-   - `pip3 install -r requirements.txt`
+   - `pip install -r requirements.txt`
 
 ## Building a database
 
 - Activate virtual environment (see above)
-- `python3 build_database.py -n -i <input> -d data/<dbfile>`
+- `python build_database.py -n -i <input> -d data/<dbfile>`
   - builds a new database file `<dbfile>`
   - `<input>` may a UD dependency parsed file or a directory containing such files
     - files may be gzipped or not
@@ -45,10 +45,10 @@ It is necessary to run all of the below scripts to get a functional database.
  - `sqlite3 data/<dbfile> < sql/wordfreqs_indexes.sql`
 
 ### Generate init/fin trigram and bigram frequencies
- - `python3 generate_freqs.py -d data/<dbfile>`
+ - `python generate_freqs.py -d data/<dbfile>`
 
 ### Generate helper tables
- - `python3 generate_helper_tables.py -d data/<dbfile> -a`
+ - `python generate_helper_tables.py -d data/<dbfile> -a`
  - Options
    - `-a`
      - All of the below (except -c)
@@ -67,6 +67,11 @@ It is necessary to run all of the below scripts to get a functional database.
 
 In practice, you should first run the script with the argument `-a` and then with argument `-c`.
 
+## Database statistics
+
+To get statistics from a database:
+ - `python db_stats.py <inputfile>`
+
 ## Managing a database
 
 Note that when using the `manage_database.py` script, aggregate information must be regenerated afterwards with the `generate_freqs.py`and `generate_helper_tables` scripts.
@@ -84,7 +89,7 @@ Note that when using the `manage_database.py` script, aggregate information must
 
 ### Combining one or more database files
 
- - `python3 manage_database.py -i <sourcefiles> -o <outfile> -c concat -e`
+ - `python manage_database.py -i <sourcefiles> -o <outfile> -c concat -e`
 
 This is mostly useful when there is a large amount of source data. In this case it makes sense to build the database in parts. 
 
@@ -99,15 +104,19 @@ This method might not be the most efficient one, but it is simple and straight-f
 
 ### Pruning a database
 
- - `python3 manage_database.py -i <infile> -o <outfile> -c prune -f <freq>`
+ - `python manage_database.py -i <infile> -o <outfile> -c prune -f <freq>`
 
 Prune the database by mandating a minimum frequency `<freq>`.
 
  - Options
    - `-f <freq>`
-     - minium frequency
+     - minimum frequency
+   - `-l <len>`
+     - maximum word length 
+   - `-p <pos1,pos2>`
+     - word classes to remove
 
-TBD: what is actually done when combining a database and pruning it.
+Remember to re-add the helper tables and gram frequencies after pruning.
 
 ## Building for languages other than Finnish.
 
