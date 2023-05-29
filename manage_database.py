@@ -63,16 +63,19 @@ parser.add_argument('-c', '--cmd',
 
 parser.add_argument('-f', '--frequency',
                     type=int,
-                    default=1,
                     help='Minimum frequency for pruning')
+
+parser.add_argument('-p', '--pos',
+                    type=str,
+                    help='Parts-of-speech to remove for pruning')
+
+parser.add_argument('-l', '--maxlength',
+                    type=int,
+                    help='Maximum word length for pruning')
 
 parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help='Verbose')
-
-parser.add_argument('-p', '--pos',
-                    type=str,
-                    help='Parts-of-speech to remove')
 
 parser.add_argument('-e', '--allowempty',
                     action='store_true',
@@ -97,6 +100,10 @@ if cmd == 'prune':
         logger.warning('No such file: %s', inputfile)
         sys.exit()
 
+    if not args.pos and not args.maxlength and not args.frequency:
+        print('No pruning criteria provided - exiting')
+        sys.exit()
+
     print(f'Using {inputfile} as source database')
     dbconn = dbutil.DatabaseConnection(inputfile)
     sqlcon = dbconn.get_connection()
@@ -105,23 +112,42 @@ if cmd == 'prune':
     # Determine how much stuff will be deleted
     print('Determining total word count..')
     total = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
+    total = total[0][0]
     print('Determining deletion word count..')
+
+    mods = 0
     if args.pos is not None:
+        mods += 1
         pp = ["'" + p + "'" for p in prunepos]
         pp2 = ','.join(pp)
         # print(pp2)
         sqlquery = f"select count(*) from wordfreqs where pos in ({pp2})"
         # print(sqlquery)
         topurge = dbutil.adhoc_query(sqlcon, sqlquery)
-    else:
+        topurge_pos = topurge[0][0]
+        toremain_pos = total - topurge_pos
+        print(f'About to delete {topurge_pos} rows of {total}, with {toremain_pos} remaining')
+
+    if args.frequency is not None:
+        mods += 1
         topurge = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs where frequency < {args.frequency}")
-    total = total[0][0]
-    topurge = topurge[0][0]
-    toremain = total - topurge
+        topurge_freq = topurge[0][0]
+        toremain_freq = total - topurge_freq
+        print(f'About to delete {topurge_freq} rows of {total}, with {toremain_freq} remaining')
+
+    if args.maxlength is not None:
+        mods += 1
+        topurge = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs where len > {args.maxlength}")
+        topurge_len = topurge[0][0]
+        toremain_len = total - topurge_len
+        print(f'About to delete {topurge_len} rows of {total}, with {toremain_len} remaining')
+
+    if mods > 1:
+        print('Multiple pruning criteria provided - the total amount of pruned rows may differ from the information provided above.')
+
     if args.output:
-        print(f'About to delete {topurge} rows of {total}, with {toremain} remaining in a copied database')
-    else:
-        print(f'About to delete {topurge} rows of {total}, with {toremain} remaining')
+        print('The original database is not modified, the changes will be made to a copied database.')
+
     if not args.yes:
         ok = input('Ok? y/N: ')
         if not ok.lower().startswith('y'):
@@ -153,8 +179,12 @@ if cmd == 'prune':
     # Deletion
     if args.pos is not None:
         buildutil.delete_pos_rows(sqlcon, prunepos)
-    else:
+
+    if args.frequency is not None:
         buildutil.delete_rows(sqlcon, args.frequency)
+
+    if args.maxlength is not None:
+        buildutil.delete_len_rows(sqlcon, args.maxlength)
 
     # Rebuild
     print('Re-adding indexes and tables...')

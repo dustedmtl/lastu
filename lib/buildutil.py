@@ -2,7 +2,7 @@
 
 # pylint: disable=invalid-name, line-too-long
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 # from typing import List, Dict, Tuple, Optional, Callable, Iterable
 # from typing import Optional, Tuple, Dict
 # import sys
@@ -85,8 +85,25 @@ def nullify_wordfreqs(sqlcon: sqlite3.Connection, full: bool = False):
 
 def delete_rows(sqlcon: sqlite3.Connection,
                 frequency: int):
-    """Delete rows where frequency is equal or lower than this value."""
-    deletestr = f"DELETE FROM wordfreqs where frequency <= {frequency}"
+    """Delete rows where frequency is lower than this value."""
+    deletestr = f"DELETE FROM wordfreqs where frequency < {frequency}"
+    adhoc_query(sqlcon, deletestr)
+
+
+def delete_pos_rows(sqlcon: sqlite3.Connection,
+                    poses: List[str]):
+    """Delete rows with these wordclasses."""
+    pp = ["'" + p + "'" for p in poses]
+    pp2 = ','.join(pp)
+    # print(pp2)
+    deletestr = f"DELETE FROM wordfreqs where pos in ({pp2})"
+    adhoc_query(sqlcon, deletestr)
+
+
+def delete_len_rows(sqlcon: sqlite3.Connection,
+                    maxlength: int):
+    """Delete rows where form length is higher than this."""
+    deletestr = f"DELETE FROM wordfreqs where len > {maxlength}"
     adhoc_query(sqlcon, deletestr)
 
 
