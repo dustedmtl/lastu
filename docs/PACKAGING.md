@@ -18,7 +18,7 @@
 - Activate virtual environment (see above)
 - Build
   - Mac:
-    - export VER=0.0.X.0
+    - `export VER=0.0.X`
     - `python write-version.py`
       - generates file `ui-qt6.new.spec` based on `ui-qt6.spec`
     - Preferred: `pyinstaller ui-qt6.new.spec`
