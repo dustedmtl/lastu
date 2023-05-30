@@ -133,6 +133,12 @@ def get_configvar(cfg: configparser.ConfigParser,
 def get_application_version():
     """Get application version in Windows/macos."""
     appfile = sys.argv[0]
+
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        pass
+    else:
+        return None
+
     if sys.platform.startswith('win32'):
         try:
             information_parser = Dispatch("Scripting.FileSystemObject")
