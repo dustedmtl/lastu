@@ -77,6 +77,10 @@ parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help='Verbose')
 
+parser.add_argument('-N', '--noindex',
+                    action='store_true',
+                    help='Do not add wordfreqs indexes to the database')
+
 parser.add_argument('-e', '--allowempty',
                     action='store_true',
                     help='Allow empty target file')
@@ -187,11 +191,16 @@ if cmd == 'prune':
         buildutil.delete_len_rows(sqlcon, args.maxlength)
 
     # Rebuild
-    print('Re-adding indexes and tables...')
-    buildutil.add_schema(sqlcon, 'wordfreqs_indexes.sql')
-    buildutil.add_schema(sqlcon, 'features.sql')
-    print('Re-linking features information...')
-    buildutil.add_features(dbconn)
+    if args.noindex:
+        freqindex_str = "CREATE INDEX IF NOT EXISTS idx_wordfreqs_freq_len ON wordfreqs(frequency DESC, len DESC)"
+        print('Adding frequency index')
+        dbutil.adhoc_query(sqlcon, freqindex_str)
+    else:
+        print('Re-adding indexes and tables...')
+        buildutil.add_schema(sqlcon, 'wordfreqs_indexes.sql')
+        buildutil.add_schema(sqlcon, 'features.sql')
+        print('Re-linking features information...')
+        buildutil.add_features(dbconn)
 
     # FIXME: run vacuum
     # buildutil.vacuum(sqlcon)
