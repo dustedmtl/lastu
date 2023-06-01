@@ -857,6 +857,76 @@ def get_orderby(orderby: str) -> str:
     return orderstring
 
 
+def parse_aggregation_query(query: str,
+                            revfeatmap: Dict = None,
+                            relfieldmap: Dict = None,
+                            aggop: str = 'sum',
+                            limit: int = 20) -> Tuple[str, List[str], List[str]]:
+    """Parse aggregation query."""
+    features = revfeatmap.keys()
+    strkeys = ['lemma', 'form', 'pos', 'posx']
+    aggops = ['count', 'sum']
+    aggcols = ['len', 'lemmalen', 'hood']
+    tables = "wordfreqs w, features f"
+    aggcol = 'frequencyx'
+
+    errors: List[str] = []
+
+    parts = query.lower().split('and')
+    groupkeys = []
+    wheres = "w.featid = f.featid"
+    whereparts = []
+
+    for part in parts:
+        try:
+            keypart = part.split()
+            key, op, val = keypart
+            if key == 'agg':
+                feats = val.split(',')
+                for feat in feats:
+                    if feat in strkeys:
+                        groupkeys.append(f"w.{feat}")
+                    elif feat in features:
+                        groupkeys.append(f"f.{feat}")
+                    else:
+                        errors.append(f"Invalid aggregation column: '{feat}'")
+            elif key == 'aggop':
+                if val in aggops:
+                    aggop = val
+                else:
+                    errors.append(f"Invalid aggregation operator: '{aggop}'")
+            elif key == 'limit':
+                limit = int(val)
+            else:
+                whereparts.append(part)
+                # errors.append(f"Invalid aggregation key: '{key}'")
+
+        except ValueError as e:
+            logging.exception(e)
+            errors.append(f"Invalid aggregation query part: '{part.strip()}'")
+
+    sqlstr = ""
+    args = []
+    if whereparts:
+        # print(whereparts)
+        # print(' and '.join(whereparts))
+        wherestr, pargs, perrors, _indexers, _notlikeindexers, _useposx = parse_querystring(' and '.join(whereparts), revfeatmap, relfieldmap)
+        if not perrors:
+            wheres += " and " + wherestr[6:]
+            args.extend(pargs)
+    if groupkeys:
+        # print(groupkeys)
+        # print(aggop, limit)
+        gk = ', '.join([k + ' as ' + k.split('.')[1] for k in groupkeys])
+        gk2 = ', '.join(groupkeys)
+        # "select w.pos as pos, f.nouncase as nouncase, sum(w.frequency) as agg from wordfreqs w, features f where w.featid = f.featid group by w.pos, f.nouncase order by agg desc limit 20
+        sqlstr = f"select {gk}, {aggop}(w.{aggcol}) as agg from {tables} where {wheres} group by {gk2} order by agg desc limit {limit}"
+    else:
+        errors.append("Not an aggregation query")
+
+    return sqlstr, args, errors
+
+
 # FIXME: defaultindex to connection class
 # FIXME: lemmas, grams to connection class?
 def get_frequency_dataframe(dbconnection: DatabaseConnection,
@@ -887,6 +957,15 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     }
 
     revfeats = dbconnection.featmap(reverse=True)
+
+    if isinstance(query, str) and 'agg' in query:
+        aggstr, aggargs, aggerrors = parse_aggregation_query(query, revfeats, relfieldmap)
+        if not aggerrors:
+            logger.info('Running as an aggregation query')
+            logger.debug('SQL: %s', aggstr)
+            return run_query(dbconnection, connection,
+                             aggstr, aggargs, False, False)
+
     wherestr, args, errors, windexedby, useposx = get_querystring(query, revfeats,
                                                                   orderstring, relfieldmap, defaultindex)
 
@@ -983,6 +1062,18 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     logger.debug('Arguments: %s', argshow)
     # print(sqlstr)
     # print(args)
+    return run_query(dbconnection, connection,
+                     sqlstr, args,
+                     useposx)
+
+
+def run_query(dbconnection: DatabaseConnection,
+              connection: sqlite3.Connection,
+              sqlstr: str,
+              args: List[str],
+              useposx: bool = False,
+              reorder: bool = True) -> pd.DataFrame:
+    """Run the final SQL query."""
 
     querystatus = 0
     querymessage = 'success'
@@ -1007,7 +1098,8 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         if useposx:
             df = df.drop_duplicates(subset=['lemma', 'form', 'pos', 'feats'], keep='last').reset_index().drop('index', axis=1)
             df = df[:dbconnection.rowlimit()]
-        df = reorder_columns(df).rename({'nouncase': 'case', 'nnumber': 'number'}, axis=1)
+        if reorder:
+            df = reorder_columns(df).rename({'nouncase': 'case', 'nnumber': 'number'}, axis=1)
 
         endtime = time.perf_counter()
         logger.info('%d rows returned in %.1f seconds', len(df), endtime - starttime)
