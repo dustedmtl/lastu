@@ -265,7 +265,7 @@ class DatabaseConnection:
             cols = columndata.name
             self.columns[table] = list(cols)
 
-    def rowlimit(self, limit: int = None) -> int:
+    def rowlimit(self, limit: Optional[int] = None) -> int:
         """Get/set rowlimit."""
         if limit:
             self.limit = limit
@@ -422,8 +422,8 @@ def write_freqs_to_db(dbc: DatabaseConnection,
 
 # FIXME: make this a query class
 def parse_query(query: str,
-                revfeatmap: Dict = None,
-                relfieldmap: Dict = None) -> Tuple[List[List[str]], List]:
+                revfeatmap: Dict,
+                relfieldmap: Dict) -> Tuple[List[List[str]], List]:
     """Parse query to SQL key-values."""
     parts = query.lower().split('and')
     kvparts = []
@@ -565,8 +565,8 @@ indexfields = {
 
 
 def parse_querystring(querystr: str,
-                      revfeatmap: Dict = None,
-                      relfieldmap: Dict = None) -> Tuple[str, List, List, List, List, bool]:
+                      revfeatmap: Dict,
+                      relfieldmap: Dict) -> Tuple[str, List, List, List, List, bool]:
     """Parse the query string."""
     queryparts, errors = parse_query(querystr, revfeatmap, relfieldmap)
     # print(queryparts)
@@ -814,10 +814,10 @@ def get_indexer(indexers: List,
     return windexedby
 
 
-def get_querystring(query: Union[str, Dict] = None,
-                    revfeatmap: Dict = None,
+def get_querystring(query: Union[str, Dict],
+                    revfeatmap: Dict,
+                    relfieldmap: Dict,
                     orderby: str = 'w.frequency',
-                    relfieldmap: Dict = None,
                     defaultindex: bool = False) -> Tuple[str, List[str], List[str], str, bool]:
     """Get final query string and other things."""
     useposx = True
@@ -858,8 +858,8 @@ def get_orderby(orderby: str) -> str:
 
 
 def parse_aggregation_query(query: str,
-                            revfeatmap: Dict = None,
-                            relfieldmap: Dict = None,
+                            revfeatmap: Dict,
+                            relfieldmap: Dict,
                             aggop: str = 'sum',
                             limit: int = 20) -> Tuple[str, List[str], List[str]]:
     """Parse aggregation query."""
@@ -930,8 +930,8 @@ def parse_aggregation_query(query: str,
 # FIXME: defaultindex to connection class
 # FIXME: lemmas, grams to connection class?
 def get_frequency_dataframe(dbconnection: DatabaseConnection,
+                            query: Union[str, Dict],
                             orderby: str = 'w.frequency',
-                            query: Union[str, Dict] = None,
                             defaultindex: bool = False,
                             newconnection: bool = False,
                             lemmas: bool = False,
@@ -966,8 +966,8 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
             return run_query(dbconnection, connection,
                              aggstr, aggargs, False, False)
 
-    wherestr, args, errors, windexedby, useposx = get_querystring(query, revfeats,
-                                                                  orderstring, relfieldmap, defaultindex)
+    wherestr, args, errors, windexedby, useposx = get_querystring(query, revfeats, relfieldmap,
+                                                                  orderstring, defaultindex)
 
     if errors:
         raise ValueError('\n'.join(errors))
