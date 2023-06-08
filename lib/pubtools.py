@@ -36,11 +36,11 @@ def add_hlines(latex: str, hlines: Optional[List[int]] = None) -> str:
 
 def save_table(df: pd.DataFrame,
                name: str, path: str = 'paper/tables',
-               ext: str = 1, index: bool = True,
+               ext: str = "1", index: bool = True,
                hlines: Optional[List[int]] = None,
                precision: int = 3,
                force: bool = False,
-               colformat: Dict = None):
+               colformat: Optional[Dict] = None):
     """Save dataframe to disk as latex, append date."""
     datestr = get_datestr()
     fmt = "%s/%s_%s_%d.tex"

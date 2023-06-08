@@ -1076,7 +1076,7 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
         for idx, item in enumerate(query[testcol]):
             # print(idx, item)
             # pass
-            df.loc[df[testcol].str.replace('#','') == item, 'order'] = idx + 1
+            df.loc[df[testcol].str.replace('#', '') == item, 'order'] = idx + 1
 
     return df, querystatus, querymessage
 
@@ -1088,7 +1088,6 @@ def run_query(dbconnection: DatabaseConnection,
               useposx: bool = False,
               reorder: bool = True) -> pd.DataFrame:
     """Run the final SQL query."""
-
     querystatus = 0
     querymessage = 'success'
 

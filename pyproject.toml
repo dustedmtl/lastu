@@ -57,6 +57,8 @@ module = [
        "wx",
        "wx.grid",
        "pandasgui",
+       # Mac
+       "Foundation",
        # local files
        ".corpus",
        ".dbutil",
