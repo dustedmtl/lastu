@@ -1,1 +1,37 @@
+name: Run coverage tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: false
+  push:
+    tags:
+      - 'v*' # Matching versioning tag
+      
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macOS-latest, windows-latest]
+
+    steps:
+      # Perform testing steps here
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+    
+      - name: Install dependencies
+        run: pip3 install -r packaging-requirements.txt
+      
+      - name: Run tests
+        run: pytest
 
