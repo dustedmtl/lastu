@@ -16,6 +16,9 @@ wm2*.txt
 # Downloads
 *.tar.gz
 
+# Testing
+.coverage
+
 # Building
 dist
 __pycache__
