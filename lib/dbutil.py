@@ -866,7 +866,7 @@ def parse_aggregation_query(query: str,
     features = revfeatmap.keys()
     strkeys = ['lemma', 'form', 'pos', 'posx']
     aggops = ['count', 'sum']
-    aggcols = ['len', 'lemmalen', 'hood']
+    # aggcols = ['len', 'lemmalen', 'hood']
     tables = "wordfreqs w, features f"
     aggcol = 'frequencyx'
 
@@ -880,7 +880,7 @@ def parse_aggregation_query(query: str,
     for part in parts:
         try:
             keypart = part.split()
-            key, op, val = keypart
+            key, _op, val = keypart
             if key == 'agg':
                 feats = val.split(',')
                 for feat in feats:
@@ -1062,9 +1062,23 @@ def get_frequency_dataframe(dbconnection: DatabaseConnection,
     logger.debug('Arguments: %s', argshow)
     # print(sqlstr)
     # print(args)
-    return run_query(dbconnection, connection,
-                     sqlstr, args,
-                     useposx)
+    df, querystatus, querymessage = run_query(dbconnection, connection,
+                                              sqlstr, args,
+                                              useposx)
+
+    # Add original wordinput ordering
+    if isinstance(query, dict):
+        dc = query.keys()
+        testcol = 'form'
+        if 'lemma' in dc:
+            testcol = 'lemma'
+        df.insert(0, 'order', 0)
+        for idx, item in enumerate(query[testcol]):
+            # print(idx, item)
+            # pass
+            df.loc[df[testcol].str.replace('#','') == item, 'order'] = idx + 1
+
+    return df, querystatus, querymessage
 
 
 def run_query(dbconnection: DatabaseConnection,
@@ -1256,6 +1270,10 @@ def get_unword_bigrams(dbc: DatabaseConnection,
     # print(wordbigramtotal, relbigs)
     resdf['bigramfreq'] = formbigs
     # resdf['relbigramfreq'] = relbigs[0]
+
+    resdf.insert(0, 'order', 0)
+    for idx, item in enumerate(data['nonword']):
+        resdf.loc[resdf.form == item, 'order'] = idx + 1
 
     return resdf
 
