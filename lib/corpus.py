@@ -146,7 +146,8 @@ def conllu_vrt_file_reader(filename: str):
                 # print(in_string)
                 sentencedata.append('\n')
                 # c = pyconll.unit.conll.Conll(sentencedata)
-                c = pyconll.unit.sentence.Sentence(in_string)
+                # c = pyconll.unit.sentence.Sentence(in_string)
+                c = []  # type: ignore
                 sentencedata = []
                 yield fileidx, c
             if insentence:
