@@ -17,6 +17,10 @@ tabulate
 pyinstaller
 pyinstaller-versionfile
 
+# testing
+pytest
+pytest-check
+
 # windows/macos building
 pypiwin32; sys_platform == 'win32'
 pyobjc; sys_platform == 'darwin'
