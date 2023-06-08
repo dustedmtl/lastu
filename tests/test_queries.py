@@ -24,12 +24,20 @@ def inifile():
 
 
 @pytest.fixture(scope="session")
-def datafile(inifile):
+def datafile_ini(inifile):
     """Get datafile path."""
     if (datadir := uiutil.get_configvar(inifile, 'input', 'datadir')) is None:
         datadir = '.'
     if (dbfile := uiutil.get_configvar(inifile, 'input', 'database')) is None:
         dbfile = "wm2database.db"
+    return os.path.join(datadir, dbfile)
+
+
+@pytest.fixture(scope="session")
+def datafile():
+    """Get fixed datafile."""
+    datadir = "tests"
+    dbfile = "fi_gutenberg_70M_50.db"
     return os.path.join(datadir, dbfile)
 
 
@@ -135,8 +143,10 @@ def test_clitic(dbc):
 
 def test_compound(dbc):
     """Check that compounds queried properly."""
-    q1 = "lemma = autotalli"
-    q2 = "lemma = autotalli and compound"
+    # q1 = "lemma = autotalli"
+    # q2 = "lemma = autotalli and compound"
+    q1 = "lemma = valtakunta"
+    q2 = "lemma = valtakunta and compound"
 
     df1, _, _ = dbutil.get_frequency_dataframe(dbc, query=q1,
                                                grams=True,
@@ -202,3 +212,16 @@ def test_error(dbc):
         for s in (["'foo' not ok", "'a' is not a number", "'naat compound'",
                    "'len' not ok: '~='", "'len<10'"]):
             check.is_true(s in str(ve))
+
+
+def test_wordlist(dbc):
+    """Text wordlist and filtered queries."""
+    filename = 'samples/lemmalist.txt'
+    wordinput = dbutil.get_wordinput(filename)
+    lemmadf, _, _ = dbutil.get_frequency_dataframe(dbc, query=wordinput, grams=True, lemmas=True)
+    check.greater(len(lemmadf), 0)
+    ffiltered = dbutil.filter_dataframe(dbc, lemmadf, "form = voi and frequency > 10 and amblemma < 0.9")
+    check.greater(len(ffiltered), 0)
+    # The order column is in the dataframe.
+    columns = ffiltered.columns
+    check.is_true('order' in columns)
