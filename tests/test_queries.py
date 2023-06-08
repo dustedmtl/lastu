@@ -37,7 +37,7 @@ def datafile_ini(inifile):
 def datafile():
     """Get fixed datafile."""
     datadir = "tests"
-    dbfile = "fi_gutenberg_70M_50.db"
+    dbfile = "fi_gutenberg_70M_100.db"
     return os.path.join(datadir, dbfile)
 
 

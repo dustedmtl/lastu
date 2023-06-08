@@ -1209,7 +1209,7 @@ def get_wordinput(filename: str) -> Dict[str, List]:
             if line.startswith('#'):
                 if not got_type:
                     # print('b', re.match('.*type\s*=\s*(\w+)', line.strip(), re.M))
-                    if (matches := re.match('.*type\s*=\s*(\w+)', line.strip())) is not None:
+                    if (matches := re.match(r'.*type\s*=\s*(\w+)', line.strip())) is not None:
                         got_type = matches.group(1)
                         if got_type not in cats:
                             # print(f'Invalid type: {got_type}')
