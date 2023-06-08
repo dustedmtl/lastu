@@ -8,7 +8,7 @@ on:
         required: false
   push:
     tags:
-      - 'v*' # Matching versioning tag
+      - 't*' # Matching versioning tag
       
 jobs:
   test:
