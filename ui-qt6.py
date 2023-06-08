@@ -368,7 +368,9 @@ class MainWindow(QMainWindow):
 
         self.layout.addWidget(self.table, 3, 0, 1, 3)
 
-        self.dbnamefield = QLabel(f'Database file: {self.dbconnection.dbfile}')
+        self.dbnamefield = QLabel()
+        self.setDbNameField()
+        # self.dbnamefield = QLabel(f'Database file: {self.dbconnection.dbfile}')
         self.dbnamefield.setObjectName('dbfile')
         self.layout.addWidget(self.dbnamefield, 4, 0, 1, 1)
         # self.dbnamefield.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -585,7 +587,8 @@ class MainWindow(QMainWindow):
         w2.mode = self.mode
         w2.inputfilename = self.inputfilename
         if w2.mode == 'inputfile':
-            w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
+            w2.setDbNameField(self.inputfilename)
+            # w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
         w2.show()
         return w2
 
@@ -594,8 +597,32 @@ class MainWindow(QMainWindow):
         w2.mode = "database"
         w2.fulldata = None
         w2.setData(None)
-        w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
+        w2.setDbNameField()
+        # w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
         w2.querybox.setText("")
+
+    def setDbNameField(self,
+                       inputfilename: Optional[str] = None):
+        dbname = self.dbconnection.dbfile
+        parts = dbname.replace('\\', '/').split('/')
+        showlength = 2
+        if len(parts) > showlength:
+            showdbname = '.../' + '/'.join(parts[-showlength:])
+        else:
+            showdbname = dbname
+
+        logger.debug("Setting dbname field as %s", showdbname)
+
+        if inputfilename is not None:
+            ifparts = inputfilename.replace('\\', '/').split('/')
+            if len(ifparts) > showlength:
+                showifname = '.../' + '/'.join(ifparts[-showlength:])
+            else:
+                showifname = inputfilename
+            logger.debug("Setting inputfile field as %s", showifname)
+            self.dbnamefield.setText(f'Database file: {showdbname}\nInput file: {showifname}')
+        else:
+            self.dbnamefield.setText(f'Database file: {showdbname}')
 
     def closeWindow(self):
         self.close()
@@ -618,12 +645,14 @@ class MainWindow(QMainWindow):
                             neww.mode = "database"
                             neww.fulldata = None
                             neww.setData(None)
-                            neww.dbnamefield.setText(f'Database file: {neww.dbconnection.dbfile}')
+                            neww.setDbNameField()
+                            # neww.dbnamefield.setText(f'Database file: {neww.dbconnection.dbfile}')
                             neww.querybox.setText("")
                         else:
                             neww = self.newWindow(dbconnection=dbconn)
                             neww.mode = "database"
-                            neww.dbnamefield.setText(f'Database file: {neww.dbconnection.dbfile}')
+                            neww.setDbNameField()
+                            # neww.dbnamefield.setText(f'Database file: {neww.dbconnection.dbfile}')
                             neww.textQuery()
                     else:
                         self.dbconnection = dbconn
@@ -633,7 +662,8 @@ class MainWindow(QMainWindow):
                             self.fulldata = None
                             self.setData(None)
                             self.statusfield.setText('')
-                        self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
+                        self.setDbNameField()
+                        # self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
                         self.mode = "database"
             except Exception as e:
                 logger.error("Couldn't connect to %s: %s", dbfile, e)
@@ -857,7 +887,8 @@ class MainWindow(QMainWindow):
             if self.mode == "inputfileprocess":
                 self.mode = "inputfile"
                 self.inputfilename = self.inputprocessfilename
-                self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
+                self.setDbNameField(self.inputfilename)
+                # self.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
             # self.table.horizontalHeader().sortIndicatorChanged.connect(self.sortData)
             # self.filterColumns()
             # self.resizeWidthToContents()
