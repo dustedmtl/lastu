@@ -1114,8 +1114,12 @@ def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[st
             raise uiutil.ConfigurationError('No data directory found')
         dbdir = join(currdir, 'data')
         logger.info('No data directory specified, using current working directory %s', currdir)
+    else:
+        dbdir = dbdir.strip('"')
     if not dbf:
         dbf = 'wm2database.db'
+    else:
+        dbf = dbf.strip('"')
 
     dbpath = join(dbdir, dbf)
     logger.info("Trying database file in path %s", dbpath)
