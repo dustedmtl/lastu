@@ -314,6 +314,7 @@ class MainWindow(QMainWindow):
         self.inputfilename = None
         self.inputprocessfilename = None
 
+        self.clearresultsifempty = False
         # self.lemmacb = QCheckBox()
         # self.formcb = QCheckBox()
         # self.freqcb = QCheckBox()
@@ -549,6 +550,7 @@ class MainWindow(QMainWindow):
             logger.info('Opening new window with existing database')
 
         w2 = MainWindow(dbc, original=False)
+
         # w2.originaldata = w2.data
         w2.appconfig = self.appconfig
         w2.config = self.config
@@ -590,6 +592,11 @@ class MainWindow(QMainWindow):
             w2.setDbNameField(self.inputfilename)
             # w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}\nInput file: {self.inputfilename}')
         w2.show()
+
+        # The query is inherited from the previous window.
+        # If the results of this query are empty, also show empty window.
+        w2.clearresultsifempty = True
+
         return w2
 
     def newEmptyWindow(self) -> QMainWindow:
@@ -634,6 +641,8 @@ class MainWindow(QMainWindow):
             try:
                 logger.info("Connecting to %s...", choosedb)
                 dbconn = dbutil.DatabaseConnection(choosedb)
+                metadata = dbutil.adhoc_query(dbconn.connection, 'select * from metadata')
+                logger.info('Database metadata: %s', metadata)
                 if (rowlimit := configfile.getConfigValue('query.fetchrows')) is not None:
                     logger.debug('Setting row limit to %d', rowlimit)
                     dbconn.rowlimit(rowlimit)
@@ -879,6 +888,7 @@ class MainWindow(QMainWindow):
         self.query_ongoing = False
 
     def setQueryResult(self, exectime: float, querydf: pd.DataFrame):
+        logger.debug('Clear results if empty: %s', self.clearresultsifempty)
         if querydf is not None and len(querydf) > 0:
             df = dbutil.add_relative_frequencies(self.dbconnection, querydf)
             self.statusfield.setText(f'Executing query: {self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
@@ -894,6 +904,10 @@ class MainWindow(QMainWindow):
             # self.resizeWidthToContents()
         else:
             self.statusfield.setText(f'Executing query {self.query_desc} .. done: no results in {exectime:.1f} seconds')
+            if self.clearresultsifempty:
+                df = pd.DataFrame()
+                self.setData(df)
+        self.clearresultsifempty = False
 
     def setQueryError(self, _text: str, error: str):
         if '\n' in error:
