@@ -4,14 +4,27 @@ Notable changes in the program will be documented here.
 
 The format of this file is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.0.9] - 2023-05-XX
+## [0.0.9] - 2023-06-13
 
 ### Added
 
 - default query to init file
-- macos version number
+- wordlist input: enable result ordering by order in input file
+- prototype feature: aggregation queries
+- packaging: macos version number
 - packaging: copy documentation to distributable package
+- testing: testing framework to packaging
 - building a database: remove extra word classes such as X,PUNCT,SYM; max length filter
+- pruning a database: add noindex option
+
+### Changed
+
+- UI: database and input file names are shortened
+
+### Fixed
+
+- reading database file path from wm2.ini
+- when opening a new window: if query has no results, show empty result window
 
 ## [0.0.8] - 2023-05-15
 
