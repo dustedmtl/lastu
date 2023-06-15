@@ -117,33 +117,33 @@ jobs:
           python write-version.py
           create-version-file win-version.yaml --outfile win-version.txt
           pyinstaller ui-qt6-win.spec
-          $folder = "wm2-$sversion"
+          $folder = "lastu-$sversion"
           New-Item -Path $folder -ItemType Directory
           Copy-Item -Path README.md -Destination $folder -Force
           Copy-Item -Path LICENSE -Destination $folder -Force
           Copy-Item -Path "docs" -Destination $folder -Recurse -Force
-          Copy-Item -Path dist/wm2.exe -Destination $folder -Force
-          Copy-Item -Path wm2.ini -Destination $folder -Force
-          Compress-Archive -Path $folder -DestinationPath "wm2-$sversion.zip"
-          echo "PKGFILE=wm2-$sversion.zip" >> $env:GITHUB_ENV
-          # echo "::set-output name=package::wm2-$sversion.zip"
+          Copy-Item -Path dist/lastu.exe -Destination $folder -Force
+          Copy-Item -Path lastu.ini -Destination $folder -Force
+          Compress-Archive -Path $folder -DestinationPath "lastu-$sversion.zip"
+          echo "PKGFILE=lastu-$sversion.zip" >> $env:GITHUB_ENV
+          # echo "::set-output name=package::lastu-$sversion.zip"
 
       - name: Build executable for macOS
         if: runner.os == 'macOS'
         run: |
           sversion="${{ env.SVERSION }}"
           appversion="${{ env.APPVERSION }}"
-          folder="wm2-$sversion"
+          folder="lastu-$sversion"
           mkdir $folder
           export VER="$appversion"
           python write-version.py
           pyinstaller ui-qt6.new.spec
-          cp -a dist/wm2.app $folder
-          cp wm2.ini $folder
+          cp -a dist/lastu.app $folder
+          cp lastu.ini $folder
           cp -a README.md LICENSE docs $folder
-          hdiutil create -format UDZO -srcfolder $folder "wm2-$sversion.dmg"
-          echo "PKGFILE=wm2-$sversion.dmg" >> $GITHUB_ENV
-          # echo "::set-output name=package::wm2-$sversion.dmg"
+          hdiutil create -format UDZO -srcfolder $folder "lastu-$sversion.dmg"
+          echo "PKGFILE=lastu-$sversion.dmg" >> $GITHUB_ENV
+          # echo "::set-output name=package::lastu-$sversion.dmg"
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v2

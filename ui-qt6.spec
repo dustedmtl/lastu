@@ -29,7 +29,7 @@ exe = EXE(
 #    a.datas,
     [],
     exclude_binaries=True,
-    name='wm2',
+    name='lastu',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -51,11 +51,11 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='wm2',
+    name='lastu',
 )
 app = BUNDLE(
     coll,
-    name='wm2.app',
+    name='lastu.app',
     icon=None,
     bundle_identifier=None,
 )
