@@ -1,15 +1,16 @@
-# wm2
+# LASTU
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform](https://img.shields.io/badge/platform-windows%20|%20MacOS-orange.svg)
 
-Wordmill2 is a program for generating stimulus words for psycholinguistic research.
+LASTU (Lexical Application for STimulus Unearthing) is a program for generating stimulus words for psycholinguistic research.
+It has been primarily developed for Finnish.
 
-The database for the program is generated from one data files containing [Universal Dependencies](https://universaldependencies.org/fi/) parsed data.
+The database for the program has been generated from one data files containing [Universal Dependencies](https://universaldependencies.org/fi/) parsed data.
 
 ## Features
 
-A wordmill2 database contains various properties for lemmas and forms:
+A LASTU database contains various properties for lemmas and forms:
  - surface frequencies (absolute and relative)
  - initial trigram, final trigram and average bigram frequencies (absolute and relative)
  - length

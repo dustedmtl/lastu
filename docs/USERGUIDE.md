@@ -1,13 +1,13 @@
-# WordMill 2 User Guide
+# LASTU User Guide
 
 ## Background
 
-WordMill 2 is a program for generating stimulus words for psycholinguistic research. It has mainly been developed for Finnish, but databases can be created for other languages as well.
+LASTU: Lexical Application for STimulus Unearthing is a program for generating stimulus words for psycholinguistic research. It has mainly been developed for Finnish, but databases can be created for other languages as well.
 
 ## Download and installation instructions
 
 The software has two necessary components:
- - the application itself (include the optional `wm2.ini` configuration file)
+ - the application itself (include the optional `lastu.ini` configuration file)
  - a database, which is a file in the form of SQLite3 database
 
 The software and databases are located at OSF https://osf.io/j8v6b/.
@@ -15,7 +15,7 @@ The software and databases are located at OSF https://osf.io/j8v6b/.
 You can download the application on OSF at https://osf.io/j8v6b/files/osfstorage:
  - Under `software`, download the appropriate package (`.zip` for Windows, `.dmg` for macOS).
  - Open the package and drag the application (`.exe` for Windows, `.app` for macOS) to your desired location.
-   - If this is your first time using the software, also drag the `wm2.ini` file to the same location.
+   - If this is your first time using the software, also drag the `lastu.ini` file to the same location.
    - Otherwise you can keep using the old configuration file.
 
 For databases, go to https://osf.io/7hrbv/files/osfstorage.
@@ -27,10 +27,10 @@ The main function of the init file is to tell the application what the database 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
  - The user's home directory
-   - macOS: `/Users/<username>/wm2.ini`
-   - Windows: `C:\Users\<username>\wm2.ini`
+   - macOS: `/Users/<username>/lastu.ini`
+   - Windows: `C:\Users\<username>\lastu.ini`
 
-If the init file is not found, the database filename will default to `wm2database.db` and
+If the init file is not found, the database filename will default to `lastudatabase.db` and
 the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user to locate a file to open.
 
 
@@ -46,7 +46,7 @@ For performance reasons, the application fetches 10000 top results from the data
 
 The results table is sortable by all available fields.
 
-The application generates debug logs to the file `wm2log.txt` and logs executed searches to the file `wm2history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
+The application generates debug logs to the file `lastu_log.txt` and logs executed searches to the file `lastu_history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
 
 ### Basic queries
 
