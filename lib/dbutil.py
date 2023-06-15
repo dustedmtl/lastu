@@ -589,7 +589,8 @@ def parse_querystring(querystr: str,
     # lemmaforms = ['ambform']
     # forms = ['len', 'hood', 'start', 'middle', 'end']
     # forms = []
-    separatetables = ['derivation', 'clitic', 'nouncase']
+    # separatetables = ['derivation', 'clitic', 'nouncase']
+    separatetables = ['derivation', 'clitic']
 
     # FIXME: use a queue mechanism for this?
     for andpart in queryparts:
@@ -699,16 +700,18 @@ def parse_querystring(querystr: str,
                             whereorparts = []
                             whereorparts.append(f'{usetable}.form GLOB ?')
                             args.append(f'?*{v}*?')
-                            whereorparts.append(f'{usetable}.form NOT GLOB ?')
-                            args.append(v + "*")
-                            whereorparts.append(f'{usetable}.revform NOT GLOB ?')
-                            args.append(v[::-1] + "*")
+                            # whereorparts.append(f'{usetable}.form NOT GLOB ?')
+                            # args.append(v + "*")
+                            # whereorparts.append(f'{usetable}.revform NOT GLOB ?')
+                            # args.append(v[::-1] + "*")
                             whereor.append(f"({' AND '.join(whereorparts)})")
                         whereparts.append(f"({' OR '.join(whereor)})")
                     else:
                         for v in invals:
-                            whereparts.append(f'instr({usetable}.form, ?) == 0')
-                            args.append(v)
+                            whereparts.append(f'{usetable}.form NOT GLOB ?')
+                            args.append(f'?*{v}*?')
+                            # whereparts.append(f'instr({usetable}.form, ?) == 0')
+                            # args.append(v)
                 else:
                     whereparts.append(f'{usetable}.{k} {c} ({qmarks})')
                     args.extend(invals)
@@ -717,13 +720,14 @@ def parse_querystring(querystr: str,
                 if c == '=':
                     whereparts.append(f'{usetable}.form GLOB ?')
                     args.append(f'?*{v}*?')
-                    whereparts.append(f'{usetable}.form NOT GLOB ?')
-                    args.append(v + "*")
-                    whereparts.append(f'{usetable}.revform NOT GLOB ?')
-                    args.append(v[::-1] + "*")
+                    # whereparts.append(f'{usetable}.form NOT GLOB ?')
+                    # args.append(v + "*")
+                    # whereparts.append(f'{usetable}.revform NOT GLOB ?')
+                    # args.append(v[::-1] + "*")
                 else:
-                    whereparts.append(f'instr({usetable}.form, ?) == 0')
-                    args.append(v)
+                    whereparts.append(f'{usetable}.form NOT GLOB ?')
+                    # whereparts.append(f'instr({usetable}.form, ?) == 0')
+                    args.append(f'?*{v}*?')
                 continue
 
             if k in ['start', 'end']:
@@ -1344,13 +1348,15 @@ def filter_dataframe(dbc: DatabaseConnection,
                     elif key == 'end':
                         format_string = " | ".join([f"form.str.endswith('{c}')" for c in useval])
                     else:
+                        # middle query
                         strings = []
                         for c in useval:
-                            str1 = f"form.str.contains('{c}')"
-                            str2 = f"~form.str.startswith('{c}')"
-                            str3 = f"~form.str.endswith('{c}')"
-                            str_comb = f"({str1} & {str2} & {str3})"
-                            strings.append(str_comb)
+                            str1 = f"form.str.contains(r'^.+{c}.+$')"
+                            # str1 = f"form.str.contains('{c}')"
+                            # str2 = f"~form.str.startswith('{c}')"
+                            # str3 = f"~form.str.endswith('{c}')"
+                            # str_comb = f"({str1} & {str2} & {str3})"
+                            strings.append(str1)
                         format_string = '|'.join(strings)
                 else:
                     if key == 'start':
@@ -1358,7 +1364,8 @@ def filter_dataframe(dbc: DatabaseConnection,
                     elif key == 'end':
                         format_string = " & ".join([f"~form.str.endswith('{c}')" for c in useval])
                     else:
-                        format_string = " & ".join([f"~form.str.contains('{c}')" for c in useval])
+                        # middle query
+                        format_string = " & ".join([f"~form.str.contains(r'^.+{c}.+$')" for c in useval])
             else:
                 format_string = f"{key}{keyadd} {op} {useval}"
                 if op == '=':

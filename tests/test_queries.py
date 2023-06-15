@@ -168,7 +168,10 @@ def test_form(dbc):
     # q1 = "form like auto%"
     q2 = "start = auto"
     q3 = "end in ssa,ssä"
-    q4 = "middle = ta"
+    q4 = "middle = la"
+    q5 = "start = la and middle = la"
+    q6 = "start = la and middle != la"
+    q7 = "start = la"
 
     # df1, _, _ = dbutil.get_frequency_dataframe(dbc, query=q1,
     #                                            grams=True,
@@ -182,6 +185,15 @@ def test_form(dbc):
     df4, _, _ = dbutil.get_frequency_dataframe(dbc, query=q4,
                                                grams=True,
                                                lemmas=True)
+    df5, _, _ = dbutil.get_frequency_dataframe(dbc, query=q5,
+                                               grams=True,
+                                               lemmas=True)
+    df6, _, _ = dbutil.get_frequency_dataframe(dbc, query=q6,
+                                               grams=True,
+                                               lemmas=True)
+    df7, _, _ = dbutil.get_frequency_dataframe(dbc, query=q7,
+                                               grams=True,
+                                               lemmas=True)
 
     # print(f"{q1}: all forms must start with 'auto'")
     # assert len(df1[~df1.form.str.contains('^auto')]) == 0
@@ -192,10 +204,14 @@ def test_form(dbc):
     check.equal(len(df3[(df3.form.str.contains('ssa$')) | (df3.form.str.contains('ssä$'))]), len(df3))
     # check.equal(len(df3[(df3.form.str.contains('ssa$')) | (df3.form.str.contains('ssä$'))]), 1)
     # assert len(df3[(df3.form.str.contains('ssa$')) | (df3.form.str.contains('ssä$'))]) == len(df3)
-    print(f"{q4}: all forms must contain 'ta' but not start or end with it")
-    check.equal(len(df4[(df4.form.str.contains('ta'))
-                        & (df4.form.str.contains('ta$') | df4.form.str.contains('^ta'))]), 0)
-    # assert len(df4[(df4.form.str.contains('ta')) & (df4.form.str.contains('ta$') | df4.form.str.contains('^ta'))]) == 0
+    print(f"{q4}: all forms must contain 'la' in the middle. They may also start or end with it")
+    check.equal(len(df4[df4.form.str.contains(r'^.+la.+$')]), len(df4))
+    print(f"{q5}: all forms must start with and contain 'la' in the middle. They may also end with it")
+    check.equal(len(df5[df5.form.str.contains(r'^.+la.+$')]), len(df5))
+    print(f"{q6}: all forms must start with and not contain 'la' in the middle. They may also end with it")
+    check.equal(len(df6[~df6.form.str.contains(r'^.+la.+$')]), len(df6))
+    print(f"{q7}: middle queries must add up to a full set")
+    check.equal(len(df7), len(df5)+len(df6))
 
 
 def test_error(dbc):
