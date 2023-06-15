@@ -161,6 +161,6 @@ def get_application_version():
 def log_handler(logdict: Dict, directory: str) -> Dict:
     """Return a log handler configuration that can write to a specified directory."""
     for handler, fn in zip(('file_handler', 'history_handler'),
-                           ('wm2log.txt', 'wm2history.txt')):
+                           ('lastu_log.txt', 'lastu_history.txt')):
         logdict['handlers'][handler]['filename'] = join(directory, fn)
     return logdict

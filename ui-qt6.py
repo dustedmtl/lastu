@@ -96,20 +96,20 @@ wm2logconfig = {
         'file_handler': {
             'class': 'logging.FileHandler',
             'formatter': 'default_formatter',
-            # 'filename': join(homedir, 'wm2log.txt'),
+            # 'filename': join(homedir, 'last_log.txt'),
             'level': 'DEBUG'
         },
         'history_handler': {
             'class': 'logging.FileHandler',
             'formatter': 'just_msg_mam',
-            # 'filename': join(homedir, 'wm2history.txt'),
+            # 'filename': join(homedir, 'lastu_history.txt'),
             'filters': ['justquery'],
             'level': 'INFO'
         }
     },
 }
 
-cfg, currdir = uiutil.get_config('wm2.ini')
+cfg, currdir = uiutil.get_config('lastu.ini')
 # print(cfg, currdir)
 
 try:
@@ -297,7 +297,7 @@ class MainWindow(QMainWindow):
                  original=True):
         super().__init__()
         # super(MainWindow, self).__init__()
-        self.setWindowTitle("WM2")
+        self.setWindowTitle("LASTU")
         self.dbconnection = dbconnection
         # self.originaldata = df
         self.appversion = uiutil.get_application_version()
@@ -379,7 +379,7 @@ class MainWindow(QMainWindow):
         copylefttext = 'Copyright (c) 2022-2023 University of Turku'
         # print(f'-{self.appversion}-')
         if self.appversion is not None and len(self.appversion) > 0:
-            copylefttext = f'WM2 version {self.appversion}. {copylefttext}'
+            copylefttext = f'LASTU version {self.appversion}. {copylefttext}'
         self.copyleft = QLabel(copylefttext)
         self.copyleft.setObjectName('copyleft')
         self.layout.addWidget(self.copyleft, 4, 1, 1, 2)
@@ -1003,8 +1003,8 @@ class MainWindow(QMainWindow):
                     df.to_csv(filename, sep=separator, index=False)
                 elif 'xlsx' in selected_filter:
                     with pd.ExcelWriter(filename) as excelwriter:
-                        df.to_excel(excelwriter, sheet_name='WM2 words', index=False)
-                        auto_adjust_xlsx_column_width(df, excelwriter, sheet_name='WM2 words', index=False)
+                        df.to_excel(excelwriter, sheet_name='LASTU words', index=False)
+                        auto_adjust_xlsx_column_width(df, excelwriter, sheet_name='LASTU words', index=False)
 
     def copyToClip(self):
         logger.debug("Copy to clipboard called")
@@ -1131,7 +1131,7 @@ def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[st
     else:
         dbdir = dbdir.strip('"')
     if not dbf:
-        dbf = 'wm2database.db'
+        dbf = 'lastudatabase.db'
     else:
         dbf = dbf.strip('"')
 
@@ -1154,7 +1154,7 @@ def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[st
 if __name__ == "__main__":
 
     logger.info('Launching application at %s', datetime.now())
-    inifile = 'wm2.ini'
+    inifile = 'lastu.ini'
     appconfig, currdir = uiutil.get_config(inifile)
     # print(appconfig, currworkdir)
     if not appconfig:
