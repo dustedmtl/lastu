@@ -1,5 +1,7 @@
 # Packaging an executable
 
+Note that the full packaging process is in the github workflow file. This document describes a process for building a bare-bones executable.
+
 ## Setup
 - Clone the repository
   - `git clone`
