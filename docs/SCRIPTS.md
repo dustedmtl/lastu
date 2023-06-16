@@ -71,8 +71,7 @@ This is mostly useful when there is a large amount of source data. In this case 
      - Normally the script produces an error if the output database `<outfile>` already exists.
      - This option suppresses the error and allows the operation.
 
-When combining rows from two databases, the inserts are done with 
-Two databases are combined with sqlite [UPSERT](https://www.sqlite.org/lang_UPSERT.html): when a row exists in both databases, the frequencies are summed.
+When combining rows from two databases, the inserts are done with sqlite [UPSERT](https://www.sqlite.org/lang_UPSERT.html): when a row exists in both databases, the frequencies are summed.
 This method might not be the most efficient one, but it is simple and straight-forward.
 
 ### Pruning a database
