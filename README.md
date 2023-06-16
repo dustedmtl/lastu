@@ -53,7 +53,7 @@ Running the source version:
  - User guide for using the application: [USERGUIDE](docs/USERGUIDE.md)
  - Technical data
    - Building databases for the application: [BUILDING](docs/BUILDING.md)
-   - Documentation for the scripts: [BUILDING](docs/SCRIPTS.md)
+   - Documentation for the scripts: [SCRIPTS](docs/SCRIPTS.md)
    - Packaging the application into an executable: [PACKAGING](docs/PACKAGING.md)
    - Technical information: [TECHINFO](docs/TECHINFO.md)
  - Input file samples: [SAMPLES](docs/SAMPLES.md)
