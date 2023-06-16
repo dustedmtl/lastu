@@ -24,6 +24,8 @@ During the building process, indexes are therefore automatically added or delete
  - Install requirements to venv
    - `pip install -r requirements.txt`
 
+Full documentation for scripts: [SCRIPTS](SCRIPTS.md)
+
 ## Building a database
 
 - Activate virtual environment (see above)
@@ -34,8 +36,6 @@ During the building process, indexes are therefore automatically added or delete
 - Additional arguments
   - `-N`
     - do not build indexes afterwards
-  - `-s <sentencecount>`
-  - `-c <filecount>`
 
 ## Additional scripts
 
@@ -49,74 +49,17 @@ It is necessary to run all of the below scripts to get a functional database.
 
 ### Generate helper tables
  - `python generate_helper_tables.py -d data/<dbfile> -a`
- - Options
-   - `-a`
-     - All of the below (except -c)
-   - `-p`
-     - Generate frequency information for pos/posx
-   - `-F`
-     - Generate feature tables
-   - `-f`
-     - Generate aggregate information for forms
-   - `-l`
-     - Generate aggregate information for lemmas
-   - `-H`
-     - Generate neighbourhood information for forms
-   - `-c`
-     - Copy hood and ambform information to the wordfreqs table
+ - `python generate_helper_tables.py -d data/<dbfile> -c`
 
-In practice, you should first run the script with the argument `-a` and then with argument `-c`.
+## Building a database from parts
 
-## Database statistics
+The process generally takes the form of building databases for a subset of the input files without indexes and then combining them with the `manage_database.py`script:
+ - For each source file/directory, run:
+   - `python3 build_database.py -n -i [source] -d [intermediate_database] -N`
+ - Combine the intermediate databases
+   - `python3 manage_database.py -i [intermediate_databases] -o [finalfile] -c concat -e`
 
-To get statistics from a database:
- - `python db_stats.py <inputfile>`
-
-## Managing a database
-
-Note that when using the `manage_database.py` script, aggregate information must be regenerated afterwards with the `generate_freqs.py`and `generate_helper_tables` scripts.
-
- - General options
-   - `-c <cmd>`
-     - Run operations `<cmd>`
-   - `-i <file1> [file2, ...]`
-     - Source file (or files)
-   - `-o <outfile`
-     - Output file. The source database will be modified in-place unless this option is present.
-   - `-y`
-     - Do not ask for confirmation when executing a pruning operation.
-     - This option is necessary if the script needs to be run in a batch script.
-
-### Combining one or more database files
-
- - `python manage_database.py -i <sourcefiles> -o <outfile> -c concat -e`
-
-This is mostly useful when there is a large amount of source data. In this case it makes sense to build the database in parts. 
-
- - Options
-   - `-e`
-     - Normally the script produces an error if the output database `<outfile>` already exists.
-     - This option suppresses the error and allows the operation.
-
-When combining rows from two databases, the inserts are done with 
-Two databases are combined with sqlite [UPSERT](https://www.sqlite.org/lang_UPSERT.html): when a row exists in both databases, the frequencies are summed.
-This method might not be the most efficient one, but it is simple and straight-forward.
-
-### Pruning a database
-
- - `python manage_database.py -i <infile> -o <outfile> -c prune -f <freq>`
-
-Prune the database by mandating a minimum frequency `<freq>`.
-
- - Options
-   - `-f <freq>`
-     - minimum frequency
-   - `-l <len>`
-     - maximum word length 
-   - `-p <pos1,pos2>`
-     - word classes to remove
-
-Remember to re-add the helper tables and gram frequencies after pruning.
+After having the final database file, add indexes, gram frequencies and helper tables as above.
 
 ## Building for languages other than Finnish.
 
