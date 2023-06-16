@@ -31,7 +31,7 @@ The init file itself is looked for from two locations:
    - Windows: `C:\Users\<username>\lastu.ini`
 
 If the init file is not found, the database filename will default to `lastudatabase.db` and
-the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user to locate a file to open.
+the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user to locate a database file to open.
 
 
 ## User interface
