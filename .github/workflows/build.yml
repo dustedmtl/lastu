@@ -18,12 +18,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
+      - name: Set up python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
-      - name: Generate Version
+      - name: Generate version
         id: get_version
         run: |
           version="${{ github.event.inputs.version }}"
@@ -57,12 +57,12 @@ jobs:
 #          os: [windows-latest]
 
     steps:
-      - name: Download Long Version Number
+      - name: Download long version number
         uses: actions/download-artifact@v2
         with:
           name: version_number
 
-      - name: Download Short Version Number
+      - name: Download short version number
         uses: actions/download-artifact@v2
         with:
           name: short_version_number
@@ -77,7 +77,7 @@ jobs:
           echo "Short version number is $sversion"
           echo "SVERSION=$sversion" >> $env:GITHUB_ENV
 
-      - name: get version mac
+      - name: get version macOS
         if: runner.os == 'macOS'
         run: |
           version=`cat version.txt`
@@ -93,7 +93,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
+      - name: Set up python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
@@ -153,14 +153,14 @@ jobs:
           echo "PKGFILE=lastu-$sversion.dmg" >> $GITHUB_ENV
           # echo "::set-output name=package::lastu-$sversion.dmg"
           
-      - name: Upload Windows Artifact
+      - name: Upload Windows artifact
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v2
         with:
           name: Windows Executable Package
           path: ${{ env.PKGFILE }}
 
-      - name: Upload macOS Artifact
+      - name: Upload macOS artifact
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v2
         with:
