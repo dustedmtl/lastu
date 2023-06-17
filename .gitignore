@@ -11,6 +11,7 @@ jupyter.*.out
 .ipynb_checkpoints
 
 # Log files
+lastu_*.txt
 wm2*.txt
 
 # Downloads
@@ -25,6 +26,8 @@ __pycache__
 *.pyc
 build
 *.egg-info
+ui-qt6.new.spec
+win-version.txt
 
 # Publication
 paper
