@@ -1,0 +1,160 @@
+name: Test building macOS software version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: true
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Generate Version
+        id: get_version
+        run: |
+          version="${{ github.event.inputs.version }}"
+          echo ${{ github.ref }}
+          if [[ -z "$version" ]]; then
+            version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
+          fi
+          echo "$version" > version.txt
+          echo "$version" | awk -F. '{print $1 "." $2 $3}' > shortversion.txt
+
+      - name: Save version number to file
+        uses: actions/upload-artifact@v1
+        with:
+          name: version_number
+          path: version.txt
+
+      - name: Save short version number to file
+        uses: actions/upload-artifact@v1
+        with:
+          name: short_version_number
+          path: shortversion.txt
+
+  build:
+    needs: version
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix: 
+#          os: [windows-latest, macos-latest]
+          os: [macos-latest]
+#          os: [windows-latest]
+
+    steps:
+      - name: Download Long Version Number
+        uses: actions/download-artifact@v2
+        with:
+          name: version_number
+
+      - name: Download Short Version Number
+        uses: actions/download-artifact@v2
+        with:
+          name: short_version_number
+
+      - name: get version Windows
+        if: runner.os == 'Windows'
+        run: |
+          $version = (Get-Content -Path version.txt).Trim()
+          echo "Version number is $version"
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+          $sversion = (Get-Content -Path shortversion.txt).Trim()
+          echo "Short version number is $sversion"
+          echo "SVERSION=$sversion" >> $env:GITHUB_ENV
+
+      - name: get version mac
+        if: runner.os == 'macOS'
+        run: |
+          version=`cat version.txt`
+          echo "Version number is $version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+          sversion=`cat shortversion.txt`
+          echo "Short version number is $sversion"
+          echo "SVERSION=$sversion" >> $GITHUB_ENV
+          appversion=`echo "$version" | awk -F. '{print $1 "." $2 "." $3}'`
+          echo "App version number is $appversion"
+          echo "APPVERSION=$appversion" >> $GITHUB_ENV
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+    
+      - name: Install dependencies
+        run: pip3 install -r packaging-requirements.txt
+      
+      - name: Run tests
+        run: pytest
+
+      - name: Install osfclient
+        run: pip install osfclient
+
+      - name: Build executable for Windows
+        if: runner.os == 'Windows'
+        run: |
+          # $version = (Get-Content -Path version.txt).Trim()
+          $version = "${{ env.VERSION }}"
+          $env:VER = $version
+          $sversion = "${{ env.SVERSION }}"
+          # Create version information file
+          python write-version.py
+          create-version-file win-version.yaml --outfile win-version.txt
+          # Build the executable package
+          pyinstaller ui-qt6-win.spec
+          # Test whether the application runs
+          dist\lastu.exe -e
+          # Package the application
+          $folder = "lastu-$sversion"
+          New-Item -Path $folder -ItemType Directory
+          Copy-Item -Path README.md -Destination $folder -Force
+          Copy-Item -Path LICENSE -Destination $folder -Force
+          Copy-Item -Path "docs" -Destination $folder -Recurse -Force
+          Copy-Item -Path dist/lastu.exe -Destination $folder -Force
+          Copy-Item -Path lastu.ini -Destination $folder -Force
+          Compress-Archive -Path $folder -DestinationPath "lastu-$sversion.zip"
+          echo "PKGFILE=lastu-$sversion.zip" >> $env:GITHUB_ENV
+          # echo "::set-output name=package::lastu-$sversion.zip"
+
+      - name: Build executable for macOS
+        if: runner.os == 'macOS'
+        run: |
+          sversion="${{ env.SVERSION }}"
+          appversion="${{ env.APPVERSION }}"
+          folder="lastu-$sversion"
+          mkdir $folder
+          # Use new spec file with new version
+          export VER="$appversion"
+          python write-version.py
+          # Build the executable package
+          pyinstaller ui-qt6.new.spec
+          # Test whether the application runs
+          dist/lastu.app/Contents/MacOS/lastu -e
+          # Package the application
+          cp -a dist/lastu.app $folder
+          cp lastu.ini $folder
+          cp -a README.md LICENSE docs $folder
+          hdiutil create -format UDZO -srcfolder $folder "lastu-$sversion.dmg"
+          echo "PKGFILE=lastu-$sversion.dmg" >> $GITHUB_ENV
+          # echo "::set-output name=package::lastu-$sversion.dmg"
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Executable Package
+          path: ${{ env.PKGFILE }}
+    
