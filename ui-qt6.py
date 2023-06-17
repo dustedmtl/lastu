@@ -1194,8 +1194,9 @@ if __name__ == "__main__":
     w = MainWindow(dbconn, appconfig=appconfig)
 
     # initial query
-    finquery = "form = 'silmäsi' and frequency > 10"
-    query = configfile.getConfigValue('query.defaultquery', finquery)
+    # finquery = "form = 'silmäsi' and frequency > 10"
+    iniquery = "freq > 100"
+    query = configfile.getConfigValue('query.defaultquery', iniquery)
     w.querybox.setText(query)
     w.textQuery()
     w.show()
