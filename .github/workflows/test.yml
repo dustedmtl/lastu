@@ -9,7 +9,7 @@ on:
   push:
     tags:
       - 't*' # Matching versioning tag
-      
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -28,10 +28,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
-    
+
       - name: Install dependencies
         run: pip3 install -r packaging-requirements.txt
-      
+
       - name: Run tests
         run: pytest
 
