@@ -48,7 +48,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      matrix: 
+      matrix:
 #          os: [windows-latest, macos-latest]
           os: [macos-latest]
 #          os: [windows-latest]
@@ -94,10 +94,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
-    
+
       - name: Install dependencies
         run: pip3 install -r packaging-requirements.txt
-      
+
       - name: Run tests
         run: pytest
 
@@ -151,10 +151,10 @@ jobs:
           hdiutil create -format UDZO -srcfolder $folder "lastu-$sversion.dmg"
           echo "PKGFILE=lastu-$sversion.dmg" >> $GITHUB_ENV
           # echo "::set-output name=package::lastu-$sversion.dmg"
-          
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: Executable Package
           path: ${{ env.PKGFILE }}
-    
+
