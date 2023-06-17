@@ -114,9 +114,13 @@ jobs:
           $version = "${{ env.VERSION }}"
           $env:VER = $version
           $sversion = "${{ env.SVERSION }}"
+          # Create version information file
           python write-version.py
           create-version-file win-version.yaml --outfile win-version.txt
+          # Build the executable package
           pyinstaller ui-qt6-win.spec
+          # Test whether the application runs
+          # Package the application
           $folder = "lastu-$sversion"
           New-Item -Path $folder -ItemType Directory
           Copy-Item -Path README.md -Destination $folder -Force
@@ -136,8 +140,12 @@ jobs:
           folder="lastu-$sversion"
           mkdir $folder
           export VER="$appversion"
+          # Use new spec file with new version
           python write-version.py
+          # Build the executable package
           pyinstaller ui-qt6.new.spec
+          # Test whether the application runs
+          # Package the application
           cp -a dist/lastu.app $folder
           cp lastu.ini $folder
           cp -a README.md LICENSE docs $folder
