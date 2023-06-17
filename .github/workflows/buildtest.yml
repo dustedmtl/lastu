@@ -101,9 +101,6 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - name: Install osfclient
-        run: pip install osfclient
-
       - name: Build executable for Windows
         if: runner.os == 'Windows'
         run: |
