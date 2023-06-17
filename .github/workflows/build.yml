@@ -153,10 +153,18 @@ jobs:
           echo "PKGFILE=lastu-$sversion.dmg" >> $GITHUB_ENV
           # echo "::set-output name=package::lastu-$sversion.dmg"
           
-      - name: Upload Artifact
+      - name: Upload Windows Artifact
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v2
         with:
-          name: Executable Package
+          name: Windows Executable Package
+          path: ${{ env.PKGFILE }}
+
+      - name: Upload macOS Artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v2
+        with:
+          name: macOS Executable Package
           path: ${{ env.PKGFILE }}
 
       - name: Upload to OSF
