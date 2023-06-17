@@ -8,6 +8,7 @@
 # pylint: disable=invalid-name
 
 import sys
+# import faulthandler; faulthandler.enable()
 from typing import Optional
 from os.path import exists, getsize, join
 import configparser
@@ -16,6 +17,7 @@ from pathlib import Path
 import time
 from datetime import datetime
 import inspect
+import argparse
 import logging
 import logging.config
 import pandas as pd
@@ -1152,6 +1154,16 @@ def getDataBaseFile(cfg: configparser.ConfigParser, currdir: str) -> Optional[st
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(prog='lastu',
+                                     description='lastu UI')
+    parser.add_argument('-e', '--exit',
+                        action='store_true',
+                        help='Exit from GUI')
+    args = parser.parse_args()
+    if args.exit:
+        print('Exiting from GUI')
+        sys.exit()
 
     logger.info('Launching application at %s', datetime.now())
     inifile = 'lastu.ini'
