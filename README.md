@@ -48,6 +48,8 @@ Supported output formats are CSV, TSV and Excel (xlsx). The data can also be cop
 Running the source version:
  - `python3 ui-qt6.py`
 
+Please see the user guide for downloading a database or an executable package.
+
 ## Documentation
 
  - User guide for using the application: [USERGUIDE](docs/USERGUIDE.md)
