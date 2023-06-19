@@ -930,7 +930,12 @@ class MainWindow(QMainWindow):
             filename = filenames[0]
             wordinput = dbutil.get_wordinput(filename)
             self.querybox.setText('')
-            self.query_desc = f' from file {filename}'
+            showfilename = filename
+            parts = filename.replace('\\', '/').split('/')
+            showlength = 2
+            if len(parts) > showlength:
+                showfilename = '.../' + '/'.join(parts[-showlength:])
+            self.query_desc = f' from file {showfilename}'
             # print(wordinput)
             inputkeys = list(wordinput.keys())
             try:
@@ -946,7 +951,7 @@ class MainWindow(QMainWindow):
                     self.mode = "inputfile"
                 else:
                     logger.info('Executing query from input file %s', filename)
-                    self.statusfield.setText(f'Executing query from input file {filename}')
+                    self.statusfield.setText(f'Executing query from input file {showfilename}')
                     self.mode = "inputfileprocess"
                     self.inputprocessfilename = filename
                     self.doQuery(wordinput)
