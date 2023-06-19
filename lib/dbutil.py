@@ -871,14 +871,14 @@ def parse_aggregation_query(query: str,
     strkeys = ['lemma', 'form', 'pos', 'posx']
     aggops = ['count', 'sum']
     # aggcols = ['len', 'lemmalen', 'hood']
-    tables = "wordfreqs w, features f"
+    tables = "wordfreqs w, features ft"
     aggcol = 'frequencyx'
 
     errors: List[str] = []
 
     parts = query.lower().split('and')
     groupkeys = []
-    wheres = "w.featid = f.featid"
+    wheres = "w.featid = ft.featid"
     whereparts = []
 
     for part in parts:
