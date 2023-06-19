@@ -16,7 +16,7 @@ import configparser
 from pathlib import Path
 import time
 from datetime import datetime
-import inspect
+# import inspect
 import argparse
 import logging
 import logging.config
@@ -25,7 +25,7 @@ from UliPlot.XLSX import auto_adjust_xlsx_column_width
 
 from PyQt6.QtWidgets import (
     QTableView, QApplication, QMainWindow, QWidget,
-    QHeaderView,
+    # QHeaderView,
     QGridLayout,
     QSizePolicy,
     QAbstractScrollArea,
@@ -120,7 +120,7 @@ try:
     logger = logging.getLogger('wm2')
     logger.debug('Starting logger')
 except ValueError as ve:
-    logconfig = uiutil.log_handler(wm2logconfig, homedir)
+    logconfig = uiutil.log_handler(wm2logconfig, str(homedir))
     logging.config.dictConfig(logconfig)
     logger = logging.getLogger('wm2')
     logger.debug('Starting logger')
@@ -610,6 +610,8 @@ class MainWindow(QMainWindow):
         # w2.dbnamefield.setText(f'Database file: {self.dbconnection.dbfile}')
         w2.querybox.setText("")
 
+        return w2
+
     def setDbNameField(self,
                        inputfilename: Optional[str] = None):
         dbname = self.dbconnection.dbfile
@@ -795,7 +797,7 @@ class MainWindow(QMainWindow):
         currentfont.setPointSize(newfontsize)
         self.copyleft.setFont(currentfont)
 
-    def setFonts(self, size: int = None):
+    def setFonts(self, size: Optional[int] = None):
         if size:
             widget = self.centralwidget
             currentfont = widget.font()

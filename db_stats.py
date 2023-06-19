@@ -62,9 +62,6 @@ if not exists(inputfile):
 
 print(f'Using {inputfile} as source database')
 sqlcon = dbutil.get_connection(inputfile)
-#if args.output:
-#    print(f'Copy database to {args.output}')
-#    # Determine how much stuff will be deleted
 
 freqindex_str = "CREATE INDEX IF NOT EXISTS idx_wordfreqs_freq_len ON wordfreqs(frequency DESC, len DESC)"
 
@@ -73,8 +70,8 @@ dbutil.adhoc_query(sqlcon, freqindex_str)
 print('Determining row word count..')
 total = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
 print('Determining deletion word count..')
-rows = dbutil.adhoc_query(sqlcon, f"select count(*) from wordfreqs")
-freqs = dbutil.adhoc_query(sqlcon, f"select sum(frequency) from wordfreqs")
+rows = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
+freqs = dbutil.adhoc_query(sqlcon, "select sum(frequency) from wordfreqs")
 
 print()
 print(f'Stats for database file {inputfile}')
