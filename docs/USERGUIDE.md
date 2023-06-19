@@ -42,7 +42,7 @@ The results are disambiguated based on the lemma, surface form, pos (part-of-spe
 
 The table shows information in four difference categories: lemma information, surface form information, gram frequencies and features. The lemma and surface form fields include both string and numeric fields.
 
-For performance reasons, the application fetches 10000 top results from the database (based on frequency) and shows top 1000 results (based on whatever sorting criteria the user has). These values can be changed in the [configuration file](#init-file-configuration), if necessary. The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
+For performance reasons, the application fetches 10000 top results from the database (based on frequency) and shows top 1000 results (based on whatever sorting criteria the user has, the default is frequency). These values can be changed in the [configuration file](#init-file-configuration), if necessary. The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
 
 The results table is sortable by all available fields.
 
@@ -53,35 +53,37 @@ The application generates debug logs to the file `lastu_log.txt` and logs execut
 The queries consist of one or more parts separated by the keyword `and`. The format of the parts depend on the type of property being queried. The three types of properties are: string, numeric and boolean.
 
 Examples for string queries:
- - `form = autossa`
-   - surface form
- - `case != ine`
-   - (noun) case is not inessive
- - `lemma = voi and pos = noun`
-   - results for the noun `voi`
- - `clitic not in kin,kaan`
-   - the surface form does not contain the clitics `kin` or `kaan`
- - `start = aut`
-   - surface form starts with `aut`
- - `end in ssa,ssä`
-   - surface form ends with `ssa` or `ssä`
 
-Examples of numeric queries:
- - `len > 10`
-   - surface form is longer than 10 characters
- - `freq > 100`
-   - the frequency of the item is higher than 100
+| Query | Explanation |
+| --- | --- |
+| `form = autossa` | surface form |
+|`case != ine` | (noun) case is not inessive |
+| `lemma = voi and pos = noun` | results for the noun `voi` |
+| `clitic not in kin,kaan` | the surface form does not contain the clitics `kin` or `kaan` |
+| `start = aut` | surface form starts with `aut` |
+| `end in ssa,ssä`| surface form ends with `ssa` or `ssä` |
+
+Examples for numeric queries:
+
+| Query | Explanation |
+| --- | --- |
+| `len > 10` | surface form is longer than 10 characters |
+| `freq > 100` | the frequency of the surface form is higher than 100 |
 
 For boolean properties, the only choice is `compound`:
- - `start = auto and compound`
-   - compounds that start with `auto`
- - `pos = adj and not compound`
-   - non-compound adjective
+
+| Query | Explanation |
+| --- | --- |
+| `start = auto and compound` | compounds that start with `auto` |
+| `pos = adj and not compound` | non-compound adjective 
 
 Different types of properties can also be combined:
- - `start = auto and compound and len > 10`
 
-For a full list of properties to query and the format of query parts, please see [query keys](#query-keys) and [query formatting](#query-formatting).
+| Query |
+| --- |
+| `start = auto and compound and len > 10` |
+
+For a full list of properties to query, the format of query parts and extended examples, please see [query keys](#query-keys), [query formatting](#query-formatting) and [extended examples](#extended-examples).
 
 ### Basic menu functions
 
@@ -157,77 +159,92 @@ Examples:
    - lemma starts with string `voi`
  - `form like %ta%`
    - form contains the substring `ta`
-   - note the difference to the operator `middle`: this search does not exclude strings that start (or end) with `ta`
 
 ### Query keys
 
 #### String properties
 
-The basic string properties that can be queried are:
- - `lemma`
- - `form` (surface form)
- - `pos` (part-of-speech, i.e. word class)
+The below tables show the query keys and operators for strings.
 
-The wildcard queries that operate on surface form:
- - `start`
-   - form begins with string
- - `middle`
-   - form contains string, but does not start or end with it
- - `end`
-   - form ends with string
+| Key | Explanation |
+| --- | --- |
+| `lemma` | Lemma |
+| `form` | Surface form |
+| `pos` | Word class (i.e., part-of-speech) |
+| `number` | Number |
+| `person` | Person |
+| `posspers` | Possessive suffix person |
+| `possnum` | Possessive suffix number |
+| `mood` | Verb mood |
+| `tense` | Verb tense |
+| `verbform` | Verb form |
+| `nouncase` | Case |
+| `derivation` | Derivation |
+| `clitic` | Clitic |
 
-Noun morphological features:
- - `nouncase` (short: `case`)
- - `nnumber`
-   - noun number
+| Operator | Explanation | Example |
+| --- | --- | --- |
+| `=` | Equal | `form = kuusi` |
+| `!=` | Unequal | `pos = noun` |
+| `in` | In a set | `case in nom,gen` |
+| `not in` | Not in a set | `case not in nom,gen` |
+| `like` | SQL `LIKE` operator | `form like auto%` |
 
-Verb morphological features:
- - `number`
- - `tense`
- - `person`
- - `verbform`
+Additional query keys for the surface form are shown below.
 
-Other morphological features
- - `posspers`
-   - possessive suffix person
- - `possnum`
-   - possessive suffix person number
- - `derivation`
-   - derivational suffixes
- - `clitic`
-   - clitics
+| Key | Explanation | Example |
+| --- | --- | --- |
+| `start` | Form begins with string | `start = au` |
+| `middle` | Form contains string in the middle | `middle in ta,sa` |
+| `end` | Form ends with string | `end not in ssa,ssä`|
 
 #### Numeric properties
 
-For lemmas:
- - `lemmalen`
-   - lemma length
- - `lemmafreq`
-   - lemma frequency (for the specific part-of-speech, i.e. word class)
- - `amblemma`
-   - measure of lemma ambiguity
+For numbers, the keys and operators are shown below.
 
-For surface forms:
- - `len`
-   - form length
- - `frequency` (short: freq)
-   - form frequency
- - `hood`
-   - orthographic neighbourhood
- - `ambform` 
-   - measure of surface form ambiguity
- - `initgramfreq`
-   - initial trigram frequency
- - `fingramfreq`
-   - final trigram frequency
- - `bigramfreq`
-   - bigram frequency
+| Key | Explanation |
+| --- | --- |
+| `lemmafrequency` | Lemma frequency |
+| `frequency` | Surface form frequency |
+| `lemmalen` | Lemma length |
+| `len` | Surface form length |
+| `hood` | Orthographic neighbourhood |
+| `amblemma` | Lemma ambiguity percentage |
+| `ambform` | Surface form ambiguity percentage |
+| `initgramfreq` | Initial trigram frequency |
+| `fingramfreq` | Final trigram frequency |
+| `bigramfreq` | Bigram frequency |
 
-For all frequency fields there is a corresponding relative frequency field (prepended with `rel`, e.g. `rellemmafreq`). The value of this field is frequency per one million tokens, except for `relbigramfreq`, which is frequency per one thousand tokens.
+| Operator | Explanation | Example |
+| --- | --- | --- |
+| `=` | Equal | `form = kuusi` |
+| `!=` | Unequal | `pos = noun` |
+| `>` | Greater than | `form = kuusi` |
+| `>=` | Greater than ow equal | `form = kuusi` |
+| `<` | Lower than | `form = kuusi` |
+| `<=` | Lower than or equal | `form = kuusi` |
 
-#### Boolean properties:
- - `compound`
-   - whether the word form is a compound
+For all frequency fields there is a corresponding relative frequency field (prepended with `rel`, e.g. `rellemmafreq`). The value of this field is frequency per one million tokens.
+
+#### Boolean properties
+
+There is one boolean key for compound words.
+
+| Key | Explanation |
+| --- | --- |
+| `compound` | Compound word |
+| `not compound` | Not compound word |
+
+### Extended examples
+
+All nouns and adjectives in inessive, elative or illative with frequency between 100 and 200, length between 5 to 12 characters (inclusive), omitting compounds:
+ - `pos in noun,adj and case in ine,ela,ill and freq > 100 and freq < 200 and len >= 5 and len <= 20 and not compound`
+
+All verbs in base form ending with `da`or `dä` with frequency above `x` and below `y`::
+ - `verbform = Inf and end in da,dä and freq > x and freq < y`
+
+Nouns with `kse` in the body in inessive case:
+ - `pos = noun and middle = kse and case = ine`
 
 ### Menu functions
 

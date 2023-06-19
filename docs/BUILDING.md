@@ -51,6 +51,13 @@ It is necessary to run all of the below scripts to get a functional database.
  - `python generate_helper_tables.py -d data/<dbfile> -a`
  - `python generate_helper_tables.py -d data/<dbfile> -c`
 
+The recommended file name schema is `<lang>_<source>_<size>_<minfreq>.db`, where
+ - `<lang>` for the language (e.g., `fi`, `es`)
+ - `<source>` for the data source (e.g., `parsebank`, `tdt`)
+ - `<size>` for the gross token size (e.g., `50M`, `2B`)
+ - `<minfreq>` for the minimum frequency, or `full` if not applicable (e.g., `10`)
+   - See [SCRIPTS](SCRIPTS.md) for pruning a database
+
 ## Building a database from parts
 
 The process generally takes the form of building databases for a subset of the input files without indexes and then combining them with the `manage_database.py`script:

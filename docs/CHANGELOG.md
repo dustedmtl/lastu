@@ -4,6 +4,23 @@ Notable changes in the program will be documented here.
 
 The format of this file is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.0.10] - 2023-06-X
+
+### Added
+
+- command line option -e to just load the program and exit (for testing)
+
+### Changed
+
+- Application name changed to LASTU
+
+### Fixed
+
+- querying and filtering method for middle != na and middle = na queries
+- reading database file path from wm2.ini
+- macOS building by downgrading PyQt version
+- Aggregation query fix: f -> ft
+
 ## [0.0.9] - 2023-06-13
 
 ### Added
