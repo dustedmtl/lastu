@@ -4,7 +4,7 @@ Notable changes in the program will be documented here.
 
 The format of this file is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.0.10] - 2023-06-X
+## [0.0.10] - 2023-06-21
 
 ### Added
 
