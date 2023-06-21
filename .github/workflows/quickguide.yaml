@@ -6,9 +6,9 @@ on:
       version:
         description: 'Documentation version number'
         required: false
-  push:
-    tags:
-      - 'd*' # Matching documentation
+#  push:
+#    tags:
+#      - 'd*' # Matching documentation
 
 jobs:
   build:
