@@ -6,9 +6,9 @@ on:
       version:
         description: 'Version number'
         required: false
-  push:
-    tags:
-      - 'v*' # Matching versioning tag
+#  push:
+#    tags:
+#      - 'v*' # Matching versioning tag
 
 jobs:
   version:
