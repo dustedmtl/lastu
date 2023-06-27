@@ -130,5 +130,5 @@ if __name__ == '__main__':
 
     finally:
         # Clean up the temporary directory
-        pass
-        # shutil.rmtree(tempdir)
+        # pass
+        shutil.rmtree(tempdir)
