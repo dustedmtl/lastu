@@ -36,45 +36,61 @@ wm2logconfig = {
 
 logging.config.dictConfig(wm2logconfig)
 logger = logging.getLogger('wm2')
-parser = argparse.ArgumentParser(prog='database stats',
-                                 description='Database statistics')
 
-parser.add_argument('dbfile',
-                    type=str,
-                    # required=True,
-                    help='input database')
 
-parser.add_argument('-o', '--output',
-                    type=str,
-                    # required=True,
-                    help='output file')
+def get_db_stats(dbfile: str,
+                 verbose: bool = False,
+                 index: bool = False):
+    """Get database statistic."""
+    sqlcon = dbutil.get_connection(dbfile)
 
-parser.add_argument('-v', '--verbose',
-                    action='store_true',
-                    help='Verbose')
+    if index:
+        freqindex_str = "CREATE INDEX IF NOT EXISTS idx_wordfreqs_freq_len ON wordfreqs(frequency DESC, len DESC)"
 
-args = parser.parse_args()
+        print('Adding index if missing..')
+        dbutil.adhoc_query(sqlcon, freqindex_str)
 
-inputfile = args.dbfile
-if not exists(inputfile):
-    logger.warning('No such file: %s', inputfile)
-    sys.exit()
+    print('Determining row word count..')
+    rows = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
+    freqs = dbutil.adhoc_query(sqlcon, "select sum(frequency) from wordfreqs")
 
-print(f'Using {inputfile} as source database')
-sqlcon = dbutil.get_connection(inputfile)
+    _metadata = dbutil.adhoc_query(sqlcon, "select * from metadata")
+    metadata = {}
+    for t in _metadata:
+        k, v = t
+        metadata[k] = v
 
-freqindex_str = "CREATE INDEX IF NOT EXISTS idx_wordfreqs_freq_len ON wordfreqs(frequency DESC, len DESC)"
+    if verbose:
+        print()
+        print(f'Stats for database file {dbfile}')
+        print()
+        print(f'Rows: {rows[0][0]}')
+        print(f'Cumulative frequency: {freqs[0][0]}')
+        print(metadata)
 
-print('Adding index if missing..')
-dbutil.adhoc_query(sqlcon, freqindex_str)
-print('Determining row word count..')
-total = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
-print('Determining deletion word count..')
-rows = dbutil.adhoc_query(sqlcon, "select count(*) from wordfreqs")
-freqs = dbutil.adhoc_query(sqlcon, "select sum(frequency) from wordfreqs")
+        return metadata, rows[0][0], freqs[0][0]
 
-print()
-print(f'Stats for database file {inputfile}')
-print()
-print(f'Rows: {rows[0][0]}')
-print(f'Cumulative frequency: {freqs[0][0]}')
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(prog='database stats',
+                                     description='Database statistics')
+
+    parser.add_argument('dbfile',
+                        type=str,
+                        # required=True,
+                        help='input database')
+
+    parser.add_argument('-v', '--verbose',
+                        action='store_true',
+                        help='Verbose')
+
+    args = parser.parse_args()
+
+    inputfile = args.dbfile
+    if not exists(inputfile):
+        logger.warning('No such file: %s', inputfile)
+        sys.exit()
+
+    print(f'Using {inputfile} as database')
+    meta, _rows, _tokens = get_db_stats(inputfile, verbose=True, index=True)
