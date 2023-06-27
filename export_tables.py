@@ -46,7 +46,9 @@ def tqdm_generator(curs, cs: int):
         yield rowss
 
 
-def export_tables(inputf: str, output: str):
+def export_tables(inputf: str,
+                  output: str,
+                  tsv: bool = False):
     """Export database to tables."""
     # Connect to the SQLite database
     conn = sqlite3.connect(inputf)
@@ -69,7 +71,7 @@ def export_tables(inputf: str, output: str):
 
         with open(csv_file, 'w', newline='', encoding='utf8') as f:
             logger.info('Exporting table %s', table_name)
-            if args.tsv:
+            if tsv:
                 writer = csv.writer(f, delimiter='\t')
             else:
                 writer = csv.writer(f)
@@ -88,8 +90,8 @@ def export_tables(inputf: str, output: str):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='manage-database',
-                                     description='Prune database')
+    parser = argparse.ArgumentParser(prog='export-tables',
+                                     description='Export tables')
 
     parser.add_argument('-i', '--input',
                         type=str,
@@ -117,4 +119,4 @@ if __name__ == '__main__':
         logger.warning('No such directory: %s', outdir)
         sys.exit()
 
-    export_tables(inputfile, outdir)
+    export_tables(inputfile, outdir, tsv=args.tsv)
