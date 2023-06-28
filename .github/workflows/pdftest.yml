@@ -43,7 +43,7 @@ jobs:
           sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra python3-pip
 
       - name: Build PDF documentation
-        run: pandoc --from gfm --verbose --standalone --number-sections -H numbering.tex --variable=colorlinks --variable=urlcolor=blue -o "/tmp/userguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
+        run: pandoc --from gfm --verbose --standalone --number-sections -H numbering.tex --variable papersize=a4paper --variable=colorlinks --variable=urlcolor=blue -o "/tmp/userguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
         continue-on-error: true
 
       - name: View output log
