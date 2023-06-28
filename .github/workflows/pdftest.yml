@@ -1,0 +1,57 @@
+name: Generate PDF Documentation
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Documentation version number'
+        required: false
+#  push:
+#    tags:
+#      - 'd*' # Matching documentation
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env: 
+      VERSION: ${{ github.ref_name }}
+      PID: ${{ vars.OSF_PROJECT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set new version number to env variable
+        run: |
+          version="${{ github.event.inputs.version }}"
+          if [[ -z "$version" ]]; then
+            version=$(echo "${{ env.VERSION }}" | cut -c 2-)
+            # version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
+          fi
+          echo "New version number value is $version"
+          echo "NEWVER=$version" >> $GITHUB_ENV
+
+      - name: Use the version number
+        run: |
+          echo "Original version number is ${{ env.VERSION }}"
+          echo "New version number value is ${{ env.NEWVER }}"
+          echo "Project id is ${{ env.PID }}"
+
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install pandoc texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra python3-pip
+
+      - name: Build PDF documentation
+        run: pandoc --from gfm --verbose --standalone --number-sections -H numbering.tex --variable=colorlinks --variable=urlcolor=blue -o "/tmp/userguide-${{ env.NEWVER }}.pdf" docs/USERGUIDE.md docs/SAMPLES.md docs/TECHINFO.md docs/LICENSE.md > /tmp/output.log 2>&1
+        continue-on-error: true
+
+      - name: View output log
+        run: cat /tmp/output.log
+  
+      - name: Upload PDF as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: userguide
+          path: "/tmp/userguide-${{ env.NEWVER }}.pdf"
+          
