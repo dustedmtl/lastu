@@ -1,4 +1,4 @@
-name: Generate PDF Documentation
+name: PDF generation test, no OSF
 
 on:
   workflow_dispatch:
