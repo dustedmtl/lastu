@@ -9,7 +9,7 @@ from os.path import exists, join, relpath
 import argparse
 import logging
 import logging.config
-from shutil import copy
+from shutil import copy, rmtree
 import tempfile
 import zipfile
 # from tqdm.autonotebook import tqdm
@@ -74,6 +74,7 @@ https://creativecommons.org/licenses/by-sa/4.0/
     with open(readmeout, 'w', encoding='utf8') as of:
         print(dbtext, file=of)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='export-database',
                                      description='Export database')
@@ -131,4 +132,4 @@ if __name__ == '__main__':
     finally:
         # Clean up the temporary directory
         # pass
-        shutil.rmtree(tempdir)
+        rmtree(tempdir)
