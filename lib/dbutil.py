@@ -1371,10 +1371,10 @@ def filter_dataframe(dbc: DatabaseConnection,
                 if op == '=':
                     format_string = f"{key}{keyadd} == {useval}"
                 elif op == 'like':
-                    useval = useval.replace('%', '')
+                    useval = useval.replace('%', '')  # type: ignore
                     format_string = f"{key}.str.contains({useval}, case=False)"
                 elif op == 'not like':
-                    useval = useval.replace('%', '')
+                    useval = useval.replace('%', '')  # type: ignore
                     format_string = f"~{key}.str.contains({useval}, case=False)"
 
             logger.debug("Using format_string: %s", format_string)
