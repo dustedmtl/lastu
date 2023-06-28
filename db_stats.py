@@ -2,8 +2,7 @@
 
 # pylint: disable=invalid-name, consider-using-with
 
-# import os
-# from os.path import isdir, isfile, exists
+from typing import Tuple, Dict
 from os.path import exists
 import sys
 import argparse
@@ -40,7 +39,7 @@ logger = logging.getLogger('wm2')
 
 def get_db_stats(dbfile: str,
                  verbose: bool = False,
-                 index: bool = False):
+                 index: bool = False) -> Tuple[Dict, int, int]:
     """Get database statistic."""
     sqlcon = dbutil.get_connection(dbfile)
 
@@ -68,7 +67,7 @@ def get_db_stats(dbfile: str,
         print(f'Cumulative frequency: {freqs[0][0]}')
         print(metadata)
 
-        return metadata, rows[0][0], freqs[0][0]
+    return metadata, rows[0][0], freqs[0][0]
 
 
 if __name__ == '__main__':
