@@ -14,7 +14,7 @@ import tempfile
 import zipfile
 # from tqdm.autonotebook import tqdm
 from db_stats import get_db_stats
-from export_tables import export_tables
+from export_tables import export_tables, export_normalized_freqs
 
 wm2logconfig = {
     'version': 1,
@@ -58,6 +58,9 @@ It has been primarily developed for Finnish.
 
 Executable applications, documentation and databases can be found from OSF: https://osf.io/j8v6b/.
 The source code for application is available at GitHub: https://github.com/dustedmtl/lastu.
+
+In addition to the SQLite3 database, the archive file contains exported tables (as is) as well as a combined file which
+combines data from different tables as shows it as it would appear in the application.
 
 # Database metadata
 Source: {source}
@@ -121,6 +124,8 @@ if __name__ == '__main__':
         # Copy database file
         logger.info("Copying database file")
         copy(inputfile, tempdir)
+        logger.info("Exporting normalized wordfreqs table to: %s", tablesdir)
+        export_normalized_freqs(inputfile, tablesdir)
         # Making final zip file
         logger.info("Zipping to: %s", outfile)
         with zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED) as zip_file:
