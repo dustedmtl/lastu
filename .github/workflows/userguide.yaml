@@ -65,5 +65,5 @@ jobs:
         env:
           OSF_TOKEN: ${{ secrets.OSF_TOKEN }}
         run: |
-          osf -p "${{ vars.OSF_PROJECT_ID }}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/userguide-${{ env.NEWVER }}.pdf"
+          osf -p "${{ vars.OSF_PROJECT_ID }}" upload "/tmp/userguide-${{ env.NEWVER }}.pdf" "documentation/lastu-userguide-${{ env.NEWVER }}.pdf"
           
