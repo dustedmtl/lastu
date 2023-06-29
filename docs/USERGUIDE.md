@@ -7,22 +7,22 @@ LASTU: Lexical Application for STimulus Unearthing is a program for generating s
 ## Download and installation instructions
 
 The software has two necessary components:
- - the application itself (include the optional `lastu.ini` configuration file)
+ - the application itself (including the optional `lastu.ini` configuration file)
  - a database, which is a file in the form of SQLite3 database
 
-The software and databases are located at OSF https://osf.io/j8v6b/.
+The software and databases are located at OSF: https://osf.io/j8v6b/.
 
-You can download the application on OSF at https://osf.io/j8v6b/files/osfstorage:
+The application can be downloaded at https://osf.io/j8v6b/files/osfstorage:
  - Under `software`, download the appropriate package (`.zip` for Windows, `.dmg` for macOS).
  - Open the package and drag the application (`.exe` for Windows, `.app` for macOS) to your desired location.
    - If this is your first time using the software, also drag the `lastu.ini` file to the same location.
    - Otherwise you can keep using the old configuration file.
 
-For databases, go to https://osf.io/7hrbv/files/osfstorage.
+For databases, go to https://osf.io/7hrbv/files/osfstorage. A database archive contains the database as well as tables exported from the database in CSV format.
 
 ### Init file and database file
 
-The main function of the init file is to tell the application what the database file is and where it should be found. For a more general description of the options, please see [init file configuration](#init-file-configuration).
+The main function of the init file is to tell the application where the database file should be found. For a more general description of the options, please see [init file configuration](#init-file-configuration).
 
 The init file itself is looked for from two locations:
  - The same directory where the application is located in
@@ -36,17 +36,17 @@ the application will try to locate it from the `data` subdirectory. If this file
 
 ## User interface
 
-The UI consists of one or more windows, with a query field, results table and various information fields. The application is used by entering a query into the query field and the pressing the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which include opening a different database, exporting and copying information to output file or clipboard and choosing which columns to show.
+The user interface consists of one or more windows, containing a query field, results table and various information fields. The application is used by typing a query into the query field and the clicking the `Query` button (or simply pressing the `Enter` on the keyboard). A variety of functions are also available from the menu, which include opening a different database, exporting and copying information to output file or clipboard and choosing which columns to show.
 
-The results are disambiguated based on the lemma, surface form, pos (part-of-speech, i.e. word class) and the set of core features (which, among other things, include case, person, tense, clitics and derivations). This means that there usually are multiple rows for each lemma/form/pos triplet.
+The results are disambiguated based on the lemma, surface form, part-of-speech (i.e. word class) and the set of core features (which, among other things, include case, person, mood, tense, clitics and derivations). This means that there usually are multiple rows for each lemma/form/pos triplet.
 
 The table shows information in four difference categories: lemma information, surface form information, gram frequencies and features. The lemma and surface form fields include both string and numeric fields.
 
-For performance reasons, the application fetches 10000 top results from the database (based on frequency) and shows top 1000 results (based on whatever sorting criteria the user has, the default is frequency). These values can be changed in the [configuration file](#init-file-configuration), if necessary. The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
+For performance reasons, the application fetches 10000 top results from the database (ordered by frequency) and shows the top 1000 results (based on whatever sorting criteria the user has, the default is frequency). These values can be changed in the [configuration file](#init-file-configuration), if necessary (e.g. if the user finds the application too slow; see also the [chapter on limitations](#limitations). The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
 
 The results table is sortable by all available fields.
 
-The application generates debug logs to the file `lastu_log.txt` and logs executed searches to the file `lastu_history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
+The application generates debug logs to the file `lastu_log.txt` and records executed searches to the file `lastu_history.txt`. These files will by default be located in the same directory as the application itself. However, if the directory isn't writable (for whatever reason), the files are written to the user's home directory.
 
 ### Basic queries
 
