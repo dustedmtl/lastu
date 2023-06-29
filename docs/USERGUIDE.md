@@ -87,12 +87,12 @@ For a full list of properties to query, the format of query parts and extended e
 
 ### Basic menu functions
 
-The functions below use the Windows platforms keys. For macOS, substitute `Cmd` for `Ctrl`.
+The keyboard shortcuts described here are applicable for the Windows platforms. For macOS, substitute `Cmd` for `Ctrl`.
 
 A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an wordlist file can be done with `Ctrl-I`. A different database can be opened with `Ctrl-D`.
 
 There are three ways to export/copy information:
- 1. `Ctrl-S` exports the result to file (csv/tsv/xlsx).
+ 1. `Ctrl-S` exports the results to file (csv/tsv/xlsx); default output format is in the configuration file.
  2. `Ctrl-E` copies the results to the clipboard.
  3. `Ctrl-C` allows the user to individually select rows, columns or cells and copy them to clipboard.
 
@@ -104,7 +104,7 @@ For more information and other shortcuts, please see the [menu functions](#menu-
 
 The two modes of operation are free search mode and wordlist mode. The free search mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed). In contrast, in the wordlist mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
 
-The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown.
+The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown (e.g. `top = 2` shows top 2 results).
 
 To get back to the free search mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
 
@@ -126,17 +126,17 @@ A query consists of one or more parts separated by the keyword `and`:
 
 The query parts generally follow the form `KEY OPERATOR VALUE`.
  - `KEY` is a string to query (`form`)
- - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) or set operator `IN`
+ - `OPERATOR` is a mathematical or string comparison (e.g. `=`, `>`) operator or set operator `IN`
  - `VALUE` is the value being searched
 
-Exceptions to these are boolean queries and negative (`NOT`) queries for certain string operators.
+Exceptions to these are boolean queries and negative (`NOT`) queries for certain string operators and the set operator.
 
 The allowed operators vary depending on whether the key queries a string, numeric or boolean property.
  - String operators are equality (`=`), inequality (`!=`) and set operators (`IN` and `NOT IN`).
  - Numeric operators are equality (`=`), inequality (`!=`), greater than (`>`), smaller than (`<`), greater than or equal (`>=`) and smaller than or equal (`<=`).
  - Boolean queries have a special format and there are no operators.
 
-For strings, the set operator `IN`allows the user to query for accepted (or not accepted) values:
+For strings, the set operator `IN` allows the user to query for accepted (or not accepted) values:
  - `KEY` IN `A,B`
    - The property `KEY` must contain value `A` or `B`
  - `KEY` NOT IN `A,B`
@@ -266,7 +266,7 @@ Input and output commands:
         - form: "# type=`querytype`"
         - `querytype` can be `lemma`, `form` or `nonword`
         - The specific category is searched for the strings in the content lines
-      - The file may be encoded as UTF-8 or ISO-Latin-1
+      - The file may be encoded as UTF-8 or ISO-Latin-1 / ISO-Latin-15
   - `Ctrl-S` - export to file (csv/tsv/xlsx)
   - `Ctrl-E` - copy to clipboard (all results)
   - `Ctrl-C` - copy to clipboard (selected cells/rows/columns)
