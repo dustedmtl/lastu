@@ -677,6 +677,7 @@ def parse_querystring(querystr: str,
                     c = 'not in'
 
                 if k in ['start', 'end']:
+                    conj = ' OR ' if c == 'in' else ' AND '
                     whereor = []
                     usecol = 'form'
                     if k == 'end':
@@ -691,7 +692,7 @@ def parse_querystring(querystr: str,
                         else:
                             # whereor.append(f'{usetable}.{usecol} NOT LIKE ?')
                             whereor.append(f'{usetable}.{usecol} NOT GLOB ?')
-                    whereparts.append(f"({' OR '.join(whereor)})")
+                    whereparts.append(f"({conj.join(whereor)})")
                     args.extend(invals)
                 elif k == 'middle':
                     if c == 'in':

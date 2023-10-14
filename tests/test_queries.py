@@ -172,6 +172,8 @@ def test_form(dbc):
     q5 = "start = la and middle = la"
     q6 = "start = la and middle != la"
     q7 = "start = la"
+    q8 = "end not in a,ä"
+    q9 = "start not in a,ä"
 
     # df1, _, _ = dbutil.get_frequency_dataframe(dbc, query=q1,
     #                                            grams=True,
@@ -194,6 +196,12 @@ def test_form(dbc):
     df7, _, _ = dbutil.get_frequency_dataframe(dbc, query=q7,
                                                grams=True,
                                                lemmas=True)
+    df8, _, _ = dbutil.get_frequency_dataframe(dbc, query=q8,
+                                               grams=True,
+                                               lemmas=True)
+    df9, _, _ = dbutil.get_frequency_dataframe(dbc, query=q9,
+                                               grams=True,
+                                               lemmas=True)
 
     # print(f"{q1}: all forms must start with 'auto'")
     # assert len(df1[~df1.form.str.contains('^auto')]) == 0
@@ -212,6 +220,10 @@ def test_form(dbc):
     check.equal(len(df6[~df6.form.str.contains(r'^.+la.+$')]), len(df6))
     print(f"{q7}: middle queries must add up to a full set")
     check.equal(len(df7), len(df5)+len(df6))
+    print(f"{q8}: end not in query must work properly")
+    check.equal(len(df8[df8.form.str.contains('a$')]), 0)
+    print(f"{q9}: start not in query must work properly")
+    check.equal(len(df9[df9.form.str.contains('^a')]), 0)
 
 
 def test_error(dbc):
