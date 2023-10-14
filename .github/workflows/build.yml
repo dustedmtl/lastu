@@ -9,6 +9,8 @@ on:
 #  push:
 #    tags:
 #      - 'v*' # Matching versioning tag
+# Version number format: vX.X.X.X
+#  e.g. v0.0.20.0
 
 jobs:
   version:
