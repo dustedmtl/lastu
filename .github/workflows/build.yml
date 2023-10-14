@@ -20,12 +20,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
-      - name: Generate version
+      - name: Generate Version
         id: get_version
         run: |
           version="${{ github.event.inputs.version }}"
@@ -59,12 +59,12 @@ jobs:
 #          os: [windows-latest]
 
     steps:
-      - name: Download long version number
+      - name: Download Long Version Number
         uses: actions/download-artifact@v2
         with:
           name: version_number
 
-      - name: Download short version number
+      - name: Download Short Version Number
         uses: actions/download-artifact@v2
         with:
           name: short_version_number
@@ -95,11 +95,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
-    
+
       - name: Install dependencies
         run: pip3 install -r packaging-requirements.txt
 
@@ -122,6 +122,7 @@ jobs:
           # Build the executable package
           pyinstaller ui-qt6-win.spec
           # Test whether the application runs
+          dist\lastu.exe -e
           # Package the application
           $folder = "lastu-$sversion"
           New-Item -Path $folder -ItemType Directory
