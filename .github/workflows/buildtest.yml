@@ -28,8 +28,8 @@ jobs:
           if [[ -z "$version" ]]; then
             version="$(echo ${{ github.ref }} | sed 's#refs/tags/v##')"
           fi
-          echo "$version" > version.txt
-          echo "$version" | awk -F. '{print $1 "." $2 $3}' > shortversion.txt
+          echo "t$version" > version.txt
+          echo "t$version" | awk -F. '{print $1 "." $2 $3}' > shortversion.txt
 
       - name: Save version number to file
         uses: actions/upload-artifact@v1
