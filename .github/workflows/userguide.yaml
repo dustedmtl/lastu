@@ -9,6 +9,9 @@ on:
 #  push:
 #    tags:
 #      - 'd*' # Matching documentation
+# Documentation version number format: dX.X
+#  e.g. d0.15
+
 
 jobs:
   build:
