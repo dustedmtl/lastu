@@ -217,12 +217,12 @@ For numbers, the keys and operators are shown below.
 
 | Operator | Explanation | Example |
 | --- | --- | --- |
-| `=` | Equal | `form = kuusi` |
-| `!=` | Unequal | `pos = noun` |
-| `>` | Greater than | `form = kuusi` |
-| `>=` | Greater than ow equal | `form = kuusi` |
-| `<` | Lower than | `form = kuusi` |
-| `<=` | Lower than or equal | `form = kuusi` |
+| `=` | Equal | `len = 8` |
+| `!=` | Unequal | `person != 3` |
+| `>` | Greater than | `freq > 10000` |
+| `>=` | Greater than ow equal | `freq >= 10000` |
+| `<` | Lower than | `ambform < 0.99` |
+| `<=` | Lower than or equal | `len <= 10` |
 
 For all frequency fields there is a corresponding relative frequency field (prepended with `rel`, e.g. `rellemmafreq`). The value of this field is frequency per one million tokens.
 
