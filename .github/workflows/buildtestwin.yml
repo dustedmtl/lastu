@@ -1,4 +1,4 @@
-name: Test building macOS software version
+name: Test building Windows software version
 
 on:
   workflow_dispatch:
