@@ -58,6 +58,7 @@ Please see the user guide for downloading a database or an executable package.
    - Documentation for the scripts: [SCRIPTS](docs/SCRIPTS.md)
    - Packaging the application into an executable: [PACKAGING](docs/PACKAGING.md)
    - Technical information: [TECHINFO](docs/TECHINFO.md)
+   - Known issues: [ISSUES](docs/ISSUES.md)
  - Input file samples: [SAMPLES](docs/SAMPLES.md)
 
 ## Limitations
