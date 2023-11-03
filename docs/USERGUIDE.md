@@ -108,6 +108,8 @@ The queries work the same for both modes. For wordlist mode, there is an additio
 
 To get back to the free search mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
 
+In wordlist mode, there is an additional column `order`, which shows the order (row) of the input words in the wordlist input file.
+
 ## Limitations
 
 The main limitations of the program relate to performance. Some queries may be slow to execute in the database. The user interface may also be slow to update when fetching data from the database or sorting it, depending on the resources of the computer. To alleviate these issues, the user may consider the following remedies:
