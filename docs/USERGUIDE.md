@@ -2,7 +2,17 @@
 
 ## Background
 
-LASTU: Lexical Application for STimulus Unearthing is a program for generating stimulus words for psycholinguistic research. It has mainly been developed for Finnish, but databases can be created for other languages as well.
+LASTU: Lexical Application for STimulus Unearthing is a program for searching for stimulus words for psycholinguistic research. It has mainly been developed for Finnish, but databases can be created for other languages as well.
+
+### Citations
+
+Citation when using our software (will change when article published):
+Sami Itkonen, Tuomo Häikiö, Vainio, Seppo, and Lehtonen, Minna. 2023. LASTU. Retrieved from osf.io/j8v6b
+
+If you also use our Finnish database(s) derived from the Finnish Internet Parsebank, your should also cite its creators:
+
+Juhani Luotolahti, Jenna Kanerva, Veronika Laippala, Sampo Pyysalo, and Filip Ginter. 2015. Towards Universal Web Parsebanks. In Proceedings of the Third International Conference on Dependency Linguistics (Depling 2015), pages 211-220, Uppsala, Sweden. Uppsala University, Uppsala, Sweden.
+https://aclanthology.org/W15-2124/
 
 ## Download and installation instructions
 
