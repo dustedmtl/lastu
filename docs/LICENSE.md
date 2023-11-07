@@ -44,6 +44,6 @@ Any databases associated with the software are licensed under a
 
 Finnish Parsebank databases are derived from Finnish Internet Parsebank, licensed under [Creative Commons Attribution 4.0 International License][cc-by]: https://turkunlp.org/finnish_nlp.html
 
-Juhani Luotolahti, Jenna Kanerva, Veronika Laippala, Sampo Pyysalo, and Filip Ginter. 2015. Towards Universal Web Parsebanks. In Proceedings of the Third International Conference on Dependency Linguistics (Depling 2015), pages 211–220, Uppsala, Sweden. Uppsala University, Uppsala, Sweden.
+Juhani Luotolahti, Jenna Kanerva, Veronika Laippala, Sampo Pyysalo, and Filip Ginter. 2015. Towards Universal Web Parsebanks. In Proceedings of the Third International Conference on Dependency Linguistics (Depling 2015), pages 211-220, Uppsala, Sweden. Uppsala University, Uppsala, Sweden.
 https://aclanthology.org/W15-2124/
 
