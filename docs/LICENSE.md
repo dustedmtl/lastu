@@ -34,7 +34,7 @@ Documentation, including this page, is licensed under a
 
 ### Database license
 
-Any databases included with the software are licensed under a
+Any databases associated with the software are licensed under a
 [Creative Commons Attribution-ShareAlike 4.0 International License][cc-by-sa].
 
 [![CC BY SA 4.0][cc-by-sa-image]][cc-by-sa]
@@ -42,4 +42,8 @@ Any databases included with the software are licensed under a
 [cc-by-sa]: https://creativecommons.org/licenses/by-sa/4.0/
 [cc-by-sa-image]: https://i.creativecommons.org/l/by-sa/4.0/88x31.png
 
+Finnish Parsebank databases are derived from Finnish Internet Parsebank, licensed under [Creative Commons Attribution 4.0 International License][cc-by]: https://turkunlp.org/finnish_nlp.html
+
+Juhani Luotolahti, Jenna Kanerva, Veronika Laippala, Sampo Pyysalo, and Filip Ginter. 2015. Towards Universal Web Parsebanks. In Proceedings of the Third International Conference on Dependency Linguistics (Depling 2015), pages 211–220, Uppsala, Sweden. Uppsala University, Uppsala, Sweden.
+https://aclanthology.org/W15-2124/
 
