@@ -6,7 +6,7 @@ LASTU: Lexical Application for STimulus Unearthing is a program for searching fo
 
 ### Citations
 
-Citation when using our software (will change when article published):
+Citation (temporary) when using our software:
 Sami Itkonen, Tuomo Häikiö, Vainio, Seppo, and Lehtonen, Minna. 2023. LASTU. Retrieved from osf.io/j8v6b
 
 If you also use our Finnish database(s) derived from the Finnish Internet Parsebank, your should also cite its creators:
