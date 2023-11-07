@@ -24,7 +24,7 @@ SOFTWARE.
 
 ### Documentation license
 
-Documentation, including this page, is licensed under a
+Documentation, including this guide, is licensed under a
 [Creative Commons Attribution 4.0 International License][cc-by].
 
 [![CC BY 4.0][cc-by-image]][cc-by]
