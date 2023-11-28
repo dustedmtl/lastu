@@ -16,7 +16,7 @@ https://aclanthology.org/W15-2124/
 
 ## Download and installation instructions
 
-The software has two necessary components:
+The software has two required components:
  - the application itself (including the optional `lastu.ini` configuration file)
  - a database, which is a file in the form of SQLite3 database
 
@@ -24,7 +24,7 @@ The software and databases are located at OSF: https://osf.io/j8v6b/.
 
 The application can be downloaded at https://osf.io/j8v6b/files/osfstorage:
  - Under `software`, download the appropriate package (`.zip` for Windows, `.dmg` for macOS).
- - Open the package and drag the application (`.exe` for Windows, `.app` for macOS) to your desired location.
+ - Open (extract) the package and drag the application (`.exe` for Windows, `.app` for macOS) to your desired location.
    - If this is your first time using the software, also drag the `lastu.ini` file to the same location.
    - Otherwise you can keep using the old configuration file.
 
@@ -34,13 +34,13 @@ For databases, go to https://osf.io/7hrbv/files/osfstorage. A database archive c
 
 The main function of the init file is to tell the application where the database file should be found. For a more general description of the options, please see [init file configuration](#init-file-configuration).
 
-The init file itself is looked for from two locations:
+The init file itself is looked for in two locations:
  - The same directory where the application is located in
  - The user's home directory
    - macOS: `/Users/<username>/lastu.ini`
    - Windows: `C:\Users\<username>\lastu.ini`
 
-If the init file is not found, the database filename will default to `lastudatabase.db` and
+If the init file is not found in either location, the database filename will default to `lastudatabase.db` and
 the application will try to locate it from the `data` subdirectory. If this file isn't found either, the application will prompt the user to locate a database file to open.
 
 
@@ -52,7 +52,7 @@ The results are disambiguated based on the lemma, surface form, part-of-speech (
 
 The table shows information in four difference categories: lemma information, surface form information, gram frequencies and features. The lemma and surface form fields include both string and numeric fields.
 
-For performance reasons, the application fetches 10000 top results from the database (ordered by frequency) and shows the top 1000 results (based on whatever sorting criteria the user has, the default is frequency). These values can be changed in the [configuration file](#init-file-configuration), if necessary (e.g. if the user finds the application too slow; see also the [chapter on limitations](#limitations). The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
+For performance reasons, by default the application fetches 10000 top results from the database (ordered by frequency) and shows the top 1000 results (based on whatever sorting criteria the user has, the default is frequency). These values can be changed in the [configuration file](#init-file-configuration), if necessary (e.g. if the user finds the application too slow; see also the [chapter on limitations](#limitations). The information field under the query field shows the number of rows fetched from the database. If the number is less than 10000, this is the amount of actual rows in the database; otherwise the total number of matching rows is unknown.
 
 The results table is sortable by all available fields.
 
@@ -102,9 +102,9 @@ The keyboard shortcuts described here are applicable for the Windows platforms. 
 A new window can be created with `Ctrl-N`, which copies the query and results from the currently active window, or `Shift-Ctrl-N`, which opens a new empty window. Queries from an wordlist file can be done with `Ctrl-I`. A different database can be opened with `Ctrl-D`.
 
 There are three ways to export/copy information:
- 1. `Ctrl-S` exports the results to file (csv/tsv/xlsx); default output format is in the configuration file.
+ 1. `Ctrl-S` exports the results to file (csv/tsv/xlsx); default output format is specified in the configuration file.
  2. `Ctrl-E` copies the results to the clipboard.
- 3. `Ctrl-C` allows the user to individually select rows, columns or cells and copy them to clipboard.
+ 3. `Ctrl-C` copies the individually selected rows, columns or cells to the clipboard.
 
 With `Ctrl-C`, only cells that have been selected will be copied (i.e. hidden cells are excluded). With `Ctrl-E`, all results are copied, including rows and columns that are hidden from the result window.
 
@@ -114,11 +114,11 @@ For more information and other shortcuts, please see the [menu functions](#menu-
 
 The two modes of operation are free search mode and wordlist mode. The free search mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed). In contrast, in the wordlist mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
 
-The queries work the same for both modes. For wordlist mode, there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown (e.g. `top = 2` shows top 2 results).
+The queries work identically in both modes. The only exception is that for the wordlist mode, where there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown (e.g. `top = 2` shows top 2 results).
 
 To get back to the free search mode from the wordlist mode, the user must either open a new empty window with `Shift-Ctrl-N` or a different database with `Ctrl-D`.
 
-In wordlist mode, there is an additional column `order`, which shows the order (row) of the input words in the wordlist input file.
+In the wordlist mode, there is an additional column `order`, which shows the order (row) of the input words in the wordlist input file.
 
 ## Limitations
 
@@ -249,13 +249,13 @@ There is one boolean key for compound words.
 
 ### Extended examples
 
-All nouns and adjectives in inessive, elative or illative with frequency between 100 and 200, length between 5 to 12 characters (inclusive), omitting compounds:
+Search for all nouns and adjectives in inessive, elative or illative with frequency between 100 and 200, length between 5 to 12 characters (inclusive), omitting compounds:
  - `pos in noun,adj and case in ine,ela,ill and freq > 100 and freq < 200 and len >= 5 and len <= 20 and not compound`
 
-All verbs in base form ending with `da`or `dä` with frequency above `x` and below `y`::
+Search for all verbs in base form ending with `da` or `dä` with frequency above `x` and below `y`:
  - `verbform = Inf and end in da,dä and freq > x and freq < y`
 
-Nouns with `kse` in the body in inessive case:
+Search for nouns with `kse` in the body in inessive case:
  - `pos = noun and middle = kse and case = ine`
 
 ### Menu functions
