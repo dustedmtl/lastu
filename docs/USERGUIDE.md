@@ -29,6 +29,7 @@ The application can be downloaded at https://osf.io/j8v6b/files/osfstorage:
    - Otherwise you can keep using the old configuration file.
 
 For databases, go to https://osf.io/7hrbv/files/osfstorage. A database archive contains the database as well as tables exported from the database in CSV format.
+ - Download the package (in `.zip` format), and extract it to a suitable location.
 
 ### Init file and database file
 
