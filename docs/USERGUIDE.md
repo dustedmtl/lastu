@@ -113,7 +113,9 @@ For more information and other shortcuts, please see the [menu functions](#menu-
 
 ### Modes: database versus wordlist
 
-The two modes of operation are free search mode and wordlist mode. The free search mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed). In contrast, in the wordlist mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
+The two modes of operation are free search mode and wordlist mode. The free search mode is the default. In this mode, any queries are searched directly from the database whenever the they are executed (when the `Query` button or `Enter` key is pressed).
+
+In the wordlist mode, the user can upload a ready list of words or nonwords from a .txt file to get their properties. In this mode only the initial result list is fetched from the database. Any queries that are made afterward are made against this set of results.
 
 The queries work identically in both modes. The only exception is that for the wordlist mode, where there is an additional key `top`. When this key is used in the query, only the top results (based on frequency) for each lemma/form/pos/feats quartet are shown (e.g. `top = 2` shows top 2 results).
 
@@ -198,7 +200,7 @@ The below tables show the query keys and operators for strings.
 | Operator | Explanation | Example |
 | --- | --- | --- |
 | `=` | Equal | `form = kuusi` |
-| `!=` | Unequal | `pos = noun` |
+| `!=` | Unequal | `pos != noun` |
 | `in` | In a set | `case in nom,gen` |
 | `not in` | Not in a set | `case not in nom,gen` |
 | `like` | SQL `LIKE` operator | `form like auto%` |
