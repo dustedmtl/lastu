@@ -7,7 +7,7 @@ LASTU: Lexical Application for STimulus Unearthing is a program for searching fo
 ### Citations
 
 Citation when using our software:
-Sami Itkonen, Tuomo Häikiö, Vainio, Seppo, and Lehtonen, Minna. In press. LASTU: A psycholinguistic search tool for Finnish lexical stimuli. Behavior Research Methods.
+Sami Itkonen, Tuomo Häikiö, Seppo Vainio, and Minna Lehtonen. In press. LASTU: A psycholinguistic search tool for Finnish lexical stimuli. Behavior Research Methods.
 
 If you also use our Finnish database(s) derived from the Finnish Internet Parsebank, your should also cite its creators:
 
