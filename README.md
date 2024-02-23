@@ -70,7 +70,13 @@ The database and software are tailored for Finnish.
 
 ## Citing
 
-Article in progress. TBD
+When using the software in your research, please use the following citation:
+
+Sami Itkonen, Tuomo Häikiö, Seppo Vainio, and Minna Lehtonen. 2024. LASTU: A psycholinguistic search tool for Finnish lexical stimuli. Behavior Research Methods. https://doi.org/10.3758/s13428-024-02347-x
+
+If you also use our Finnish database(s) derived from the Finnish Internet Parsebank, your should also cite its creators:
+
+Juhani Luotolahti, Jenna Kanerva, Veronika Laippala, Sampo Pyysalo, and Filip Ginter. 2015. Towards Universal Web Parsebanks. In Proceedings of the Third International Conference on Dependency Linguistics (Depling 2015), pages 211-220, Uppsala, Sweden. Uppsala University, Uppsala, Sweden. https://aclanthology.org/W15-2124/
 
 
 # License
