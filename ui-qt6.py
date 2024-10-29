@@ -847,6 +847,7 @@ class MainWindow(QMainWindow):
             try:
                 if self.fulldata is None:
                     self.fulldata = self.data
+                    logger.debug("Setting full data from input file")
                 # logger.info('Fulldata %d', len(self.fulldata))
                 if len(querytext.strip()) > 0:
                     logger.info('Filter: %s', querytext)
@@ -897,6 +898,7 @@ class MainWindow(QMainWindow):
             df = dbutil.add_relative_frequencies(self.dbconnection, querydf)
             self.statusfield.setText(f'Executing query: {self.query_desc} .. done: {len(querydf)} rows returned in {exectime:.1f} seconds')
             self.setData(df)
+            self.fulldata = None
             # self.table.horizontalHeader().sectionClicked.connect(self.sortData)
             if self.mode == "inputfileprocess":
                 self.mode = "inputfile"
@@ -911,6 +913,7 @@ class MainWindow(QMainWindow):
             if self.clearresultsifempty:
                 df = pd.DataFrame()
                 self.setData(df)
+                self.fulldata = None
         self.clearresultsifempty = False
 
     def setQueryError(self, _text: str, error: str):
