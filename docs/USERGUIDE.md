@@ -32,6 +32,10 @@ The application can be downloaded at https://osf.io/j8v6b/files/osfstorage:
 For databases, go to https://osf.io/7hrbv/files/osfstorage. A database archive contains the database as well as tables exported from the database in CSV format.
  - Download the package (in `.zip` format), and extract it to a suitable location.
 
+Your operating system may issue a warning when opening the application for the first time. How to get around this:
+ - macOS: https://support.apple.com/en-gb/guide/mac-help/mchleab3a043/mac
+ - Windows: TBD
+
 ### Init file and database file
 
 The main function of the init file is to tell the application where the database file should be found. For a more general description of the options, please see [init file configuration](#init-file-configuration).
