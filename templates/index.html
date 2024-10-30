@@ -5,48 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LASTU Query App</title>
     <style>
+        /* Basic reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Layout styling */
+        body, html {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            overflow-y: auto; /* Makes the table scrollable */
+            flex-direction: column;
+            flex: 1;
+        }
+
+        header, footer {
+            padding: 10px;
+            background: #f0f0f0;
+            text-align: left;
+            flex-shrink: 0; /* Prevent header and footer from shrinking */
+        }
+
+        /* Form styling */
+        #queryForm {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Table styling */
+        .table-container {
+            flex: 1;
+            overflow-y: auto; /* Makes the table scrollable */
+            padding: 0 10px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
         }
+
         th, td {
             padding: 8px;
             border: 1px solid #ddd;
             text-align: left;
         }
+
         th {
             cursor: pointer;
         }
+
         .ascending::after {
             content: " ▲";
         }
+
         .descending::after {
             content: " ▼";
         }
-        .footer {
-            margin-top: 10px;
-            font-size: 14px;
-        }
+
     </style>
 </head>
 <body>
-    <h1>LASTU Query App</h1>
-    <form id="queryForm">
-        <label for="querytxt">Query:</label>
-        <input type="text" id="querytxt" name="querytxt" required>
-        <button type="submit">Submit</button>
-    </form>
+    <header>
+        <h1>LASTU Query App</h1>
+        <form id="queryForm">
+            <label for="querytxt">Query:</label>
+            <input type="text" id="querytxt" name="querytxt" size="40" required>
+            <button type="submit">Submit</button>
+        </form>
+    </header>
 
-    <div id="statusMessage"></div>
-    <table id="resultsTable">
-        <thead id="tableHeader">
-            <!-- Headers will be dynamically inserted here -->
-        </thead>
-        <tbody id="tableBody">
-            <!-- Table rows will be dynamically inserted here -->
-        </tbody>
-    </table>
-    <div class="footer" id="tableFooter"></div>
+    <div class="container">
+        <div class="table-container">
+            <table id="resultsTable">
+                <thead id="tableHeader">
+                    <!-- Headers will be dynamically inserted here -->
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Table rows will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <div id="tableFooter" class="footer"></div>
+    </footer>
 
     <script>
         const maxRows = 100;  // Control the maximum number of rows displayed
@@ -68,7 +120,7 @@
                 const result = await response.json();
 
                 // Display the query message or status
-                document.getElementById('statusMessage').textContent = result.message;
+                document.getElementById('tableFooter').textContent = result.message;
 
                 // Populate table if data is available
                 if (result.data && result.data.length > 0) {
@@ -79,7 +131,7 @@
                 }
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById('statusMessage').textContent = "Error fetching data.";
+                document.getElementById('tableFooter').textContent = "Error fetching data.";
             }
         });
 
@@ -117,7 +169,7 @@
                 tableBody.appendChild(tr);
             });
 
-            // Update footer
+            // Update footer text based on row count
             if (data.length <= maxRows) {
                 tableFooter.textContent = `Showing ${data.length} results`;
             } else {
