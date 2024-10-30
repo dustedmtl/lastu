@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LASTU Query App</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            cursor: pointer;
+        }
+        .ascending::after {
+            content: " ▲";
+        }
+        .descending::after {
+            content: " ▼";
+        }
+        .footer {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LASTU Query App</h1>
+    <form id="queryForm">
+        <label for="querytxt">Query:</label>
+        <input type="text" id="querytxt" name="querytxt" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="statusMessage"></div>
+    <table id="resultsTable">
+        <thead id="tableHeader">
+            <!-- Headers will be dynamically inserted here -->
+        </thead>
+        <tbody id="tableBody">
+            <!-- Table rows will be dynamically inserted here -->
+        </tbody>
+    </table>
+    <div class="footer" id="tableFooter"></div>
+
+    <script>
+        const maxRows = 100;  // Control the maximum number of rows displayed
+        let currentSortColumn = null;
+        let currentSortDirection = true;  // true for ascending, false for descending
+        let originalData = [];  // To hold the full dataset for sorting
+
+        // Submit form and fetch data from API
+        document.getElementById('queryForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const querytxt = document.getElementById('querytxt').value;
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ querytxt })
+                });
+                const result = await response.json();
+
+                // Display the query message or status
+                document.getElementById('statusMessage').textContent = result.message;
+
+                // Populate table if data is available
+                if (result.data && result.data.length > 0) {
+                    originalData = result.data;  // Store original data for sorting
+                    generateTable(originalData);
+                } else {
+                    document.getElementById('tableBody').innerHTML = "<tr><td colspan='100%'>No data available</td></tr>";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('statusMessage').textContent = "Error fetching data.";
+            }
+        });
+
+        // Generate table with top maxRows rows and sortable headers
+        function generateTable(data) {
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+            const tableFooter = document.getElementById('tableFooter');
+
+            // Clear previous table contents
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+            tableFooter.innerHTML = '';
+
+            // Create table headers dynamically
+            const headers = Object.keys(data[0]);
+            const headerRow = document.createElement('tr');
+            headers.forEach((header, index) => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.addEventListener('click', () => sortTableByColumn(originalData, header, index));
+                headerRow.appendChild(th);
+            });
+            tableHeader.appendChild(headerRow);
+
+            // Display only the top 100 rows
+            const top100Data = data.slice(0, maxRows);
+            top100Data.forEach(row => {
+                const tr = document.createElement('tr');
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = row[header];
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+
+            // Update footer
+            if (data.length <= maxRows) {
+                tableFooter.textContent = `Showing ${data.length} results`;
+            } else {
+                tableFooter.textContent = `Showing ${maxRows} rows of ${data.length}`;
+            }
+        }
+
+        // Sort the table by a specified column
+        function sortTableByColumn(data, column, columnIndex) {
+            // Determine sort direction
+            if (currentSortColumn === columnIndex) {
+                currentSortDirection = !currentSortDirection;  // Toggle direction
+            } else {
+                currentSortDirection = true;  // Default to ascending
+                currentSortColumn = columnIndex;
+            }
+
+            // Sort the data array
+            data.sort((a, b) => {
+                const valA = a[column];
+                const valB = b[column];
+
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return currentSortDirection ? valA - valB : valB - valA;
+                } else {
+                    return currentSortDirection
+                        ? String(valA).localeCompare(String(valB))
+                        : String(valB).localeCompare(String(valA));
+                }
+            });
+
+            // Update the table with sorted data, displaying only the top maxRows rows
+            generateTable(data);
+
+            // Update sort indicator in headers
+            const headers = document.querySelectorAll("th");
+            headers.forEach((header, index) => {
+                header.classList.remove("ascending", "descending");
+                if (index === columnIndex) {
+                    header.classList.add(currentSortDirection ? "ascending" : "descending");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

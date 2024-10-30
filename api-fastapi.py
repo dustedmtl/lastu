@@ -1,4 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
 import pandas as pd
@@ -7,6 +10,9 @@ import sqlite3
 from lib import dbutil
 
 app = FastAPI()
+
+# Set up Jinja2 templates
+templates = Jinja2Templates(directory="templates")
 
 # Define the path to your SQLite database file
 DB_PATH = "tests/fi_gutenberg_70M_100.db"
@@ -22,6 +28,11 @@ def get_db_connection():
 
 class QueryRequest(BaseModel):
     querytxt: str
+
+# Endpoint to render the HTML UI
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/query")
 async def get_frequency(query: QueryRequest):
