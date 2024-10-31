@@ -20,6 +20,10 @@ seaborn
 uralicNLP; sys_platform != "win32"
 symspellpy; sys_platform != "win32"
 
+# api
+fastapi
+uvicorn
+
 # code quality
 typing-extensions
 mypy
