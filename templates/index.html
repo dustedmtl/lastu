@@ -71,6 +71,34 @@
             content: " ▼";
         }
 
+        .spinner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading {
+            background-color: #e0e0e0;
+            color: #a0a0a0;
+        }
+
+        .loading .spinner {
+            display: block;
+        }
+
+        /* Spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -85,6 +113,7 @@
 
     <div class="container">
         <div class="table-container">
+            <div class="spinner"></div> <!-- Loading Spinner -->
             <table id="resultsTable">
                 <thead id="tableHeader">
                     <!-- Headers will be dynamically inserted here -->
@@ -106,10 +135,34 @@
         let currentSortDirection = true;  // true for ascending, false for descending
         let originalData = [];  // To hold the full dataset for sorting
 
+        // References to important elements
+        const queryForm = document.getElementById('queryForm');
+        const queryInput = document.getElementById('querytxt');
+        const submitButton = queryForm.querySelector('button');
+        const tableContainer = document.querySelector('.table-container');
+        const spinner = document.querySelector('.spinner');
+
+        // Display loading state
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                queryInput.disabled = true;
+                submitButton.disabled = true;
+                tableContainer.classList.add('loading');
+                spinner.style.display = 'block';
+            } else {
+                queryInput.disabled = false;
+                submitButton.disabled = false;
+                tableContainer.classList.remove('loading');
+                spinner.style.display = 'none';
+            }
+        }
+
         // Submit form and fetch data from API
         document.getElementById('queryForm').addEventListener('submit', async function(event) {
             event.preventDefault();
             const querytxt = document.getElementById('querytxt').value;
+
+            setLoadingState(true); // Show loading indicator
 
             try {
                 const response = await fetch('/query', {
@@ -132,6 +185,8 @@
             } catch (error) {
                 console.error("Error:", error);
                 document.getElementById('tableFooter').textContent = "Error fetching data.";
+            } finally {
+                setLoadingState(false); // Hide loading indicator
             }
         });
 
