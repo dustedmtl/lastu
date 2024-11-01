@@ -63,14 +63,6 @@
             cursor: pointer;
         }
 
-        .ascending::after {
-            content: " ▲";
-        }
-
-        .descending::after {
-            content: " ▼";
-        }
-
         .spinner {
             display: none;
             position: absolute;
@@ -99,6 +91,31 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Style for the header content */
+        .header-content {
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+        }
+
+        /* Space for the sort icon, even if empty */
+        .sort-icon {
+             font-size: 0.8em; /* Smaller than the header text */
+             width: 1em;       /* Reserve space for icon */
+             display: inline-block;
+             text-align: center;
+        }
+
+        /* Ascending and descending classes for additional styling */
+        .ascending .sort-icon {
+             color: #4caf50; /* Example color for ascending */
+        }
+
+        .descending .sort-icon {
+             color: #f44336; /* Example color for descending */
+        }
+
     </style>
 </head>
 <body>
@@ -131,8 +148,8 @@
 
     <script>
         const maxRows = 100;  // Control the maximum number of rows displayed
-        let currentSortColumn = null;
-        let currentSortDirection = true;  // true for ascending, false for descending
+        let currentSortColumn = 'frequency';
+        let currentSortDirection = false;  // true for ascending, false for descending
         let originalData = [];  // To hold the full dataset for sorting
 
         // References to important elements
@@ -205,12 +222,27 @@
             const headerRow = document.createElement('tr');
             headers.forEach((header, index) => {
                 const th = document.createElement('th');
-                th.textContent = header;
 
-                // Set the sort indicator based on the current sort state
+                // Create a div to contain the header text and sort icon
+                const headerDiv = document.createElement('div');
+                headerDiv.classList.add('header-content');
+
+                // Header text
+                const headerText = document.createElement('span');
+                headerText.textContent = header;
+                headerDiv.appendChild(headerText);
+
+                // Sort icon placeholder
+                const sortIcon = document.createElement('span');
+                sortIcon.classList.add('sort-icon');
                 if (header === currentSortColumn) {
-                    th.classList.add(currentSortDirection ? 'ascending' : 'descending');
+                    sortIcon.textContent = currentSortDirection ? '▲' : '▼'; // Up or down arrow
+                } else {
+                    sortIcon.innerHTML = '&nbsp;'; // Space reserved for icon
                 }
+                headerDiv.appendChild(sortIcon);
+
+                th.appendChild(headerDiv);
 
                 th.addEventListener('click', () => {
                     if (currentSortColumn === header) {
