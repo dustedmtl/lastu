@@ -14,8 +14,24 @@ app = FastAPI()
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
+# Config
+# FIXME: make rows to show/fetch configurable
+# FIXME: make port configurable
+
+# Other
+# FIXME: documentation
+# FIXME: logging
+
+# UI
+# FIXME: paging
+# FIXME: groups like in desktop app
+# FIXME: open browser when starting the app
+# FIXME: allow choice of database
+# FIXME: export list
+
 # Define the path to your SQLite database file
 DB_PATH = "tests/fi_gutenberg_70M_100.db"
+#DB_PATH = "data/fi_parsebank_5B_20/fi_parsebank_5B_20.db"
 
 # Database connection setup with error handling for non-existent database file
 def get_db_connection():
