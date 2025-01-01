@@ -8,13 +8,14 @@ import os.path
 import pytest
 from pytest_check import check
 import pandas as pd
+import polars as pl
 
 currdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currdir)
 sys.path.append(parentdir)
 
 from lib import dbutil, uiutil
-
+from lib import polarsutil
 
 @pytest.fixture(scope="session")
 def inifile():
@@ -42,11 +43,26 @@ def datafile():
 
 
 @pytest.fixture(scope="session")
+def csvfile():
+    """Get fixed csvfile."""
+    datadir = "tests/gutenberg"
+    csvfile = "wordfreqs_combined.csv"
+    return os.path.join(datadir, csvfile)
+
+
+@pytest.fixture(scope="session")
 def dbc(datafile):
     """Get connection to database."""
     print(f'Calling dbc with {datafile}')
     conn = dbutil.DatabaseConnection(datafile)
     return conn
+
+
+@pytest.fixture(scope="session")
+def lazy_df(csvfile):
+    """Get lazy dataframe."""
+    lazy_df = polarsutil.lazy_csv(csvfile)
+    return lazy_df
 
 
 @pytest.fixture(scope="session")
@@ -64,7 +80,7 @@ def test_df(df):
     assert isinstance(df, pd.DataFrame)
 
 
-def test_basic(dbc):
+def test_basic(dbc, lazy_df):
     """Check that a basic query is done properly."""
     q1 = "form = voi and ambform < 0.9"
     q2 = "form = voi and ambform > 0.9"
@@ -88,6 +104,13 @@ def test_basic(dbc):
     print(f"{q2}: All forms must be 'voi'")
     check.equal(len(df2[df2.form != 'voi']), 0)
     # assert len(df2[df2.form != 'voi']) == 0
+
+    pdf1 = polarsutil.query(lazy_df, q1)
+    print(f'{q1}: Must not have rows with ambform > 0.9')
+    check.equal(len(df1[df1.ambform > 0.9]), 0)
+    print(f'{q1}: Polars must have same result count')
+    check.equal(len(df1), len(pdf1))
+    
 
 
 def test_clitic(dbc):
@@ -140,8 +163,9 @@ def test_clitic(dbc):
     check.greater(len(df6[df6.clitic == '_']), 0)
     # assert len(df6[df6.clitic == '_']) > 0
 
+    # FIXME: implement lazy frames for clitics, derivations, cases etc
 
-def test_compound(dbc):
+def test_compound(dbc, lazy_df):
     """Check that compounds queried properly."""
     # q1 = "lemma = autotalli"
     # q2 = "lemma = autotalli and compound"
@@ -162,8 +186,23 @@ def test_compound(dbc):
     check.equal(len(df2[~df2.lemma.str.contains('#')]), 0)
     # assert len(df2[~df2.lemma.str.contains('#')]) == 0
 
+    pdf1 = polarsutil.query(lazy_df, q1)
+    # print(len(df1))
+    # print(df1)
+    # print(len(pdf1))
+    # print(pdf1)
+    print(f'{q1}: some lemmas should contain #')
+    check.greater(len(pdf1.filter(pl.col("lemma").str.contains("#"))), 0)
+    print(f'{q1}: Polars must have same result count')
+    check.equal(len(df1), len(pdf1))
+    pdf2 = polarsutil.query(lazy_df, q2)
+    print(f'{q2}: all lemmas must contain #')
+    check.equal(len(pdf2.filter(~pl.col("lemma").str.contains("#"))), 0)
+    print(f'{q2}: Polars must have same result count')
+    check.equal(len(df2), len(pdf2))
 
-def test_form(dbc):
+
+def test_form(dbc, lazy_df):
     """Check that form wildcards queried properly."""
     # q1 = "form like auto%"
     q2 = "start = auto"
@@ -225,7 +264,55 @@ def test_form(dbc):
     print(f"{q9}: start not in query must work properly")
     check.equal(len(df9[df9.form.str.contains('^a')]), 0)
 
+    pdf2 = polarsutil.query(lazy_df, q2)
+    pdf3 = polarsutil.query(lazy_df, q3)
+    pdf4 = polarsutil.query(lazy_df, q4)
+    pdf5 = polarsutil.query(lazy_df, q5)
+    pdf6 = polarsutil.query(lazy_df, q6)
+    pdf7 = polarsutil.query(lazy_df, q7)
+    pdf8 = polarsutil.query(lazy_df, q8)
+    pdf9 = polarsutil.query(lazy_df, q9)
 
+    print(f"{q2}: all forms must start with 'auto'")
+    check.equal(len(pdf2.filter(~pl.col("form").str.starts_with("auto"))), 0)
+    print(f"{q3}: all forms must end with 'ssa' or 'ssä'")
+    check.equal(len(pdf3.filter(pl.col("form").str.ends_with("ssa")
+                                | pl.col("form").str.ends_with("ssä"))),
+                len(pdf3))
+
+    print(f"{q4}: all forms must contain 'la' in the middle. They may also start or end with it")
+    # print(len(df4), len(pdf4))
+    # print(pdf4.select(['lemma', 'form']))
+    check.equal(len(pdf4.filter(pl.col("form").str.contains(r'.+la.+'))), len(df4))
+
+    print(f"{q5}: all forms must start with and contain 'la' in the middle. They may also end with it")
+    check.equal(len(pdf5.filter(pl.col("form").str.contains(r'.+la.+')
+                                & pl.col("form").str.starts_with('la'))),
+                len(df5))
+    # print(len(df5), len(pdf5))
+    # print(pdf5.select(['lemma', 'form']))
+
+    print(f"{q6}: all forms must start with and not contain 'la' in the middle. They may also end with it")
+    # print(len(df6), len(pdf6))
+    # print(pdf6.select(['lemma', 'form']))
+    check.equal(len(pdf6.filter(~pl.col("form").str.contains(r'.+la.+')
+                                & pl.col("form").str.starts_with('la'))),
+                len(df6))
+
+    print(f"{q7}: middle queries must add up to a full set")
+    check.equal(len(pdf7), len(pdf5)+len(pdf6))
+
+    print(f"{q8}: end not in query must work properly")
+    # print(len(df8), len(pdf8))
+    # print(pdf8.select(['lemma', 'form', 'frequency']))
+    check.equal(len(pdf8.filter(pl.col("form").str.ends_with("a")
+                                | pl.col("form").str.ends_with("ä"))), 0)
+
+    print(f"{q9}: start not in query must work properly")
+    check.equal(len(pdf9.filter(pl.col("form").str.starts_with("a")
+                                | pl.col("form").str.starts_with("ä"))), 0)
+
+    
 def test_error(dbc):
     """Test an error query."""
     q1 = "nouncase in Ill,Gen and pos in PROPN,NOUN and foo = 0 and len >  a and naat compound and len ~= 10 and len<10"
@@ -253,3 +340,4 @@ def test_wordlist(dbc):
     # The order column is in the dataframe.
     columns = ffiltered.columns
     check.is_true('order' in columns)
+    # FIXME: polars wordlist
