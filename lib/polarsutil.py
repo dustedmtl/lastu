@@ -252,16 +252,24 @@ def parse_query_polars(query: str,
                         # print(f"Query comparator for '{key}' not ok: '{comparator}'")
                         # logger.debug("Query comparator for '%s' not ok: '%s'", key, comparator)
                 elif key in featkeys:
-                    # FIXME: _ handling
                     if comparator in stroperators:
                         polarsop = 'equal'
                         value = value.title()
+                        underscore = False
 
+                        if value == '_':
+                            underscore = True
                         if comparator in ['in', 'notin']:
                             value = value.split(',')
+                            if '_' in value:
+                                underscore = True
                         if comparator in ['!=', 'notin']:
                             negate = True
                         isok = True
+
+                        if not underscore and negate:
+                            # Remove underscores if this is a negative query
+                            kvparts.append([key, polarsop, '_', negate])
                     else:
                         errors.append(f"Query comparator for '{key}' not ok: '{comparator}'")
                         # print(f"Query comparator for '{key}' not ok: '{comparator}'")
@@ -309,4 +317,4 @@ def query(lazy_df: pl.LazyFrame,
         return query_lazy_df(lazy_df, filters)
     except ValueError as ve:
         logging.info(ve)
-        return pd.DataFrame()
+        return pl.DataFrame()
