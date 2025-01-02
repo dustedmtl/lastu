@@ -71,16 +71,6 @@ def create_string_expression(column: str, operation: str, values: Union[str, Lis
         expr = pl.col(column).str.contains(middleregex % values[0])
         for value in values[1:]:
             expr = expr | pl.col(column).str.contains(middleregex % value)
-#        expr2 = pl.col(column).str.starts_with(values[0])
-#        for value in values[1:]:
-#            expr2 = expr2 | pl.col(column).str.starts_with(value)
-#        expr3 = pl.col(column).str.ends_with(values[0])
-#        for value in values[1:]:
-#            expr3 = expr3 | pl.col(column).str.ends_with(value)
-#        print(expr)
-#        print(expr2)
-#        print(expr3)
-#        expr = expr & ~expr2 & ~expr3
     elif operation == "starts_with":
         expr = pl.col(column).str.starts_with(values[0])
         for value in values[1:]:
@@ -113,7 +103,6 @@ def query_lazy_df(lazy_df: pl.LazyFrame,
                 # redundant:
                 # elif filter_type == "not_equal":
                 #     expr = pl.col(column) != value
-                # FIXME: "middle" query (cannot start or end with the string)
                 elif filter_type == "in":
                     expr = pl.col(column).is_in(value)  # `value` should be a list of acceptable values
                 elif filter_type in ['=']:
@@ -159,18 +148,23 @@ def parse_query_polars(query: str,
                'start', 'middle', 'end',
                'top'
                ]
-    # FIXME: extend strkeys from headers
-    # FIXME: input csv header instead of lazy_df
-    # strkeys.extend(revfeatmap.keys())
+
+    cols = lazy_df.collect_schema().names()
+    featkeys = [item for item in cols if item not in numkeys and item not in strkeys and not item.endswith('gramfreq') and item != 'feats']
+    logging.debug("Got extended features: %s", featkeys)
+
     formkeys = ['start', 'middle', 'end']
     boolkeys = ['compound']
     stroperators = ['=', '!=', 'like', 'in', 'notin']
     formoperators = ['=', '!=', 'in', 'notin']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
 
+    # FIXME: relative gram freqs: read from bigrams table
     shortcuts = {
         'freq': 'frequency',
         'relfreq': 'relfrequency',
+        'initrigramfreq': 'initgramfreq',
+        'fintrigramfreq': 'fingramfreq',
         'nouncase': 'case',
         'nnumber': 'number',
     }
@@ -229,7 +223,6 @@ def parse_query_polars(query: str,
                     elif key == 'end':
                         polarsop = 'ends_with'
                     elif key == 'middle':
-                        # FIXME: not right
                         polarsop = 'middle'
 
                     if comparator in formoperators:
@@ -248,8 +241,21 @@ def parse_query_polars(query: str,
                         polarsop = 'equal'
                         if key == 'pos':
                             value = value.upper()
-                        elif key == 'case':
-                            value = value.title()
+
+                        if comparator in ['in', 'notin']:
+                            value = value.split(',')
+                        if comparator in ['!=', 'notin']:
+                            negate = True
+                        isok = True
+                    else:
+                        errors.append(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        # print(f"Query comparator for '{key}' not ok: '{comparator}'")
+                        # logger.debug("Query comparator for '%s' not ok: '%s'", key, comparator)
+                elif key in featkeys:
+                    # FIXME: _ handling
+                    if comparator in stroperators:
+                        polarsop = 'equal'
+                        value = value.title()
 
                         if comparator in ['in', 'notin']:
                             value = value.split(',')
@@ -277,6 +283,9 @@ def query_to_filter(query: str,
                     lazy_df: pl.LazyFrame) -> Dict[str, List[Dict]]:
     """Convert LASTU query to polars filters."""
     k, e = parse_query_polars(query, lazy_df)
+    if e:
+        error = '\n'.join(e)
+        raise ValueError(error)
 
     filters: dict[str, List] = {}
     for part in k:
@@ -294,6 +303,10 @@ def query_to_filter(query: str,
 def query(lazy_df: pl.LazyFrame,
           query: str) -> pl.DataFrame:
     """Query lazy frame using LASTU syntax."""
-    filters = query_to_filter(query, lazy_df)
-    logging.info("%s -> %s", query, filters)
-    return query_lazy_df(lazy_df, filters)
+    try:
+        filters = query_to_filter(query, lazy_df)
+        logging.info("%s -> %s", query, filters)
+        return query_lazy_df(lazy_df, filters)
+    except ValueError as ve:
+        logging.info(ve)
+        return pd.DataFrame()

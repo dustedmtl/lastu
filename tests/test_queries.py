@@ -113,7 +113,7 @@ def test_basic(dbc, lazy_df):
     
 
 
-def test_clitic(dbc):
+def test_clitic(dbc, lazy_df):
     """Check that clitics are queried properly."""
     q1 = "clitic != _"
     q2 = "clitic = _"
@@ -142,28 +142,67 @@ def test_clitic(dbc):
                                                lemmas=True)
     print(f'{q1}: result must not contain _')
     check.equal(len(df1[df1.clitic == '_']), 0)
-    # assert len(df1[df1.clitic == '_']) == 0
+
     print(f'{q2}: result must not contain results other than _')
     check.equal(len(df2[df2.clitic != '_']), 0)
     print(f'{q2}: have results')
     check.greater(len(df2[df2.clitic == '_']), 0)
-    # assert len(df2[df2.clitic != '_']) == 0
+
     print(f'{q3}: result must not contain results other than _')
     check.equal(len(df3[df3.clitic != '_']), 0)
     print(f'{q3}: have results')
     check.greater(len(df3[df3.clitic == '_']), 0)
-    # assert len(df3[df3.clitic != '_']) == 0
+
     print(f'{q4}: result must not contain _')
     check.equal(len(df4[df4.clitic == '_']), 0)
-    # assert len(df4[df4.clitic == '_']) == 0
+
     print(f'{q5}: result must not contain _')
     check.greater(len(df5[df5.clitic == '_']), 0)
-    # assert len(df5[df5.clitic == '_']) > 0
+    print(f'{q5}: result must not contain Kin,Kaan')
+    check.equal(len(df5[df5.clitic == 'Kin']), 0)
+    check.equal(len(df5[df5.clitic == 'Kaan']), 0)
+
     print(f'{q6}: result must not contain _')
     check.greater(len(df6[df6.clitic == '_']), 0)
-    # assert len(df6[df6.clitic == '_']) > 0
+    print(f'{q6}: result must not contain Kin')
+    check.equal(len(df6[df6.clitic == 'Kin']), 0)
 
-    # FIXME: implement lazy frames for clitics, derivations, cases etc
+
+    pdf1 = polarsutil.query(lazy_df, q1)
+    pdf2 = polarsutil.query(lazy_df, q2)
+    pdf3 = polarsutil.query(lazy_df, q3)
+    pdf4 = polarsutil.query(lazy_df, q4)
+    pdf5 = polarsutil.query(lazy_df, q5)
+    pdf6 = polarsutil.query(lazy_df, q6)
+
+    print(f'{q1}: result must not contain _')
+    check.equal(len(pdf1.filter(pl.col("clitic").str.contains("_"))), 0)
+    # check.equal(len(df1[df1.clitic == '_']), 0)
+
+    print(f'{q2}: result must not contain results other than _')
+    check.equal(len(pdf2.filter(~pl.col("clitic").str.contains("_"))), 0)
+    print(f'{q2}: have results')
+    check.greater(len(pdf2.filter(pl.col("clitic").str.contains("_"))), 0)
+
+    print(f'{q3}: result must not contain results other than _')
+    check.equal(len(pdf3.filter(~pl.col("clitic").str.contains("_"))), 0)
+    print(f'{q3}: have results')
+    check.greater(len(pdf3.filter(pl.col("clitic").str.contains("_"))), 0)
+
+    print(f'{q4}: result must not contain _')
+    check.equal(len(pdf4.filter(pl.col("clitic").str.contains("_"))), 0)
+
+    print(f'{q5}: result must not contain _')
+    check.equal(len(pdf5.filter(pl.col("clitic").str.contains("_"))), 0)
+    print(f'{q5}: result must not contain Kin,Kaan')
+    check.equal(len(pdf5.filter(pl.col("clitic").str.contains('Kin')
+                                | pl.col("clitic").str.contains('Kaan'))), 0)
+
+    print(f'{q6}: result must not contain _')
+    check.equal(len(pdf6.filter(pl.col("clitic").str.contains("_"))), 0)
+    print(f'{q6}: result must not contain Kin')
+    check.equal(len(pdf5.filter(pl.col("clitic").str.contains('Kin'))), 0)
+
 
 def test_compound(dbc, lazy_df):
     """Check that compounds queried properly."""
@@ -187,14 +226,11 @@ def test_compound(dbc, lazy_df):
     # assert len(df2[~df2.lemma.str.contains('#')]) == 0
 
     pdf1 = polarsutil.query(lazy_df, q1)
-    # print(len(df1))
-    # print(df1)
-    # print(len(pdf1))
-    # print(pdf1)
     print(f'{q1}: some lemmas should contain #')
     check.greater(len(pdf1.filter(pl.col("lemma").str.contains("#"))), 0)
     print(f'{q1}: Polars must have same result count')
     check.equal(len(df1), len(pdf1))
+
     pdf2 = polarsutil.query(lazy_df, q2)
     print(f'{q2}: all lemmas must contain #')
     check.equal(len(pdf2.filter(~pl.col("lemma").str.contains("#"))), 0)
