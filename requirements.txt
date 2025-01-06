@@ -1,6 +1,7 @@
 numpy
 nltk
 pandas
+polars
 tqdm
 
 # notebook stuff
@@ -20,11 +21,15 @@ seaborn
 uralicNLP; sys_platform != "win32"
 symspellpy; sys_platform != "win32"
 
+# api
+fastapi
+uvicorn
+
 # code quality
 typing-extensions
 mypy
 pylint
-flake8==4.0.1
+flake8
 flake8-docstrings
 pyproject-flake8
 
