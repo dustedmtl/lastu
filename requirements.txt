@@ -1,6 +1,7 @@
 numpy
 nltk
 pandas
+polars
 tqdm
 
 # notebook stuff

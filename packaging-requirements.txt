@@ -1,6 +1,7 @@
 
 # Base
 pandas
+polars
 tqdm
 
 # UI
@@ -14,6 +15,10 @@ uliplot
 
 # query debug
 tabulate
+
+# api
+fastapi
+uvicorn
 
 # building
 pyinstaller
