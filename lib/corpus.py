@@ -15,7 +15,8 @@ from collections import Counter
 from conllu import TokenList
 from conllu.exceptions import ParseException
 from conllu.parser import (
-    parse_conllu_plus_fields, parse_sentences, parse_token_and_metadata
+#    parse_conllu_plus_fields, parse_sentences, parse_token_and_metadata
+    parse_sentences, parse_token_and_metadata
 )
 # from tqdm.notebook import tqdm
 from tqdm.autonotebook import tqdm
@@ -78,7 +79,7 @@ def conllu_file_reader(cfile: str,
 
         idx = 0
         with get_filehandle(cfile) as fileh:
-            fields = parse_conllu_plus_fields(fileh, metadata_parsers=None)
+            # fields = parse_conllu_plus_fields(fileh, metadata_parsers=None)
             try:
                 for sentence in parse_sentences(fileh):
                     # The used parser module considers two spaces to be a separator, fix that.
@@ -88,7 +89,7 @@ def conllu_file_reader(cfile: str,
                     sentence = re.sub(r' +', ' ', sentence)
                     tokenlist = parse_token_and_metadata(
                         sentence,
-                        fields=fields,
+                        # fields=fields,
                         field_parsers=None,
                         metadata_parsers=None
                     )
@@ -142,7 +143,7 @@ def conllu_vrt_file_reader(filename: str):
             if line.startswith('</sentence'):
                 insentence = False
                 fileidx += 1
-                in_string = ''.join(sentencedata)
+                # in_string = ''.join(sentencedata)
                 # print(in_string)
                 sentencedata.append('\n')
                 # c = pyconll.unit.conll.Conll(sentencedata)
