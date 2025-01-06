@@ -1,12 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+# from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import os
 import pandas as pd
 import polars as pl
-import sqlite3
+# import sqlite3
 
 from lib import dbutil, polarsutil
 

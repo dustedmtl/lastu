@@ -5,7 +5,7 @@
 from typing import Optional, Dict, Tuple, Any, List, Union
 # from collections import Counter, defaultdict
 import polars as pl
-import pandas as pd
+# import pandas as pd
 import re
 import logging
 import time
@@ -42,22 +42,22 @@ def lazy_csv(csvfile: str) -> pl.LazyFrame:
 def create_string_expression(column: str, operation: str, values: Union[str, List[str]]) -> pl.Expr:
     """
     Create an expression for string operations (ends_with, starts_with, contains, equals).
-    
+
     Args:
         column (str): The name of the column to check.
         operation (str): The operation to perform ('ends_with', 'starts_with', 'contains', 'equals').
         values (Union[str, List[str]]): A single value or a list of values to check against.
-    
+
     Returns:
         pl.Expr: A Polars expression based on the specified operation.
     """
     # Normalize values to a list
     if isinstance(values, str):
         values = [values]
-    
+
     if not values:
         raise ValueError("The list of values cannot be empty.")
-    
+
     if operation == "equal":
         expr = pl.col(column).str.replace("#", "") == values[0]
         for value in values[1:]:
@@ -81,7 +81,7 @@ def create_string_expression(column: str, operation: str, values: Union[str, Lis
             expr = expr | pl.col(column).str.ends_with(value)
     else:
         raise ValueError(f"Unsupported string operation: {operation}")
-    
+
     return expr
 
 
@@ -150,7 +150,8 @@ def parse_query_polars(query: str,
                ]
 
     cols = lazy_df.collect_schema().names()
-    featkeys = [item for item in cols if item not in numkeys and item not in strkeys and not item.endswith('gramfreq') and item != 'feats']
+    featkeys = [item for item in cols if item not in numkeys and
+                item not in strkeys and not item.endswith('gramfreq') and item != 'feats']
     logging.debug("Got extended features: %s", featkeys)
 
     formkeys = ['start', 'middle', 'end']
