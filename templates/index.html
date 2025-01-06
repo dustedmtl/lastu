@@ -177,7 +177,7 @@
         // Remember sorting state across queries
         async function fetchAndDisplayData(querytxt) {
             try {
-                const response = await fetch('/query', {
+                const response = await fetch('/query-polars', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ querytxt })
