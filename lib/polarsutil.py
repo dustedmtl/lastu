@@ -155,6 +155,7 @@ def parse_query_polars(query: str,
 
     formkeys = ['start', 'middle', 'end']
     boolkeys = ['compound']
+    # FIXME: implement like operator
     stroperators = ['=', '!=', 'like', 'in', 'notin']
     formoperators = ['=', '!=', 'in', 'notin']
     numoperators = ['=', '!=', '<', '>', '<=', '>=']
@@ -254,6 +255,11 @@ def parse_query_polars(query: str,
                 elif key in featkeys:
                     if comparator in stroperators:
                         polarsop = 'equal'
+                        # Derivation and clitic searches are not exact, but will suffice for most cases.
+                        # For example, "derivation = L" will match both "Lainen" and "Llinen".
+                        # Since the value is Titlecased, the derivation must start with the inputted string.
+                        if key in ['clitic', 'derivation']:
+                            polarsop = 'contains'
                         value = value.title()
                         underscore = False
 
