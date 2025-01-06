@@ -15,7 +15,6 @@ from collections import Counter
 from conllu import TokenList
 from conllu.exceptions import ParseException
 from conllu.parser import (
-#    parse_conllu_plus_fields, parse_sentences, parse_token_and_metadata
     parse_sentences, parse_token_and_metadata
 )
 # from tqdm.notebook import tqdm
