@@ -1,3 +1,7 @@
+"""API for reading data from database/CSV file."""
+
+from pathlib import Path
+from os.path import join
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse
 # from fastapi.staticfiles import StaticFiles
@@ -6,9 +10,45 @@ from pydantic import BaseModel
 import os
 import pandas as pd
 import polars as pl
-# import sqlite3
-
+import logging
+# import time
 from lib import dbutil, polarsutil
+
+
+homedir = Path.home()
+wm2logconfig = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'root': {
+        'handlers': ['console', 'file_handler'],
+        'level': 'DEBUG'
+    },
+    'formatters': {
+        'default_formatter': {
+            'format': '%(asctime)s %(levelname)s %(message)s',
+            'datefmt': '%d.%m.%Y %H:%M:%S'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default_formatter',
+            'level': 'DEBUG'
+        },
+        'file_handler': {
+            'class': 'logging.FileHandler',
+            'formatter': 'default_formatter',
+            'filename': join(homedir, 'apilog.txt'),
+            'level': 'DEBUG'
+        }
+    },
+}
+
+logging.config.dictConfig(wm2logconfig)
+logger = logging.getLogger('wm2')
+# logger.info('info log')
+# logger.debug('debug log')
+
 
 app = FastAPI()
 
@@ -21,7 +61,6 @@ templates = Jinja2Templates(directory="templates")
 
 # Other
 # FIXME: documentation
-# FIXME: logging
 
 # UI
 # FIXME: paging
@@ -30,14 +69,18 @@ templates = Jinja2Templates(directory="templates")
 # FIXME: allow choice of database
 # FIXME: export list
 
+# Maximum number of rows to fetch from the CSV file (ordered by frequency)
+max_rows = 10000
+
 # Define the path to your SQLite database file
 DB_PATH = "tests/fi_gutenberg_70M_100.db"
-#DB_PATH = "data/fi_parsebank_5B_20/fi_parsebank_5B_20.db"
-CSV_PATH = "tests/gutenberg/wordfreqs_combined.csv"
-#CSV_PATH = "data/fi_parsebank_5B_20/tables/wordfreqs_combined.csv"
+# DB_PATH = "data/fi_parsebank_5B_20/fi_parsebank_5B_20.db"
+# CSV_PATH = "tests/gutenberg/wordfreqs_combined.csv"
+CSV_PATH = "data/fi_parsebank_5B_20/tables/wordfreqs_combined.csv"
 
-# Database connection setup with error handling for non-existent database file
+
 def get_db_connection():
+    """Depend database connection."""
     if not os.path.exists(DB_PATH):
         # Raise an HTTPException if the database file does not exist
         raise HTTPException(status_code=500, detail="Database file does not exist.")
@@ -46,6 +89,7 @@ def get_db_connection():
 
 
 def get_lazyframe():
+    """Depend loading for polars CSV file."""
     if not os.path.exists(CSV_PATH):
         # Raise an HTTPException if the database file does not exist
         raise HTTPException(status_code=500, detail="Database CSV file does not exist.")
@@ -54,19 +98,22 @@ def get_lazyframe():
 
 
 class QueryRequest(BaseModel):
+    """Data model for query."""
+
     querytxt: str
 
 
 # Endpoint to render the HTML UI
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
+    """Load HTML index file."""
     return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.post("/query")
 async def get_frequency(query: QueryRequest, db_connection=Depends(get_db_connection)):
-    # Establish the database connection
+    """Get dataframe from database and return as JSON.."""
     # db_connection = get_db_connection()
-
     try:
         # Call the `get_frequency_dataframe` function with provided query
         newdf, querystatus, querymessage = dbutil.get_frequency_dataframe(
@@ -95,7 +142,7 @@ async def get_frequency(query: QueryRequest, db_connection=Depends(get_db_connec
 
 @app.post("/query-polars")
 async def get_polars_frequency(query: QueryRequest, lazy_df=Depends(get_lazyframe)):
-    # Query from CSV file
+    """Get dataframe from CSV file with polars and return as JSON."""
     # lazy_df = get_lazyframe()
 
     try:
@@ -107,7 +154,7 @@ async def get_polars_frequency(query: QueryRequest, lazy_df=Depends(get_lazyfram
         querymessage = ""
         # Convert the resulting DataFrame to a dictionary
         # data = newdf.to_dict(orient="records") if isinstance(newdf, pl.DataFrame) else {}
-        data = newdf.to_dicts() if isinstance(newdf, pl.DataFrame) else {}
+        data = newdf[:max_rows].to_dicts() if isinstance(newdf, pl.DataFrame) else {}
 
         return {
             "data": data,
