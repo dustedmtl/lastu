@@ -33,7 +33,6 @@ def query_timing(func):
 
 def lazy_csv(csvfile: str) -> pl.LazyFrame:
     """Load lazy dataframe from a CSV file."""
-    # Lazy load CSV file
     lazy_frame = pl.scan_csv(csvfile)
 
     return lazy_frame
@@ -321,6 +320,7 @@ def query(lazy_df: pl.LazyFrame,
     try:
         filters = query_to_filter(query, lazy_df)
         logging.info("%s -> %s", query, filters)
+        logging.debug(lazy_df.explain())
         return query_lazy_df(lazy_df, filters)
     except ValueError as ve:
         logging.info(ve)
